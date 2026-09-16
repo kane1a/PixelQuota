@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f4f6f8" />
+  <meta name="description" content="Compress any image to a strict KB limit, resize to exact pixels, convert HEIC, and download privately in your browser." />
+  <meta property="og:title" content="PixelQuota - Exact image limits without uploads" />
+  <meta property="og:description" content="Hit exact KB and pixel limits in one pass. Processing stays on your device." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23111418'/%3E%3Cpath d='M18 25V18h7M39 18h7v7M46 39v7h-7M25 46h-7v-7' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%232f6df6'/%3E%3C/svg%3E" />
+  <title>PixelQuota - Exact KB Image Compressor</title>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="app-bar">
+      <a class="brand" href="./index.html" aria-label="PixelQuota home">
+        <span class="brand-glyph" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></span>
+        <span class="brand-name">PixelQuota</span>
+      </a>
+      <div class="header-tools">
+        <span class="local-badge"><span class="local-dot"></span><span data-i18n="localBadge">Files stay on this device</span></span>
+        <label class="language-wrap"><span class="sr-only">Language</span><select id="languageSelect" aria-label="Language"><option value="en">EN</option><option value="zh-TW">繁中</option></select></label>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <div class="intro-copy">
+          <p class="eyebrow" data-i18n="eyebrow">IMAGE LIMIT TOOL</p>
+          <h1 id="heroTitle" data-i18n="heroTitle">Make the photo fit.<br><span>Keep the quality.</span></h1>
+          <p id="heroSub" class="intro-sub" data-i18n="heroSub">Set the exact KB, dimensions, and format once. PixelQuota finds the best result that passes the upload rule.</p>
+        </div>
+      </section>
+
+      <section class="workbench" aria-labelledby="toolHeading">
+        <div class="image-pane">
+          <div class="pane-heading">
+            <div><span class="step-chip">01</span><div><p data-i18n="addImages">ADD IMAGES</p><h2 id="toolHeading" data-i18n="dropTitle">Bring in the files that need fixing.</h2></div></div>
+            <button id="clearBtn" class="quiet-button" type="button" hidden data-i18n="clearAll">Clear all</button>
+          </div>
+          <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-describedby="dropHint">
+            <input id="fileInput" type="file" accept="image/*,.heic,.heif,.avif,.bmp" multiple hidden />
+            <div class="drop-visual" aria-hidden="true"><span class="frame-corner tl"></span><span class="frame-corner tr"></span><span class="frame-corner bl"></span><span class="frame-corner br"></span><svg viewBox="0 0 32 32" fill="none"><path d="M16 7v14m0-14-5 5m5-5 5 5M8 21v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <strong data-i18n="dropFiles">Drop images here</strong>
+            <span id="dropHint" data-i18n="dropHint">Choose files, drag them here, or paste from the clipboard.</span>
+            <div class="drop-actions"><button id="browseBtn" class="button primary" type="button" data-i18n="chooseButton">Choose images</button></div>
+            <small>JPG · PNG · WebP · AVIF · HEIC · BMP</small>
+          </div>
+          <div class="privacy-line"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.7 2.9 8 7 10 4.1-2 7-5.3 7-10V6l-7-3Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m9.2 12 1.7 1.7 4-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="privacyLine">Images are processed in this browser. PixelQuota never receives the file.</span></div>
+          <section id="resultsSection" class="results-section" hidden aria-live="polite"><div class="results-heading"><div><p data-i18n="results">RESULTS</p><h3 id="resultsSummary" data-i18n="queuedTitle">Queued for processing.</h3></div><button id="downloadAllBtn" class="button secondary compact" type="button" disabled data-i18n="downloadAll">Download ZIP</button></div><div id="resultList" class="result-list"></div></section>
+        </div>
+
+        <aside class="spec-pane" aria-label="Output settings">
+          <div class="spec-topline"><div><span class="step-chip inverse">02</span><p data-i18n="outputSpec">OUTPUT SPEC</p></div><span id="gateBadge" class="gate-badge">≤ 200 KB</span></div>
+          <div class="target-control"><label for="targetKb" data-i18n="maxFileSize">Maximum file size</label><div class="target-input"><input id="targetKb" type="number" min="5" max="100000" step="1" value="200" inputmode="decimal" /><span>KB</span></div><div class="preset-row" id="presetRow" aria-label="File size presets"><button type="button" data-kb="20">20</button><button type="button" data-kb="50">50</button><button type="button" data-kb="100">100</button><button type="button" data-kb="200" class="active">200</button><button type="button" data-kb="500">500</button><button type="button" data-kb="1000">1 MB</button><button type="button" data-custom="true" data-i18n="customSize">Custom</button></div><p class="custom-hint" data-i18n="customHint">Choose a preset or type any size above.</p><p class="helper" data-i18n="safeMargin">A 2% safety margin keeps strict upload forms from rejecting a borderline file.</p></div>
+          <div class="spec-section"><div class="section-label"><span data-i18n="format">Format</span><small data-i18n="formatHint">Auto is best for most people</small></div><div class="segment-grid" id="formatButtons" role="group" aria-label="Output format"><button type="button" data-format="auto" class="active" data-i18n="autoFormat">Auto</button><button type="button" data-format="image/jpeg">JPG</button><button type="button" data-format="image/webp">WebP</button><button type="button" data-format="image/png">PNG</button></div></div>
+          <details class="advanced-settings" id="advancedSettings"><summary><span data-i18n="advanced">Dimensions & privacy</span><i aria-hidden="true"></i></summary><div class="advanced-inner"><div class="section-label"><span data-i18n="resizeMode">Resize mode</span></div><div class="segment-grid two" id="resizeButtons" role="group" aria-label="Resize mode"><button type="button" data-resize="limit" class="active" data-i18n="fitWithin">Fit within</button><button type="button" data-resize="exact" data-i18n="exactCrop">Exact crop</button></div><div class="dimension-grid"><label><span data-i18n="width">Width</span><div><input id="maxWidth" type="number" min="1" max="16000" placeholder="Any" data-i18n-placeholder="any" /><em>px</em></div></label><label><span data-i18n="height">Height</span><div><input id="maxHeight" type="number" min="1" max="16000" placeholder="Any" data-i18n-placeholder="any" /><em>px</em></div></label></div><label class="check-row"><input id="stripMetadata" type="checkbox" checked /><span><b data-i18n="stripMetadata">Remove EXIF and location</b><small data-i18n="stripHelp">Re-encoded images leave camera and GPS metadata behind.</small></span></label></div></details>
+          <button id="processBtn" class="process-button" type="button" disabled><span><b data-i18n="processButton">Fit images to the limit</b><small id="queueText" data-i18n="queueEmpty">Add images to begin</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 12 0m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="spec-foot"><span data-i18n="noAccount">No account</span><span></span><span data-i18n="noUpload">No upload</span><span></span><span data-i18n="noWatermark">No watermark</span></div>
+        </aside>
+      </section>
+
+      <section id="adTop" class="ad-slot" hidden aria-label="Advertisement"><span data-i18n="adLabel">ADVERTISEMENT</span><div id="adTopInner"></div></section>
+      <section class="trust-strip" aria-label="Product principles"><article><b>01</b><div><h3 data-i18n="trust1Title">The byte count is the judge.</h3><p data-i18n="trust1Body">PixelQuota checks the actual encoded file, not an estimate from a quality slider.</p></div></article><article><b>02</b><div><h3 data-i18n="trust2Title">Your image never leaves.</h3><p data-i18n="trust2Body">Compression, conversion, previews, and ZIP creation all run on your device.</p></div></article><article><b>03</b><div><h3 data-i18n="trust3Title">One pass for annoying forms.</h3><p data-i18n="trust3Body">KB cap, exact pixels, JPG-only portals, and iPhone HEIC can be handled together.</p></div></article></section>
+      <section class="limit-section"><div class="limit-copy"><p class="eyebrow" data-i18n="commonLimits">COMMON LIMITS</p><h2 data-i18n="oneClickTargets">Start with the number the form gave you.</h2></div><div class="limit-links" id="commonLimitButtons"><button type="button" data-kb="20"><strong>20 KB</strong><span data-i18n="limitTight">tight forms</span></button><button type="button" data-kb="50"><strong>50 KB</strong><span data-i18n="limitPhoto">photo uploads</span></button><button type="button" data-kb="100"><strong>100 KB</strong><span data-i18n="limitApps">applications</span></button><button type="button" data-kb="200"><strong>200 KB</strong><span data-i18n="limitCommon">common limit</span></button><button type="button" data-kb="500"><strong>500 KB</strong><span data-i18n="limitQuality">high quality</span></button><button type="button" data-kb="1000"><strong>1 MB</strong><span data-i18n="limitWeb">email & web</span></button></div></section>
+      <section class="seo-copy" id="seoCopy"><p class="eyebrow" data-i18n="guideLabel">PIXELQUOTA GUIDE</p><h2 id="seoHeading" data-i18n="seoHeading">Compress an image to a precise KB limit without guessing.</h2><div class="seo-columns"><p id="seoParagraph1" data-i18n="seoParagraph1">Upload forms often reject a photo for being only a few kilobytes too large. PixelQuota checks the real encoded output, searches for the best quality under the limit, and only reduces dimensions when it has to.</p><p id="seoParagraph2" data-i18n="seoParagraph2">The image-processing path runs locally in your browser. That is useful for ID photos, applications, certificates, screenshots, and other files you may not want copied to an unknown server.</p></div></section>
+    </main>
+
+    <footer><a class="brand footer-brand" href="./index.html"><span class="brand-glyph small" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></span><span class="brand-name">PixelQuota</span></a><p data-i18n="footerText">Exact image limits. No upload.</p><nav><a href="./privacy.html" data-i18n="privacyLink">Privacy</a></nav></footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./config.js"></script>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+tests/downloads/
+tests/artifacts/
+tests/fixture.jpg
+*.log
+.vscode/
+.idea/
