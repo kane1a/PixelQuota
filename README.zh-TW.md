@@ -6,7 +6,7 @@
 
 可依指定 **KB 大小**壓縮、設定精確**像素尺寸**、轉換格式、批次處理，整個圖片流程都在瀏覽器本機完成。
 
-[English](README.md) · [快速開始](#快速開始) · [隱私](#隱私) · [參與貢獻](CONTRIBUTING.md)
+[**線上直接使用**](https://kane1a.github.io/PixelQuota/) · [English](README.md) · [快速開始](#快速開始) · [隱私](#隱私) · [參與貢獻](CONTRIBUTING.md)
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-111827.svg)
 ![Privacy: local processing](https://img.shields.io/badge/privacy-local%20processing-168a57.svg)
@@ -81,9 +81,9 @@ npm run test:e2e
 
 ## GitHub Pages
 
-Repository 已包含 `.github/workflows/pages.yml`。
+線上版本：**https://kane1a.github.io/PixelQuota/**。
 
-公開 repository 後，到 **Settings → Pages**，將來源設為 **GitHub Actions**。之後每次 push 到 `main`，GitHub 都會自動 build 並部署 `dist/`。
+Repository 透過 `.github/workflows/pages.yml` 自動部署；之後每次 push 到 `main`，GitHub 都會自動 build 並發布 `dist/`。
 
 ## 運作方式
 

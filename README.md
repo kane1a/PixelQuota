@@ -6,7 +6,7 @@
 
 Compress to a target **KB size**, resize to exact **pixel dimensions**, convert formats, batch-process files, and keep the entire image pipeline inside your browser.
 
-[繁體中文](README.zh-TW.md) · [Quick start](#quick-start) · [Privacy](#privacy) · [Contributing](CONTRIBUTING.md)
+[**Live Demo**](https://kane1a.github.io/PixelQuota/) · [繁體中文](README.zh-TW.md) · [Quick start](#quick-start) · [Privacy](#privacy) · [Contributing](CONTRIBUTING.md)
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-111827.svg)
 ![Privacy: local processing](https://img.shields.io/badge/privacy-local%20processing-168a57.svg)
@@ -81,9 +81,9 @@ If Chrome is not in a standard location, set `CHROME_PATH` first.
 
 ## GitHub Pages
 
-This repository includes a GitHub Pages workflow at `.github/workflows/pages.yml`.
+The live app is available at **https://kane1a.github.io/PixelQuota/**.
 
-After the repository is public, open **Settings → Pages** and use **GitHub Actions** as the source. Every push to `main` will build and deploy `dist/` automatically.
+This repository deploys through `.github/workflows/pages.yml`. Every push to `main` builds and publishes `dist/` automatically.
 
 ## How it works
 
