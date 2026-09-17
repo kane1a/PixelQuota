@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.1 — 2026-09-17
+
+- Added a draggable Original / Compressed comparison as the primary result preview.
+- Added result-row selection so batch files can be switched into the large comparison preview.
+- Defaulted the comparison to the first result that successfully meets the target.
+- Failed results now show the original preview with the localized failure reason instead of a misleading comparison slider.
+- Added touch, mouse, and keyboard-friendly comparison controls while preserving existing compression and batch behavior.
+
 ## 1.3.0 — 2026-09-17
 
 - Rebuilt the desktop interface around a short centered hero and a full-width workspace.

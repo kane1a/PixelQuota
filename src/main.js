@@ -7,7 +7,8 @@ const $ = id => document.getElementById(id);
 const state = {
   files:[], results:[], errors:[], previews:[], processKeys:[], resultOptions:[],
   locale:detectLocale(), busy:false, outputFormat:'auto', resizeMode:'limit',
-  customMode:false, pageMode:'default', pagePresetKb:null, lastSkipped:0
+  customMode:false, pageMode:'default', pagePresetKb:null, lastSkipped:0,
+  selectedIndex:null, selectionManual:false, comparePosition:50
 };
 const cfg = window.PIXELQUOTA_CONFIG || {};
 
@@ -112,28 +113,69 @@ function errorReason(error) {
   const message=String(error?.message||error||'');
   return /decode_failed|heic|decoder|image/i.test(message)?t('failDecode'):t('failUnknown');
 }
+function selectedClass(index) { return state.selectedIndex===index?' selected':''; }
+function updateComparisonPosition(value=state.comparePosition) {
+  state.comparePosition=Math.max(0,Math.min(100,Number(value)||0));
+  const stage=$('comparisonStage'); if(stage) stage.style.setProperty('--compare-position',`${state.comparePosition}%`);
+  const range=$('compareRange'); if(range&&Number(range.value)!==state.comparePosition) range.value=String(state.comparePosition);
+}
+function chooseDefaultResult() {
+  if(!state.files.length){state.selectedIndex=null;return;}
+  if(Number.isInteger(state.selectedIndex)&&state.selectedIndex>=0&&state.selectedIndex<state.files.length){
+    if(state.selectionManual||state.results[state.selectedIndex]?.metTarget)return;
+  }
+  const passed=state.results.findIndex(r=>r?.metTarget);
+  if(passed>=0){state.selectedIndex=passed;return;}
+  if(!Number.isInteger(state.selectedIndex)||state.selectedIndex<0||state.selectedIndex>=state.files.length)state.selectedIndex=0;
+}
+function renderComparison() {
+  const panel=$('comparisonPanel'); if(!panel)return;
+  if(!state.files.length){panel.hidden=true;return;}
+  chooseDefaultResult();
+  const index=state.selectedIndex??0; const file=state.files[index]; const result=state.results[index]; const error=state.errors[index];
+  if(!file){panel.hidden=true;return;} panel.hidden=false;
+  const original=$('compareOriginal'),output=$('compareOutput'),mask=$('compareOutputMask'),badge=$('compareOutputBadge'),divider=$('compareDivider'),range=$('compareRange'),failure=$('compareFailure'),unavailable=$('compareUnavailable');
+  unavailable.hidden=true; original.onload=()=>{unavailable.hidden=true;}; original.onerror=()=>{unavailable.hidden=false;}; original.src=state.previews[index]||''; original.alt=`${file.name} ${t('original')}`;
+  $('compareFilename').textContent=file.name; $('compareOriginalSize').textContent=formatBytes(file.size);
+  failure.hidden=true; $('compareFailureText').textContent='';
+  const showSlider=!!result?.metTarget;
+  mask.hidden=!showSlider; badge.hidden=!showSlider; divider.hidden=!showSlider; range.hidden=!showSlider;
+  if(showSlider){
+    if(!result.previewUrl)result.previewUrl=safeUrl(result.blob); output.src=result.previewUrl; output.alt=`${file.name} ${t('compressed')}`;
+    $('compareOutputSize').textContent=formatBytes(result.blob.size); const saved=Math.max(0,Math.round((1-result.blob.size/file.size)*100));
+    $('compareDimensions').textContent=`${result.outputWidth}×${result.outputHeight} · ${formatName(result.outputType)}`; $('compareSaving').textContent=`${saved}% ${t('smaller')}`;
+    $('compareStatus').className='status pass'; $('compareStatus').textContent=t('pass'); updateComparisonPosition();
+  }else{
+    $('compareOutputSize').textContent='—'; $('compareDimensions').textContent=result?`${result.outputWidth}×${result.outputHeight} · ${formatName(result.outputType)}`:formatBytes(file.size); $('compareSaving').textContent=result?t('targetMissed'):t('waiting');
+    $('compareStatus').className=`status ${result||error?'fail':'pending'}`; $('compareStatus').textContent=result||error?t('failed'):t('waiting');
+    if(result||error){failure.hidden=false;$('compareFailureText').textContent=result?failureReason(result,state.resultOptions[index]):errorReason(error);}
+  }
+  document.querySelectorAll('.result-card').forEach(card=>card.classList.toggle('selected',Number(card.dataset.resultIndex)===index));
+}
+function selectResult(index,manual=true){if(!Number.isInteger(index)||index<0||index>=state.files.length)return;state.selectedIndex=index;if(manual)state.selectionManual=true;state.comparePosition=50;renderComparison();}
+
 function resultCardHtml(file,index,result) {
   if (!result.previewUrl) result.previewUrl=safeUrl(result.blob);
   const saved=Math.max(0,Math.round((1-result.blob.size/file.size)*100));
   const reason=result.metTarget?'':failureReason(result,state.resultOptions[index]);
-  return `<article class="result-card done${result.metTarget?'':' over-limit'}" data-result-index="${index}"><div class="thumb"><img src="${result.previewUrl}" alt="" /></div><div class="result-info"><strong title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</strong><span>${formatBytes(file.size)}</span></div><div class="size-flow"><div><span>${t('original')}</span><b>${formatBytes(file.size)}</b></div><i>→</i><div><span>${t('output')}</span><b>${formatBytes(result.blob.size)}</b></div><div class="dimension-note"><span>${t('dimensions')}</span><b>${result.outputWidth}×${result.outputHeight}</b></div><div class="saving-note"><span>${t('saved')}</span><b>${saved}%</b></div></div><div class="result-status"><span class="status ${result.metTarget?'pass':'fail'}">${result.metTarget?t('pass'):t('failed')}</span></div>${reason?`<div class="result-reason"><strong>!</strong><span>${escapeHtml(reason)}</span></div>`:''}<div class="result-action"><button type="button" data-download-index="${index}">${t('download')}</button></div></article>`;
+  return `<article class="result-card done${result.metTarget?'':' over-limit'}${selectedClass(index)}" data-result-index="${index}" data-select-result="${index}" tabindex="0"><div class="thumb"><img src="${result.previewUrl}" alt="" /></div><div class="result-info"><strong title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</strong><span>${formatBytes(file.size)}</span></div><div class="size-flow"><div><span>${t('original')}</span><b>${formatBytes(file.size)}</b></div><i>→</i><div><span>${t('output')}</span><b>${formatBytes(result.blob.size)}</b></div><div class="dimension-note"><span>${t('dimensions')}</span><b>${result.outputWidth}×${result.outputHeight}</b></div><div class="saving-note"><span>${t('saved')}</span><b>${saved}%</b></div></div><div class="result-status"><span class="status ${result.metTarget?'pass':'fail'}">${result.metTarget?t('pass'):t('failed')}</span></div>${reason?`<div class="result-reason"><strong>!</strong><span>${escapeHtml(reason)}</span></div>`:''}<div class="result-action"><button type="button" data-download-index="${index}">${t('download')}</button></div></article>`;
 }
 function errorCardHtml(file,index,error) {
-  return `<article class="result-card failed" data-result-index="${index}"><div class="thumb placeholder error-thumb"><span>!</span></div><div class="result-info"><strong title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</strong><span>${formatBytes(file.size)}</span></div><div class="size-flow"><div><span>${t('original')}</span><b>${formatBytes(file.size)}</b></div><i>→</i><div><span>${t('output')}</span><b>—</b></div></div><div class="result-status"><span class="status fail">${t('failed')}</span></div><div class="result-reason"><strong>!</strong><span>${escapeHtml(errorReason(error))}</span></div></article>`;
+  return `<article class="result-card failed${selectedClass(index)}" data-result-index="${index}" data-select-result="${index}" tabindex="0"><div class="thumb placeholder error-thumb"><span>!</span></div><div class="result-info"><strong title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</strong><span>${formatBytes(file.size)}</span></div><div class="size-flow"><div><span>${t('original')}</span><b>${formatBytes(file.size)}</b></div><i>→</i><div><span>${t('output')}</span><b>—</b></div></div><div class="result-status"><span class="status fail">${t('failed')}</span></div><div class="result-reason"><strong>!</strong><span>${escapeHtml(errorReason(error))}</span></div></article>`;
 }
 function queuedCardHtml(file,index) {
-  return `<article class="result-card queued" data-result-index="${index}">${queueThumb(file,index)}<div class="result-info"><strong title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</strong><span>${formatBytes(file.size)}</span></div><div class="size-flow"><div><span>${t('original')}</span><b>${formatBytes(file.size)}</b></div><i>→</i><div><span>${t('output')}</span><b>${t('waiting')}</b></div></div><div class="result-status"><span class="status pending">${t('waiting')}</span><div class="progress"><i></i></div></div><div class="result-action"><button type="button" disabled>${t('download')}</button></div></article>`;
+  return `<article class="result-card queued${selectedClass(index)}" data-result-index="${index}" data-select-result="${index}" tabindex="0">${queueThumb(file,index)}<div class="result-info"><strong title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</strong><span>${formatBytes(file.size)}</span></div><div class="size-flow"><div><span>${t('original')}</span><b>${formatBytes(file.size)}</b></div><i>→</i><div><span>${t('output')}</span><b>${t('waiting')}</b></div></div><div class="result-status"><span class="status pending">${t('waiting')}</span><div class="progress"><i></i></div></div><div class="result-action"><button type="button" disabled>${t('download')}</button></div></article>`;
 }
 function renderCard(index) {
   const existing=document.querySelector(`[data-result-index="${index}"]`); if(!existing)return;
   const html=state.results[index]?resultCardHtml(state.files[index],index,state.results[index]):state.errors[index]?errorCardHtml(state.files[index],index,state.errors[index]):queuedCardHtml(state.files[index],index);
-  existing.outerHTML=html;
+  existing.outerHTML=html; renderComparison();
 }
 function renderCards() {
   if(!state.files.length){$('resultsSection').hidden=true;$('emptyResults').hidden=false;$('resultList').innerHTML='';return;}
   $('emptyResults').hidden=true;$('resultsSection').hidden=false;
-  $('resultList').innerHTML=state.files.map((file,i)=>state.results[i]?resultCardHtml(file,i,state.results[i]):state.errors[i]?errorCardHtml(file,i,state.errors[i]):queuedCardHtml(file,i)).join('');
-  $('downloadAllBtn').disabled=!state.results.some(Boolean); updateResultsSummary();
+  chooseDefaultResult(); $('resultList').innerHTML=state.files.map((file,i)=>state.results[i]?resultCardHtml(file,i,state.results[i]):state.errors[i]?errorCardHtml(file,i,state.errors[i]):queuedCardHtml(file,i)).join('');
+  $('downloadAllBtn').disabled=!state.results.some(Boolean); updateResultsSummary(); renderComparison();
 }
 function updateResultsSummary() {
   if(!state.files.length)return;
@@ -150,12 +192,12 @@ function addFiles(files) {
   if(!incoming.length)return;
   const room=30-state.files.length; if(room<=0)return toast(t('tooMany')); if(incoming.length>room)toast(t('tooMany'));
   incoming.slice(0,room).forEach(file=>{state.files.push(file);state.previews.push(URL.createObjectURL(file));state.results.push(null);state.errors.push(null);state.processKeys.push(null);state.resultOptions.push(null);});
-  state.lastSkipped=0; renderCards(); updateQueue();
+  if(state.selectedIndex===null)state.selectedIndex=0; state.lastSkipped=0; renderCards(); updateQueue();
 }
 function resetAll() {
   state.results.forEach(r=>r?.previewUrl&&URL.revokeObjectURL(r.previewUrl)); state.previews.forEach(url=>URL.revokeObjectURL(url));
-  state.files=[];state.results=[];state.errors=[];state.previews=[];state.processKeys=[];state.resultOptions=[];state.busy=false;state.lastSkipped=0;
-  $('fileInput').value='';$('resultsSection').hidden=true;$('emptyResults').hidden=false;$('resultList').innerHTML='';updateQueue();
+  state.files=[];state.results=[];state.errors=[];state.previews=[];state.processKeys=[];state.resultOptions=[];state.busy=false;state.lastSkipped=0;state.selectedIndex=null;state.selectionManual=false;state.comparePosition=50;
+  $('fileInput').value='';$('resultsSection').hidden=true;$('emptyResults').hidden=false;$('comparisonPanel').hidden=true;$('resultList').innerHTML='';updateQueue();
 }
 function prepareCard(index) {
   const old=state.results[index]; if(old?.previewUrl)URL.revokeObjectURL(old.previewUrl);
@@ -180,7 +222,7 @@ async function processAll() {
     prepareCard(i);state.resultOptions[i]={...opts};
     try{
       const result=await compressImage(state.files[i],opts,p=>updateCardProgress(i,p));
-      state.results[i]=result;state.errors[i]=null;state.processKeys[i]=key;renderCard(i);
+      state.results[i]=result;state.errors[i]=null;state.processKeys[i]=key;if(result.metTarget&&!state.selectionManual&&!state.results[state.selectedIndex]?.metTarget)state.selectedIndex=i;renderCard(i);
     }catch(error){
       console.warn('PixelQuota decode/compress failure:',state.files[i]?.name,error);
       state.results[i]=null;state.errors[i]={message:String(error?.message||error)};state.processKeys[i]=key;renderCard(i);
@@ -212,8 +254,10 @@ function bind(){
   $('formatButtons').onclick=e=>{const b=e.target.closest('[data-format]');if(b)setFormat(b.dataset.format);};
   $('resizeButtons').onclick=e=>{const b=e.target.closest('[data-resize]');if(b)setResize(b.dataset.resize);};
   $('processBtn').onclick=processAll;$('clearBtn').onclick=resetAll;$('downloadAllBtn').onclick=downloadAll;
-  $('resultList').onclick=e=>{const b=e.target.closest('[data-download-index]');if(!b)return;const r=state.results[Number(b.dataset.downloadIndex)];if(r)downloadBlob(r.blob,r.outputName);};
+  $('compareRange').oninput=e=>updateComparisonPosition(e.target.value);
+  $('resultList').onclick=e=>{const b=e.target.closest('[data-download-index]');if(b){e.stopPropagation();const r=state.results[Number(b.dataset.downloadIndex)];if(r)downloadBlob(r.blob,r.outputName);return;}const card=e.target.closest('[data-select-result]');if(card)selectResult(Number(card.dataset.selectResult));};
+  $('resultList').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('[data-select-result]')&&!e.target.closest('button')){e.preventDefault();selectResult(Number(e.target.closest('[data-select-result]').dataset.selectResult));}};
   $('languageSelect').onchange=e=>applyLocale(e.target.value);
 }
-function init(){initPageMode();bind();applyLocale(state.locale);setFormat(state.outputFormat);setResize(state.resizeMode);initMonetization();window.PixelQuotaTest={addFiles,processAll,state,compressImage,setPreset,setCustom,setFormat,setResize,settingsKey,inputOptions};}
+function init(){initPageMode();bind();applyLocale(state.locale);setFormat(state.outputFormat);setResize(state.resizeMode);initMonetization();window.PixelQuotaTest={addFiles,processAll,state,compressImage,setPreset,setCustom,setFormat,setResize,settingsKey,inputOptions,selectResult,renderComparison,updateComparisonPosition};}
 init();

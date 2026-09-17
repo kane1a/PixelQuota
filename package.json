@@ -1,6 +1,6 @@
 {
   "name": "pixelquota",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Privacy-first image compressor for exact KB and pixel limits. Runs entirely in the browser.",
   "license": "MIT",
   "private": true,

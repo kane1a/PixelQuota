@@ -34,6 +34,7 @@ It checks the **real encoded byte size**, searches for the highest quality that 
 | Clear failure reasons | Explains why a file cannot meet the requested KB, format, and dimensions together. |
 | Private by design | Image bytes stay in the browser. PixelQuota has no image-upload endpoint. |
 | Batch workflow | Process up to 30 images and download the results as a ZIP. |
+| Before / after comparison | Drag across a large Original / Compressed preview to inspect quality, and click batch rows to switch the selected image. |
 | Format conversion | JPG, PNG, WebP, AVIF, HEIC/HEIF, and BMP input; JPG, PNG, WebP, or automatic output. |
 | Metadata removal | Re-encoded images can drop EXIF and location metadata. |
 | Safe repeat processing | Clicking Process again with unchanged settings skips finished files; changing settings reprocesses from the original. |
@@ -75,7 +76,7 @@ The build creates two useful entry points:
 npm run test:e2e
 ```
 
-The test opens the real built app in Chrome/Chromium and verifies localization, common/custom KB controls, repeated-processing safety, changed-setting reprocessing, localized failure reasons, download behavior, responsive layouts, and typography in both English and Traditional Chinese.
+The test opens the real built app in Chrome/Chromium and verifies localization, common/custom KB controls, the draggable before/after comparison, batch preview switching, repeated-processing safety, changed-setting reprocessing, localized failure reasons, download behavior, responsive layouts, and typography in both English and Traditional Chinese.
 
 If Chrome is not in a standard location, set `CHROME_PATH` first.
 
