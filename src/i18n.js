@@ -1,8 +1,10 @@
 export const strings = {
   en: {
-    localBadge:'Files stay on this device', languageLabel:'Language', eyebrow:'IMAGE LIMIT TOOL',
-    heroTitle:'Make the photo fit.\nKeep the quality.',
-    heroSub:'Set the exact KB, dimensions, and format once. PixelQuota finds the best result that passes the upload rule.',
+    localBadge:'Files stay on this device', languageLabel:'Language', eyebrow:'PRIVATE IMAGE COMPRESSION',
+    navCompress:'Compress', navFeatures:'Features', navPrivacy:'Privacy', windowPrivate:'Local processing · no image upload',
+    heroTitle:'Exact KB. Exact pixels. No uploads.',
+    heroSub:'Compress images for strict upload limits — all inside your browser.',
+    heroChipPrivate:'Private in browser', heroChipTarget:'Exact KB target', heroChipBatch:'Batch ready', privateTitle:'100% private', emptyResultsTitle:'No images yet', emptyResultsBody:'Add one or more images to see the processed files here.',
     addImages:'ADD IMAGES', dropTitle:'Bring in the files that need fixing.', clearAll:'Clear all',
     dropFiles:'Drop images here', dropHint:'Choose files, drag them here, or paste from the clipboard.', chooseButton:'Choose images',
     privacyLine:'Images are processed in this browser. PixelQuota never receives the file.',
@@ -41,9 +43,11 @@ export const strings = {
     adLabel:'ADVERTISEMENT'
   },
   'zh-TW': {
-    localBadge:'檔案只留在這台裝置', languageLabel:'語言', eyebrow:'圖片限制工具',
-    heroTitle:'讓照片符合限制。\n盡量保留畫質。',
-    heroSub:'一次設定 KB、像素尺寸與格式，PixelQuota 會找出能通過上傳規則的最佳結果。',
+    localBadge:'檔案只留在這台裝置', languageLabel:'語言', eyebrow:'本機圖片壓縮',
+    navCompress:'壓縮', navFeatures:'特色', navPrivacy:'隱私', windowPrivate:'本機處理 · 圖片不上傳',
+    heroTitle:'精準 KB，精準尺寸，不必上傳。',
+    heroSub:'專為嚴格上傳限制而設計，所有處理都在你的瀏覽器完成。',
+    heroChipPrivate:'瀏覽器內處理', heroChipTarget:'精準 KB 上限', heroChipBatch:'批次處理', privateTitle:'100% 隱私', emptyResultsTitle:'尚未加入圖片', emptyResultsBody:'加入一張或多張圖片後，這裡會顯示處理結果。',
     addImages:'加入圖片', dropTitle:'把需要處理的照片放進來。', clearAll:'全部清除',
     dropFiles:'把圖片拖到這裡', dropHint:'可選擇檔案、拖曳到這裡，或從剪貼簿貼上。', chooseButton:'選擇圖片',
     privacyLine:'圖片只在這個瀏覽器裡處理，PixelQuota 不會收到檔案。',

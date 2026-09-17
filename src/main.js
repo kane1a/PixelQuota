@@ -1,4 +1,4 @@
-import './styles.css';
+import './app.css';
 import { zipSync } from 'fflate';
 import { compressImage } from './compress.js';
 import { strings, detectLocale } from './i18n.js';
@@ -20,7 +20,7 @@ function toast(msg) { const el=$('toast'); el.textContent=msg; el.classList.add(
 function safeUrl(blob) { return URL.createObjectURL(blob); }
 function targetKb() { return Math.max(5, Number($('targetKb').value || 200)); }
 function formatName(type) { return type==='image/png'?'PNG':type==='image/webp'?'WebP':type==='image/jpeg'?'JPG':'Auto'; }
-function setHeroLines(line1,line2) { $('heroTitle').innerHTML=`${escapeHtml(line1)}<br><span>${escapeHtml(line2)}</span>`; }
+function setHeroLines(line1,line2) { $('heroTitle').textContent=[line1,line2].filter(Boolean).join(' '); }
 
 function initPageMode() {
   const path=location.pathname.toLowerCase();
@@ -130,8 +130,8 @@ function renderCard(index) {
   existing.outerHTML=html;
 }
 function renderCards() {
-  if(!state.files.length){$('resultsSection').hidden=true;$('resultList').innerHTML='';return;}
-  $('resultsSection').hidden=false;
+  if(!state.files.length){$('resultsSection').hidden=true;$('emptyResults').hidden=false;$('resultList').innerHTML='';return;}
+  $('emptyResults').hidden=true;$('resultsSection').hidden=false;
   $('resultList').innerHTML=state.files.map((file,i)=>state.results[i]?resultCardHtml(file,i,state.results[i]):state.errors[i]?errorCardHtml(file,i,state.errors[i]):queuedCardHtml(file,i)).join('');
   $('downloadAllBtn').disabled=!state.results.some(Boolean); updateResultsSummary();
 }
@@ -155,7 +155,7 @@ function addFiles(files) {
 function resetAll() {
   state.results.forEach(r=>r?.previewUrl&&URL.revokeObjectURL(r.previewUrl)); state.previews.forEach(url=>URL.revokeObjectURL(url));
   state.files=[];state.results=[];state.errors=[];state.previews=[];state.processKeys=[];state.resultOptions=[];state.busy=false;state.lastSkipped=0;
-  $('fileInput').value='';$('resultsSection').hidden=true;$('resultList').innerHTML='';updateQueue();
+  $('fileInput').value='';$('resultsSection').hidden=true;$('emptyResults').hidden=false;$('resultList').innerHTML='';updateQueue();
 }
 function prepareCard(index) {
   const old=state.results[index]; if(old?.previewUrl)URL.revokeObjectURL(old.previewUrl);

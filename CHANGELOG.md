@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 — 2026-09-17
+
+- Rebuilt the desktop interface around a short centered hero and a full-width workspace.
+- Kept the headline on one line on desktop while preserving responsive wrapping on smaller screens.
+- Expanded the results area and moved upload/output controls into a dedicated left column.
+- Refreshed the visual system with the blue/white PixelQuota product style while preserving all compression, HEIC, batch ZIP, metadata removal, localization, exact-size, and repeat-processing behavior.
+- Added explicit empty-result and local-processing states to make the workflow clearer before files are selected.
+
 ## 1.2.1 — 2026-09-17
 
 - Improved English and Traditional Chinese heading wrapping with balanced typography.
