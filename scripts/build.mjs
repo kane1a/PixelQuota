@@ -38,7 +38,7 @@ html=html.replace(/<script type="module" src="\/src\/main\.js"><\/script>/,`<scr
 
 fs.writeFileSync(path.join(dist,'index.html'),html);
 fs.writeFileSync(path.join(dist,'PixelQuota.html'),html);
-fs.writeFileSync(path.join(dist,'START-HERE.txt'),'PixelQuota 1.3.2\r\n\r\n直接雙擊 PixelQuota.html 即可使用，不需要安裝、不需要終端機。\r\nDouble-click PixelQuota.html to use the app. No install or local server required.\r\n');
+fs.writeFileSync(path.join(dist,'START-HERE.txt'),'PixelQuota 1.3.3\r\n\r\n直接雙擊 PixelQuota.html 即可使用，不需要安裝、不需要終端機。\r\nDouble-click PixelQuota.html to use the app. No install or local server required.\r\n');
 
 const pages=[
   ['compress-image-to-20kb','Compress Image to 20KB - PixelQuota','Compress JPG, PNG, WebP, AVIF, or HEIC under 20KB in your browser. No upload, no account, no watermark.'],

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.3 — 2026-09-17
+
+- Fixed the empty red failure banner appearing beneath successful before/after previews.
+- Added regression coverage to ensure successful results keep the failure message fully hidden.
+
 ## 1.3.2 — 2026-09-17
 
 - Moved the processed-image list beside the large before/after preview on desktop for a denser, cleaner result workspace.
