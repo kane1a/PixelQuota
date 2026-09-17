@@ -79,21 +79,23 @@
             <div id="emptyResults" class="empty-results"><span class="empty-ring"></span><h3 data-i18n="emptyResultsTitle">No images yet</h3><p data-i18n="emptyResultsBody">Add one or more images to see the processed files here.</p></div>
             <section id="resultsSection" class="results-section" hidden aria-live="polite">
               <div class="results-heading"><div><p data-i18n="results">RESULTS</p><h3 id="resultsSummary" data-i18n="queuedTitle">Queued for processing.</h3></div><button id="downloadAllBtn" class="button secondary compact" type="button" disabled data-i18n="downloadAll">Download ZIP</button></div>
-              <section id="comparisonPanel" class="comparison-panel" hidden aria-labelledby="comparisonTitle">
-                <div class="comparison-copy"><div><p data-i18n="compareLabel">QUALITY PREVIEW</p><h3 id="comparisonTitle" data-i18n="compareTitle">Original vs compressed</h3></div><span data-i18n="compareHint">Drag across the image to compare quality.</span></div>
-                <div id="comparisonStage" class="comparison-stage" style="--compare-position:50%">
-                  <img id="compareOriginal" class="comparison-image comparison-original" alt="" />
-                  <div id="compareOutputMask" class="comparison-output-mask"><img id="compareOutput" class="comparison-image comparison-output" alt="" /></div>
-                  <div class="comparison-badge original-badge"><span data-i18n="original">Original</span><strong id="compareOriginalSize">—</strong></div>
-                  <div id="compareOutputBadge" class="comparison-badge output-badge"><span data-i18n="compressed">Compressed</span><strong id="compareOutputSize">—</strong></div>
-                  <div id="compareDivider" class="comparison-divider"><span aria-hidden="true">↔</span></div>
-                  <input id="compareRange" class="comparison-range" type="range" min="0" max="100" value="50" aria-label="Original and compressed comparison" />
-                  <div id="compareUnavailable" class="comparison-unavailable" hidden data-i18n="previewUnavailable">Preview unavailable for this file format.</div>
-                </div>
-                <div class="comparison-meta"><div><strong id="compareFilename">—</strong><span id="compareDimensions">—</span></div><div class="comparison-stats"><span id="compareSaving">—</span><span id="compareStatus" class="status pending">—</span></div></div>
-                <div id="compareFailure" class="comparison-failure" hidden><strong>!</strong><span id="compareFailureText"></span></div>
-              </section>
-              <div id="resultList" class="result-list"></div>
+              <div class="results-workspace">
+                <section id="comparisonPanel" class="comparison-panel" hidden aria-labelledby="comparisonTitle">
+                  <div class="comparison-copy"><div><p data-i18n="compareLabel">QUALITY PREVIEW</p><h3 id="comparisonTitle" data-i18n="compareTitle">Original vs compressed</h3></div><span data-i18n="compareHint">Drag across the image to compare quality.</span></div>
+                  <div id="comparisonStage" class="comparison-stage" style="--compare-position:50%">
+                    <img id="compareOriginal" class="comparison-image comparison-original" alt="" />
+                    <div id="compareOutputMask" class="comparison-output-mask"><img id="compareOutput" class="comparison-image comparison-output" alt="" /></div>
+                    <div class="comparison-badge original-badge"><span data-i18n="original">Original</span><strong id="compareOriginalSize">—</strong></div>
+                    <div id="compareOutputBadge" class="comparison-badge output-badge"><span data-i18n="compressed">Compressed</span><strong id="compareOutputSize">—</strong></div>
+                    <div id="compareDivider" class="comparison-divider"><span aria-hidden="true">↔</span></div>
+                    <input id="compareRange" class="comparison-range" type="range" min="0" max="100" value="50" aria-label="Original and compressed comparison" />
+                    <div id="compareUnavailable" class="comparison-unavailable" hidden data-i18n="previewUnavailable">Preview unavailable for this file format.</div>
+                  </div>
+                  <div class="comparison-meta"><div><strong id="compareFilename">—</strong><span id="compareDimensions">—</span></div><div class="comparison-stats"><span id="compareSaving">—</span><span id="compareStatus" class="status pending">—</span></div></div>
+                  <div id="compareFailure" class="comparison-failure" hidden><strong>!</strong><span id="compareFailureText"></span></div>
+                </section>
+                <div id="resultList" class="result-list" aria-label="Processed images"></div>
+              </div>
             </section>
           </section>
         </div>

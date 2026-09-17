@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.2 — 2026-09-17
+
+- Moved the processed-image list beside the large before/after preview on desktop for a denser, cleaner result workspace.
+- Added a fixed-height, vertically scrollable result list for larger batches.
+- Kept the selected-file interaction intact: choosing a result row updates the large comparison preview.
+- Preserved the stacked preview-then-list layout on tablets and phones.
+
 ## 1.3.1 — 2026-09-17
 
 - Added a draggable Original / Compressed comparison as the primary result preview.
