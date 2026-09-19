@@ -2,8 +2,37 @@ const HEIC_RE = /\.(heic|heif)$/i;
 
 function toBlob(canvas, type, quality) {
   return new Promise((resolve, reject) => {
-    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Encoder returned no data')), type, quality);
+    canvas.toBlob(blob => {
+      if(!blob)return reject(new Error('encode_failed:no_data'));
+      if(type!=='image/png'&&blob.type!==type)return reject(new Error(`encode_unsupported:${type}`));
+      resolve(blob);
+    }, type, quality);
   });
+}
+
+function writeAscii(view,offset,text){for(let i=0;i<text.length;i++)view.setUint8(offset+i,text.charCodeAt(i));}
+function encodeBmp(canvas){
+  const width=canvas.width,height=canvas.height,rowBytes=width*4,pixelBytes=rowBytes*height,header=54;
+  const buffer=new ArrayBuffer(header+pixelBytes),view=new DataView(buffer);
+  writeAscii(view,0,'BM');view.setUint32(2,header+pixelBytes,true);view.setUint32(10,header,true);
+  view.setUint32(14,40,true);view.setInt32(18,width,true);view.setInt32(22,height,true);view.setUint16(26,1,true);view.setUint16(28,32,true);view.setUint32(30,0,true);view.setUint32(34,pixelBytes,true);view.setInt32(38,2835,true);view.setInt32(42,2835,true);
+  const src=canvas.getContext('2d',{willReadFrequently:true}).getImageData(0,0,width,height).data;
+  let out=header;
+  for(let y=height-1;y>=0;y--){
+    const row=y*width*4;
+    for(let x=0;x<width;x++){
+      const i=row+x*4;
+      view.setUint8(out++,src[i+2]);view.setUint8(out++,src[i+1]);view.setUint8(out++,src[i]);view.setUint8(out++,255);
+    }
+  }
+  return new Blob([buffer],{type:'image/bmp'});
+}
+
+export async function detectEncoderSupport(type){
+  if(type==='image/bmp')return true;
+  if(!['image/jpeg','image/png','image/webp','image/avif'].includes(type))return false;
+  const canvas=document.createElement('canvas');canvas.width=2;canvas.height=2;
+  try{const blob=await toBlob(canvas,type,.9);return blob.type===type;}catch{return false;}
 }
 
 async function decodeWithImage(blob) {
@@ -108,15 +137,31 @@ async function bestPng(canvas, targetBytes) {
   return { fits:blob.size <= targetBytes, blob, quality:1 };
 }
 
+async function bestBmp(canvas,targetBytes){
+  const blob=encodeBmp(canvas);
+  return{fits:blob.size<=targetBytes,blob,quality:1};
+}
+
+function sourceType(file,sourceExt){
+  if(file.type&&/^image\/(jpeg|png|webp|avif|bmp)$/.test(file.type))return file.type;
+  return sourceExt==='png'?'image/png':sourceExt==='webp'?'image/webp':sourceExt==='avif'?'image/avif':sourceExt==='bmp'?'image/bmp':/^jpe?g$/.test(sourceExt)?'image/jpeg':'';
+}
+function extensionForType(type){return type==='image/png'?'png':type==='image/webp'?'webp':type==='image/avif'?'avif':type==='image/bmp'?'bmp':'jpg';}
+async function encodeAtQuality(canvas,type,quality=.98){
+  if(type==='image/bmp')return encodeBmp(canvas);
+  return toBlob(canvas,type,type==='image/png'?undefined:quality);
+}
+
 export async function compressImage(file, opts, onProgress=()=>{}) {
   const image = await decodeFile(file);
   const src = sourceDimensions(image);
   const transparency = hasTransparency(image);
-  const targetBytes = Math.max(3000, Math.floor(Number(opts.targetKb || 200) * 1000 * 0.98));
+  const compressionMode=opts.compressionMode==='convert'?'convert':'limit';
+  const targetBytes = compressionMode==='convert'?Number.POSITIVE_INFINITY:Math.max(3000, Math.floor(Number(opts.targetKb || 200) * 1000 * 0.98));
   const planned = plannedDimensions(image, opts);
   const sourceExt = (file.name.match(/\.([^.]+)$/)?.[1] || 'jpg').toLowerCase();
   const isHeic = HEIC_RE.test(file.name) || /heic|heif/i.test(file.type);
-  if (opts.outputFormat === 'auto' && opts.stripMetadata === false && !isHeic && !planned.exact && planned.width === src.width && planned.height === src.height && file.size <= targetBytes) {
+  if (compressionMode==='limit'&&opts.outputFormat === 'auto' && opts.stripMetadata === false && !isHeic && !planned.exact && planned.width === src.width && planned.height === src.height && file.size <= targetBytes) {
     onProgress(100);
     return {
       blob:file,
@@ -135,16 +180,44 @@ export async function compressImage(file, opts, onProgress=()=>{}) {
     };
   }
   let type = opts.outputFormat;
-  if (type === 'auto') type = transparency ? 'image/webp' : 'image/jpeg';
-  const extension = type === 'image/png' ? 'png' : type === 'image/webp' ? 'webp' : 'jpg';
+  if (type === 'auto'){
+    const originalType=sourceType(file,sourceExt);
+    type=compressionMode==='convert'&&originalType&&!isHeic?originalType:(transparency ? 'image/webp' : 'image/jpeg');
+  }
+  if(!['image/jpeg','image/png','image/webp','image/avif','image/bmp'].includes(type))throw new Error(`encode_unsupported:${type}`);
+  if(type==='image/avif'&&!(await detectEncoderSupport(type)))throw new Error('encode_unsupported:image/avif');
+  const extension = extensionForType(type);
   let dims = planned;
   let attempt = 0;
   let encoded = null;
 
+  if(compressionMode==='convert'){
+    onProgress(20);
+    const canvas=draw(image,dims,dims.exact);
+    const blob=await encodeAtQuality(canvas,type,.98);
+    onProgress(100);
+    return{
+      blob,
+      outputName:file.name.replace(/\.[^.]+$/, '') + `_converted.${extension}`,
+      outputType:type,
+      quality:type==='image/png'||type==='image/bmp'?1:.98,
+      metTarget:true,
+      targetBytes,
+      originalSize:file.size,
+      originalWidth:src.width,
+      originalHeight:src.height,
+      outputWidth:dims.width,
+      outputHeight:dims.height,
+      sourceName:file.name,
+      operation:'convert',
+      conversionOnly:true
+    };
+  }
+
   while (attempt < 14) {
     onProgress(Math.min(92, 10 + attempt*6));
     const canvas = draw(image, dims, dims.exact);
-    encoded = type === 'image/png' ? await bestPng(canvas,targetBytes) : await bestLossy(canvas,type,targetBytes);
+    encoded = type === 'image/png' ? await bestPng(canvas,targetBytes) : type==='image/bmp'?await bestBmp(canvas,targetBytes):await bestLossy(canvas,type,targetBytes);
     if (encoded.fits) break;
     if (dims.exact) break;
     const ratio = Math.sqrt(targetBytes/Math.max(encoded.blob.size,1));

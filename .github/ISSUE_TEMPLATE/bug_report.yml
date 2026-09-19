@@ -21,15 +21,28 @@ body:
       placeholder: Windows 11, macOS, Android, iOS...
     validations:
       required: true
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Tool
+      options:
+        - Compress / Convert
+        - Watermark
+        - Redact
+        - Social Crop
+        - Remove Background
+        - Shared UI / localization
+    validations:
+      required: true
   - type: textarea
     id: steps
     attributes:
       label: Steps to reproduce
-      description: Include input format, requested KB, output format, and dimensions when relevant.
+      description: Include the relevant tool settings. For AI background removal, mention model/cache state and WebGPU/WASM if shown.
       placeholder: |
-        1. Add a non-sensitive JPG...
-        2. Set 100 KB...
-        3. Click Process...
+        1. Add a non-sensitive image...
+        2. Choose the tool/settings...
+        3. Process or export...
     validations:
       required: true
   - type: textarea

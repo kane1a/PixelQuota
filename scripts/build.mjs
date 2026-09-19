@@ -5,6 +5,7 @@ import { build } from 'esbuild';
 const root=process.cwd();
 const dist=path.join(root,'dist');
 const assets=path.join(dist,'assets');
+const {version}=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8').replace(/^\uFEFF/,''));
 fs.rmSync(dist,{recursive:true,force:true});
 fs.mkdirSync(assets,{recursive:true});
 
@@ -32,13 +33,13 @@ const css=fs.existsSync(cssPath)?fs.readFileSync(cssPath,'utf8'):'';
 const configPath=path.join(dist,'config.js');
 const config=fs.existsSync(configPath)?fs.readFileSync(configPath,'utf8').replace(/<\/script/gi,'<\\/script'):'';
 
-if(css) html=html.replace('</head>',`<style>${css}</style>\n</head>`);
-html=html.replace(/<script src="\.\/config\.js"><\/script>/,config?`<script>${config}</script>`:'');
-html=html.replace(/<script type="module" src="\/src\/main\.js"><\/script>/,`<script type="module">${js}</script>`);
+if(css) html=html.replace('</head>',()=>`<style>${css}</style>\n</head>`);
+html=html.replace(/<script src="\.\/config\.js"><\/script>/,()=>config?`<script>${config}</script>`:'');
+html=html.replace(/<script type="module" src="\/src\/main\.js"><\/script>/,()=>`<script type="module">${js}</script>`);
 
 fs.writeFileSync(path.join(dist,'index.html'),html);
 fs.writeFileSync(path.join(dist,'PixelQuota.html'),html);
-fs.writeFileSync(path.join(dist,'START-HERE.txt'),'PixelQuota 1.3.3\r\n\r\n直接雙擊 PixelQuota.html 即可使用，不需要安裝、不需要終端機。\r\nDouble-click PixelQuota.html to use the app. No install or local server required.\r\n');
+fs.writeFileSync(path.join(dist,'START-HERE.txt'),`PixelQuota ${version}\r\n\r\n直接雙擊 PixelQuota.html 即可使用，不需要安裝、不需要終端機。\r\nDouble-click PixelQuota.html to use the app. No install or local server required.\r\n`);
 
 const pages=[
   ['compress-image-to-20kb','Compress Image to 20KB - PixelQuota','Compress JPG, PNG, WebP, AVIF, or HEIC under 20KB in your browser. No upload, no account, no watermark.'],

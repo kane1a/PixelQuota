@@ -14,4 +14,4 @@ PixelQuota is intended to process selected image bytes locally in the browser. A
 
 ## Privacy boundary
 
-The project has no image-upload endpoint. Optional advertising or sponsor integrations must remain isolated from selected image bytes.
+The project has no image-upload endpoint. AI background removal may download model files, but those requests must remain independent from selected image bytes: images must never be attached to model downloads or sent to a remote inference service. Optional advertising or sponsor integrations must also remain isolated from selected image bytes.
