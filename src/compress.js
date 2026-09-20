@@ -1,3 +1,5 @@
+import { encodeAvif, detectAvifEncoderSupport } from './avif.js';
+
 const HEIC_RE = /\.(heic|heif)$/i;
 
 function toBlob(canvas, type, quality) {
@@ -30,7 +32,8 @@ function encodeBmp(canvas){
 
 export async function detectEncoderSupport(type){
   if(type==='image/bmp')return true;
-  if(!['image/jpeg','image/png','image/webp','image/avif'].includes(type))return false;
+  if(type==='image/avif')return detectAvifEncoderSupport();
+  if(!['image/jpeg','image/png','image/webp'].includes(type))return false;
   const canvas=document.createElement('canvas');canvas.width=2;canvas.height=2;
   try{const blob=await toBlob(canvas,type,.9);return blob.type===type;}catch{return false;}
 }
@@ -116,16 +119,21 @@ function draw(image, dims, exact) {
   return canvas;
 }
 
+async function encodeLossy(canvas,type,quality){
+  if(type==='image/avif')return encodeAvif(canvas,quality);
+  return toBlob(canvas,type,quality);
+}
+
 async function bestLossy(canvas, type, targetBytes) {
   let low = 0.28, high = 0.98, best = null, bestQ = low;
-  const lowBlob = await toBlob(canvas, type, low);
+  const lowBlob = await encodeLossy(canvas, type, low);
   if (lowBlob.size > targetBytes) return { fits:false, blob:lowBlob, quality:low };
-  const highBlob = await toBlob(canvas, type, high);
+  const highBlob = await encodeLossy(canvas, type, high);
   if (highBlob.size <= targetBytes) return { fits:true, blob:highBlob, quality:high };
   best = lowBlob;
   for (let i=0;i<9;i++) {
     const q = (low+high)/2;
-    const blob = await toBlob(canvas, type, q);
+    const blob = await encodeLossy(canvas, type, q);
     if (blob.size <= targetBytes) { best = blob; bestQ = q; low = q; }
     else high = q;
   }
@@ -149,6 +157,7 @@ function sourceType(file,sourceExt){
 function extensionForType(type){return type==='image/png'?'png':type==='image/webp'?'webp':type==='image/avif'?'avif':type==='image/bmp'?'bmp':'jpg';}
 async function encodeAtQuality(canvas,type,quality=.98){
   if(type==='image/bmp')return encodeBmp(canvas);
+  if(type==='image/avif')return encodeAvif(canvas,quality);
   return toBlob(canvas,type,type==='image/png'?undefined:quality);
 }
 

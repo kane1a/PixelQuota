@@ -54,7 +54,21 @@ function initPageMode() {
   }
 }
 
+function applyRouteMeta() {
+  if (state.pageMode==='preset') {
+    const limit=formatLimit(state.pagePresetKb);
+    setDocumentMeta(template('presetPageTitle',{limit}),template('presetPageDescription',{limit}));
+    return;
+  }
+  if (state.pageMode==='heic') {
+    setDocumentMeta(t('heicPageTitle'),t('heicPageDescription'));
+    return;
+  }
+  setDocumentMeta(t('pageTitle'),t('pageDescription'));
+}
+
 function applyPageCopy() {
+  applyRouteMeta();
   if (state.toolMode==='watermark') {
     document.querySelector('.hero-section .eyebrow').textContent=t('watermarkEyebrow');
     setHeroLines(t('watermarkHeroTitle'),'');
@@ -62,7 +76,6 @@ function applyPageCopy() {
     $('seoHeading').textContent=t('watermarkSeoHeading');
     $('seoParagraph1').textContent=t('watermarkSeoParagraph1');
     $('seoParagraph2').textContent=t('watermarkSeoParagraph2');
-    setDocumentMeta(t('watermarkPageTitle'),t('watermarkPageDescription'));
     return;
   }
   if (state.toolMode==='redact') {
@@ -72,7 +85,6 @@ function applyPageCopy() {
     $('seoHeading').textContent=t('redactSeoHeading');
     $('seoParagraph1').textContent=t('redactSeoParagraph1');
     $('seoParagraph2').textContent=t('redactSeoParagraph2');
-    setDocumentMeta(t('redactPageTitle'),t('redactPageDescription'));
     return;
   }
   if (state.toolMode==='crop') {
@@ -82,7 +94,6 @@ function applyPageCopy() {
     $('seoHeading').textContent=t('cropSeoHeading');
     $('seoParagraph1').textContent=t('cropSeoParagraph1');
     $('seoParagraph2').textContent=t('cropSeoParagraph2');
-    setDocumentMeta(t('cropPageTitle'),t('cropPageDescription'));
     return;
   }
   if (state.toolMode==='remove-bg') {
@@ -92,7 +103,6 @@ function applyPageCopy() {
     $('seoHeading').textContent=t('bgSeoHeading');
     $('seoParagraph1').textContent=t('bgSeoParagraph1');
     $('seoParagraph2').textContent=t('bgSeoParagraph2');
-    setDocumentMeta(t('bgPageTitle'),t('bgPageDescription'));
     return;
   }
   document.querySelector('.hero-section .eyebrow').textContent=t('eyebrow');
@@ -103,7 +113,6 @@ function applyPageCopy() {
     $('seoHeading').textContent=template('presetSeoHeading',{limit});
     $('seoParagraph1').textContent=template('presetSeoParagraph1',{limit});
     $('seoParagraph2').textContent=t('seoParagraph2');
-    setDocumentMeta(template('presetPageTitle',{limit}),template('presetPageDescription',{limit}));
     return;
   }
   if (state.pageMode==='heic') {
@@ -112,7 +121,6 @@ function applyPageCopy() {
     $('seoHeading').textContent=t('seoHeading');
     $('seoParagraph1').textContent=t('seoParagraph1');
     $('seoParagraph2').textContent=t('seoParagraph2');
-    setDocumentMeta(t('heicPageTitle'),t('heicPageDescription'));
     return;
   }
   const lines=t('heroTitle').split('\n');
@@ -121,7 +129,6 @@ function applyPageCopy() {
   $('seoHeading').textContent=t('seoHeading');
   $('seoParagraph1').textContent=t('seoParagraph1');
   $('seoParagraph2').textContent=t('seoParagraph2');
-  setDocumentMeta(t('pageTitle'),t('pageDescription'));
 }
 
 function syncLanguageMenu(){

@@ -16,6 +16,7 @@ await build({
   format:'esm',
   platform:'browser',
   target:['es2020'],
+  loader:{'.wasm':'binary'},
   outfile:path.join(assets,'app.js'),
   logLevel:'info'
 });

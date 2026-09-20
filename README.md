@@ -51,9 +51,9 @@ BiRefNet Lite predicts a fixed-size alpha matte. PixelQuota reuses that matte fo
 
 **Input:** common browser-decodable image formats, plus explicit HEIC / HEIF conversion support. Current browsers typically cover JPG, PNG, WebP, AVIF, and BMP; actual decode support can vary by browser.
 
-**Output:** JPG, PNG, WebP, BMP, and AVIF when the current browser can really encode AVIF. PixelQuota checks AVIF capability instead of silently returning another format. Automatic output selection is also available.
+**Output:** JPG, PNG, WebP, BMP, and AVIF. AVIF export uses a bundled local WebAssembly encoder instead of depending on browser canvas AVIF support, so it remains a real AVIF file without uploading image bytes or silently falling back to another format. Automatic output selection is also available.
 
-HEIC / HEIF decoding uses `heic2any`. ZIP creation uses `fflate`.
+HEIC / HEIF decoding uses `heic2any`. AVIF encoding uses the bundled `@jsquash/avif` WebAssembly codec. ZIP creation uses `fflate`.
 
 ## Privacy
 

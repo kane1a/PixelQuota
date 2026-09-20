@@ -51,9 +51,9 @@ BiRefNet Lite 會產生固定尺寸的 alpha matte。PixelQuota 會重用同一�
 
 **輸入：** 支援瀏覽器可解碼的常見圖片格式，並另外提供 HEIC / HEIF 轉換支援。目前主流瀏覽器通常可處理 JPG、PNG、WebP、AVIF、BMP；實際解碼能力仍可能依瀏覽器而不同。
 
-**輸出：** JPG、PNG、WebP、BMP，以及在目前瀏覽器真的能編碼時才啟用的 AVIF。PixelQuota 會先檢查 AVIF 能力，不會不支援時偷偷輸出成別的格式；也可以使用自動格式。
+**輸出：** JPG、PNG、WebP、BMP、AVIF。AVIF 改用內建的本機 WebAssembly 編碼器，不再依賴瀏覽器 Canvas 是否原生支援 AVIF；圖片 bytes 不會上傳，也不會在失敗時偷偷改成其他格式。另提供自動格式。
 
-HEIC / HEIF 解碼使用 `heic2any`，ZIP 打包使用 `fflate`。
+HEIC / HEIF 解碼使用 `heic2any`，AVIF 編碼使用內建的 `@jsquash/avif` WebAssembly codec，ZIP 打包使用 `fflate`。
 
 ## 隱私
 

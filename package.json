@@ -1,6 +1,6 @@
 {
   "name": "pixelquota",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Privacy-first browser image toolkit for compression, conversion, watermarking, redaction, social cropping, and background removal.",
   "license": "MIT",
   "private": true,
@@ -12,6 +12,7 @@
     "test:e2e": "node tests/e2e.mjs"
   },
   "dependencies": {
+    "@jsquash/avif": "^2.1.1",
     "fflate": "^0.8.2",
     "heic2any": "^0.0.4"
   },

@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.1 — 2026-09-20
+
+### Compression and conversion
+
+- Replaced browser-dependent Canvas AVIF output with a bundled local WebAssembly AVIF encoder, so AVIF export no longer depends on native browser encoding support and never requires uploading image bytes.
+- Added regression coverage for real AVIF signatures, conversion-only output, exact-KB AVIF compression, and zero runtime AVIF WASM network requests.
+
+### UX
+
+- Kept the browser tab title stable while switching between Compress, Watermark, Redact, Social Crop, and Remove Background.
+- Preserved dedicated titles for exact-KB and HEIC-to-JPG landing-page routes while tool switching no longer rewrites page metadata.
+
+
 ## 1.4.0 — 2026-09-19
 
 ### New tools
