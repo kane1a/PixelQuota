@@ -549,7 +549,7 @@ export async function vectorizeImage(file,options={},onProgress=()=>{}){
     autoStrategy:strategy,
     autoLabel:strategy==='layers'?layerLabel(layered):requestedPreset==='auto'?(['mono-curve','mono-native'].includes(strategy)?`${analysis.label} · 高品質曲線重建`:analysis.label):'手動設定',
     autoPalette:strategy==='layers'?layered.colors.filter(c=>c.startsWith('#')):requestedPreset==='auto'&&analysis.palette?paletteCss(analysis.palette):[],
-    layerInfo:strategy==='layers'?{layers:layered.layerCount,gradients:layered.gradientCount,grain:layered.grainCount,raster:layered.rasterCount,hairlines:layered.hairlineCount,background:layered.background}:null,
+    layerInfo:strategy==='layers'?{inkColors:layered.colors.slice(layered.background==='transparent'||layered.background==='none'?0:1).length,layers:layered.layerCount,gradients:layered.gradientCount,grain:layered.grainCount,raster:layered.rasterCount,hairlines:layered.hairlineCount,background:layered.background}:null,
     sourceColorCount:analysis.sourceColors,
     grayscaleRatio:analysis.grayscaleRatio,
     candidateCount,

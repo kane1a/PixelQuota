@@ -3,12 +3,19 @@ import { decodeFile } from './compress.js';
 export const CROP_PRESETS={
   'ig-tall':{width:1080,height:1440,label:'Instagram Feed 3:4'},
   'ig-portrait':{width:1080,height:1350,label:'Instagram Feed 4:5'},
-  'ig-story':{width:1080,height:1920,label:'Instagram Story / Reel 9:16'},
+  'ig-square':{width:1080,height:1080,label:'Instagram Feed 1:1'},
+  'ig-story':{width:1080,height:1920,label:'Instagram Story / Reels 9:16'},
+  'ig-reel-cover':{width:1080,height:1440,label:'Instagram Reels Cover 3:4'},
   'x-header':{width:1500,height:500,label:'X Header'},
   'youtube-thumb':{width:1280,height:720,label:'YouTube Thumbnail 16:9'},
   'facebook-cover':{width:851,height:315,label:'Facebook Page Cover'},
   'linkedin-cover':{width:1512,height:256,label:'LinkedIn Page Cover'},
-  'linkedin-link':{width:1200,height:627,label:'LinkedIn Link Preview'}
+  'linkedin-link':{width:1200,height:627,label:'LinkedIn Link Preview'},
+  'threads-portrait':{width:1080,height:1350,label:'Threads Post 4:5'},
+  'threads-square':{width:1080,height:1080,label:'Threads Post 1:1'},
+  'tiktok-vertical':{width:1080,height:1920,label:'TikTok Photo / Cover 9:16'},
+  'pinterest-pin':{width:1000,height:1500,label:'Pinterest Pin 2:3'},
+  'pinterest-square':{width:1000,height:1000,label:'Pinterest Pin 1:1'}
 };
 
 const decodeCache=new Map();
