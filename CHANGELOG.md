@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.4.2 — 2026-09-25
+
+### Fixes
+
+- Changing a setting while a batch is processing no longer commits results built with the old settings; the run stops and asks to be run again.
+- Automatic output format now checks every pixel for transparency, so images with small transparent areas are no longer exported as JPG.
+- Exporting a transparent image as JPG now fills transparent areas with white instead of black.
+- Unchecking "Remove EXIF and location" now keeps the original EXIF block on JPG-to-JPG output (orientation tag reset, since pixels are already rotated). Other output formats still drop metadata, and EXIF is dropped when it would take more than half of a KB limit.
+- Images or output sizes beyond browser canvas limits now fail with a clear message instead of a generic error.
+- ZIP downloads no longer drop files when two outputs share a name; duplicates get a numbered suffix.
+- Released decoded image memory after compression and when removing files from Remove Background.
+
+### Accessibility
+
+- Tool, format, resize, redaction, crop and engine button groups now expose the current selection with `aria-pressed`.
+- The Privacy page language menu now exposes its options and current selection to assistive technology.
+
+### Build
+
+- Declared `esbuild` as a direct dev dependency; the build script imports it and previously relied on Vite installing it indirectly, which broke the Vite 8 upgrade.
+- Removed the unused `scripts/postbuild.mjs`, which no longer matched the inlined build output.
+
 ## 1.4.1 — 2026-09-20
 
 ### Compression and conversion
