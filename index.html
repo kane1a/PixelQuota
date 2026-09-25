@@ -193,7 +193,7 @@
               <div id="vectorSettings" class="vector-settings" hidden>
                 <div class="vector-pro-card smart">
                   <div class="vector-pro-head"><div><span>SVG PRO MAX · SMART VECTORIZE</span><strong>一鍵轉 SVG，參數交給 PixelQuota。</strong></div><b>測試版</b></div>
-                  <p>先分析顏色數量、抗鋸齒、透明度與幾何，再自動選擇向量化策略。Logo 會優先鎖定原始主色，避免把抗鋸齒灰階誤當成新顏色。</p>
+                  <p>分層引擎：用抗鋸齒像素還原次像素邊緣，每個顏色只輸出一個 path，直線拉直、尖角保留；線性與放射漸層會轉成 SVG 漸層。</p>
                   <div id="vectorAutoSummary" class="vector-auto-summary"><span>自動模式</span><b>等待圖片分析</b><small>大多數情況不需要調整任何參數。</small></div>
                 </div>
                 <details id="vectorAdvanced" class="vector-advanced">
@@ -209,6 +209,8 @@
                     <div class="vector-toggle-grid">
                       <label><input id="vectorPreserveCorners" type="checkbox" checked /><span><b>保留尖角 / 直角</b><small>避免本來有稜有角的圖形被強制圓滑</small></span></label>
                       <label><input id="vectorStraightLines" type="checkbox" checked /><span><b>直線重建</b><small>把足夠接近直線的曲線重新拉直</small></span></label>
+                      <label><input id="vectorDropBackground" type="checkbox" /><span><b>移除純色背景</b><small>只輸出 Logo 本體，背景變透明</small></span></label>
+                      <label><input id="vectorTextureRaster" type="checkbox" /><span><b>顆粒質感保留原圖</b><small>漸層上的顆粒、雜訊改嵌入點陣，外觀一致但檔案較大</small></span></label>
                     </div>
                     <div class="watermark-range-row vector-range"><label for="vectorDetail"><span>細節保留</span><output id="vectorDetailValue">58%</output></label><input id="vectorDetail" type="range" min="0" max="100" step="1" value="58" /><p class="helper">手動模式才需要調。越高會保留更多小圖形與顏色。</p></div>
                     <div class="watermark-range-row vector-range"><label for="vectorSimplify"><span>幾何簡化</span><output id="vectorSimplifyValue">62%</output></label><input id="vectorSimplify" type="range" min="0" max="100" step="1" value="62" /><p class="helper">手動模式才需要調。提高後會更積極合併共線節點與近似曲線。</p></div>

@@ -207,7 +207,9 @@ function vectorOptions(){
     simplify:Number($('vectorSimplify')?.value||state.vectorSimplify),
     snap:Number($('vectorSnap')?.value||state.vectorSnap),
     preserveCorners:$('vectorPreserveCorners')?.checked!==false,
-    straightLines:$('vectorStraightLines')?.checked!==false
+    straightLines:$('vectorStraightLines')?.checked!==false,
+    dropBackground:$('vectorDropBackground')?.checked===true,
+    textureMode:$('vectorTextureRaster')?.checked?'raster':'fit'
   };
 }
 function vectorSettingsKey(opts=vectorOptions()){return vectorOptionsKey(opts);}
@@ -219,7 +221,7 @@ function updateVectorStats(result=null){
   $('vectorSimilarityStat').textContent=vector?`${vector.similarity}%`:'—';
   $('vectorSizeStat').textContent=vector?formatBytes(vector.blob.size):'—';
   $('vectorPathRaw').textContent=vector?(vector.topologyLocked?`拓撲鎖定 · ${vector.pathCount} paths`:`描邊初稿 ${vector.rawPathCount} → 清理後 ${vector.pathCount}`):'等待轉換';
-  $('vectorNodeRaw').textContent=vector?(vector.vectorEngine==='pixelquota-monocurve'?`曲線 ${vector.curveCount} · 直線 ${vector.lineCount}`:`節點 ${vector.rawNodeCount} → ${vector.nodeCount}`):'等待轉換';
+  $('vectorNodeRaw').textContent=vector?(vector.vectorEngine==='pixelquota-layers'?`曲線 ${vector.curveCount} · 直線 ${vector.lineCount}`:vector.vectorEngine==='pixelquota-monocurve'?`曲線 ${vector.curveCount} · 直線 ${vector.lineCount}`:`節點 ${vector.rawNodeCount} → ${vector.nodeCount}`):'等待轉換';
   const summary=$('vectorAutoSummary');
   if(summary){
     const label=summary.querySelector('span'),title=summary.querySelector('b'),note=summary.querySelector('small');
@@ -228,7 +230,8 @@ function updateVectorStats(result=null){
       title.textContent=vector.autoLabel||'SVG 已完成';
       const palette=vector.autoPalette?.length?`鎖定主色：${vector.autoPalette.join(' / ')} · `:'';
       const engine=vector.curveEngineLabel?`曲線引擎：${vector.curveEngineLabel} · `:'';
-      note.textContent=`${palette}${engine}${vector.candidateCount||1} 種候選 · 原圖取樣色 ${vector.sourceColorCount??'—'} 色`;
+      const li=vector.layerInfo;
+      note.textContent=li?`${palette}${li.layers} 層${li.gradients?` · ${li.gradients} 組漸層`:''}${li.hairlines?` · ${li.hairlines} 條細線`:''}${li.grain?` · ${li.grain} 區顆粒質感`:''}${li.raster?` · ${li.raster} 區保留點陣`:''} · 背景 ${li.background==='transparent'?'透明':li.background}`:`${palette}${engine}${vector.candidateCount||1} 種候選 · 原圖取樣色 ${vector.sourceColorCount??'—'} 色`;
     }else{
       label.textContent='自動模式';title.textContent='等待圖片分析';note.textContent='大多數情況不需要調整任何參數。';
     }
@@ -1373,6 +1376,8 @@ function bind(){
   }
   $('vectorPreserveCorners').onchange=vectorSettingsChanged;
   $('vectorStraightLines').onchange=vectorSettingsChanged;
+  if($('vectorDropBackground'))$('vectorDropBackground').onchange=vectorSettingsChanged;
+  if($('vectorTextureRaster'))$('vectorTextureRaster').onchange=vectorSettingsChanged;
   $('watermarkSubtoolSwitch').onclick=e=>{const b=e.target.closest('[data-watermark-panel]');if(b)setWatermarkPanel(b.dataset.watermarkPanel);};
   $('watermarkPresets').onclick=e=>{const b=e.target.closest('[data-watermark-preset]');if(b)applyWatermarkPreset(b.dataset.watermarkPreset);};
   $('watermarkAlignButtons').onclick=e=>{const b=e.target.closest('[data-align]');if(b)setWatermarkTextAlign(b.dataset.align);};

@@ -2,6 +2,7 @@ import ImageTracer from 'imagetracerjs';
 import { decodeFile } from './compress.js';
 import { CURVE_PROFILES, refitSvgCurves, scoreCurveCandidate } from './vector-curve.js';
 import { monoLogoCandidates } from './mono-logo.js';
+import { traceLayers } from './layer-trace.js';
 
 export const VECTOR_PRESETS={
   auto:{label:'Smart Auto',colors:12,maxEdge:1900,baseOmit:2,baseLine:0.55,baseCurve:0.55},
@@ -419,6 +420,12 @@ function tracerOptions(options={}){
   };
 }
 
+function layerLabel(r){
+  const ink=r.colors.slice(r.background==='transparent'||r.background==='none'?0:1);
+  const flat=ink.filter(c=>c.startsWith('#')).length,grad=r.gradientCount;
+  const kind=flat+grad<=1&&!grad?'單色 Logo':grad?`${flat} 色 + ${grad} 組漸層`:`${flat} 色分層`;
+  return `${kind} · 分層次像素描邊`;
+}
 export function vectorOptionsKey(options={}){
   return JSON.stringify({
     preset:options.preset||'auto',
@@ -426,7 +433,9 @@ export function vectorOptionsKey(options={}){
     simplify:Number(options.simplify??62),
     snap:Number(options.snap??72),
     preserveCorners:options.preserveCorners!==false,
-    straightLines:options.straightLines!==false
+    straightLines:options.straightLines!==false,
+    dropBackground:options.dropBackground===true,
+    textureMode:options.textureMode||'fit'
   });
 }
 
@@ -449,7 +458,23 @@ export async function vectorizeImage(file,options={},onProgress=()=>{}){
   const analysis=sourcePaletteAnalysis(imageData);
   let chosen,strategy='manual',candidateCount=1,candidateDiagnostics=[];
   const dimensions={width,height,sourceWidth:source.width,sourceHeight:source.height};
-  if(requestedPreset==='auto'){
+  // Layer engine: sub-pixel, colour-exact tracing for logos / flat art / clean gradients.
+  let layered=null;
+  if(requestedPreset==='auto'||requestedPreset==='logo'){
+    try{
+      const lossy=/jpe?g|webp|avif|heic/i.test(file.type||'')||/\.(jpe?g|webp|avif|heic)$/i.test(file.name||'');
+      layered=traceLayers(imageData,{sourceWidth:source.width,sourceHeight:source.height,lossy,dropBackground:options.dropBackground===true,gradientMode:options.textureMode==='raster'?'raster':'fit'});
+      candidateDiagnostics.push({engine:'pixelquota-layers',status:layered.status,reason:layered.reason,layers:layered.layerCount,pathCount:layered.pathCount,nodeCount:layered.nodeCount,ms:layered.ms});
+    }catch(error){candidateDiagnostics.push({engine:'pixelquota-layers',error:String(error?.message||error)});}
+    onProgress(40);
+  }
+  if(layered&&(layered.status==='ok'||requestedPreset==='logo'||options.textureMode==='raster')){
+    const doc=new DOMParser().parseFromString(layered.svg,'image/svg+xml'),stats=statsFromDocument(doc);
+    const quality=await svgQualityMetrics(layered.svg,imageData,width,height);
+    chosen={svg:layered.svg,rawStats:stats,cleanStats:{...stats,pathCount:layered.pathCount,nodeCount:layered.nodeCount,curveCount:layered.curveCount,lineCount:layered.lineCount},similarity:quality.similarity,edgeSimilarity:quality.edgeSimilarity,vectorEngine:'pixelquota-layers',curveProfile:'layers',curveProfileLabel:'分層次像素描邊'};
+    strategy='layers';
+    onProgress(80);
+  }else if(requestedPreset==='auto'){
     const smart=smartTracerOptions(options,analysis,{locked:!!analysis.palette});
     const locked=await traceVectorCandidate(imageData,smart.trace,smart.cleanup,dimensions);
     chosen=locked;strategy=analysis.palette?'palette-locked':'auto-illustration';
@@ -522,8 +547,9 @@ export async function vectorizeImage(file,options={},onProgress=()=>{}){
     svgText:svg,
     preset:requestedPreset,
     autoStrategy:strategy,
-    autoLabel:requestedPreset==='auto'?(['mono-curve','mono-native'].includes(strategy)?`${analysis.label} · 高品質曲線重建`:analysis.label):'手動設定',
-    autoPalette:requestedPreset==='auto'&&analysis.palette?paletteCss(analysis.palette):[],
+    autoLabel:strategy==='layers'?layerLabel(layered):requestedPreset==='auto'?(['mono-curve','mono-native'].includes(strategy)?`${analysis.label} · 高品質曲線重建`:analysis.label):'手動設定',
+    autoPalette:strategy==='layers'?layered.colors.filter(c=>c.startsWith('#')):requestedPreset==='auto'&&analysis.palette?paletteCss(analysis.palette):[],
+    layerInfo:strategy==='layers'?{layers:layered.layerCount,gradients:layered.gradientCount,grain:layered.grainCount,raster:layered.rasterCount,hairlines:layered.hairlineCount,background:layered.background}:null,
     sourceColorCount:analysis.sourceColors,
     grayscaleRatio:analysis.grayscaleRatio,
     candidateCount,
@@ -540,7 +566,7 @@ export async function vectorizeImage(file,options={},onProgress=()=>{}){
     curveCount:cleanStats.curveCount,
     lineCount:cleanStats.lineCount,
     rawLineCount:rawStats.lineCount,
-    topologyLocked:requestedPreset==='auto'&&analysis.kind==='mono-logo'&&['palette-locked','mono-curve','mono-native'].includes(strategy),
+    topologyLocked:strategy==='layers'||requestedPreset==='auto'&&analysis.kind==='mono-logo'&&['palette-locked','mono-curve','mono-native'].includes(strategy),
     similarity,
     edgeSimilarity:chosen.edgeSimilarity??similarity
   };
