@@ -52,7 +52,7 @@
       <section class="app-window" id="app" aria-labelledby="toolHeading">
         <div class="window-header">
           <div class="window-brand"><strong>PixelQuota</strong></div>
-          <div id="toolModeSwitch" class="tool-mode-switch" role="group" aria-label="Image tool"><button type="button" class="active" data-tool-mode="compress" data-i18n="modeCompress">Compress</button><button type="button" data-tool-mode="watermark" data-i18n="modeWatermark">Watermark</button><button type="button" data-tool-mode="redact" data-i18n="modeRedact">Redact</button><button type="button" data-tool-mode="crop" data-i18n="modeCrop">Social crop</button><button type="button" data-tool-mode="remove-bg" data-i18n="modeRemoveBg">Remove BG</button></div>
+          <div id="toolModeSwitch" class="tool-mode-switch" role="group" aria-label="Image tool"><button type="button" class="active" data-tool-mode="compress" data-i18n="modeCompress">Compress</button><button type="button" data-tool-mode="watermark" data-i18n="modeWatermark">Watermark</button><button type="button" data-tool-mode="redact" data-i18n="modeRedact">Redact</button><button type="button" data-tool-mode="crop" data-i18n="modeCrop">Social crop</button><button type="button" data-tool-mode="remove-bg" data-i18n="modeRemoveBg">Remove BG</button><button type="button" data-tool-mode="vectorize" title="SVG Pro Max 測試版">SVG Pro</button></div>
           <div class="window-security"><span class="local-dot"></span><span data-i18n="windowPrivate">Local processing · no image upload</span></div>
         </div>
 
@@ -189,6 +189,38 @@
                 </div>
                 <div id="bgSensitivityWrap" class="watermark-range-row background-sensitivity"><label for="bgSensitivity"><span data-i18n="bgSensitivity">Background sensitivity</span><output id="bgSensitivityValue">48%</output></label><input id="bgSensitivity" type="range" min="10" max="90" step="1" value="48" /><p class="helper" data-i18n="bgSensitivityHint">Higher values remove more colors similar to the sampled edge background.</p></div>
                 <div class="watermark-note background-note"><span>◇</span><p><b data-i18n="bgOutputTitle">Transparent PNG output</b><small data-i18n="bgOutputHelp">Export keeps the original pixel dimensions and writes transparency into a PNG file.</small></p></div>
+              </div>
+              <div id="vectorSettings" class="vector-settings" hidden>
+                <div class="vector-pro-card smart">
+                  <div class="vector-pro-head"><div><span>SVG PRO MAX · SMART VECTORIZE</span><strong>一鍵轉 SVG，參數交給 PixelQuota。</strong></div><b>測試版</b></div>
+                  <p>先分析顏色數量、抗鋸齒、透明度與幾何，再自動選擇向量化策略。Logo 會優先鎖定原始主色，避免把抗鋸齒灰階誤當成新顏色。</p>
+                  <div id="vectorAutoSummary" class="vector-auto-summary"><span>自動模式</span><b>等待圖片分析</b><small>大多數情況不需要調整任何參數。</small></div>
+                </div>
+                <details id="vectorAdvanced" class="vector-advanced">
+                  <summary><span>進階設定</span><small>只有自動結果不滿意時再調整</small></summary>
+                  <div class="vector-advanced-inner">
+                    <div class="section-label vector-section-label"><span>處理策略</span><small>預設建議保持「自動」</small></div>
+                    <div id="vectorPresetSwitch" class="vector-preset-switch" role="group" aria-label="SVG vector preset">
+                      <button type="button" class="active" data-vector-preset="auto"><b>智慧自動</b><small>自動判斷 Logo / 插畫 / 線稿</small></button>
+                      <button type="button" data-vector-preset="logo"><b>Logo / Icon</b><small>尖角、直線、少節點</small></button>
+                      <button type="button" data-vector-preset="illustration"><b>Illustration</b><small>保留較多色彩層次</small></button>
+                      <button type="button" data-vector-preset="line"><b>Line Art</b><small>黑白線稿與掃描圖</small></button>
+                    </div>
+                    <div class="vector-toggle-grid">
+                      <label><input id="vectorPreserveCorners" type="checkbox" checked /><span><b>保留尖角 / 直角</b><small>避免本來有稜有角的圖形被強制圓滑</small></span></label>
+                      <label><input id="vectorStraightLines" type="checkbox" checked /><span><b>直線重建</b><small>把足夠接近直線的曲線重新拉直</small></span></label>
+                    </div>
+                    <div class="watermark-range-row vector-range"><label for="vectorDetail"><span>細節保留</span><output id="vectorDetailValue">58%</output></label><input id="vectorDetail" type="range" min="0" max="100" step="1" value="58" /><p class="helper">手動模式才需要調。越高會保留更多小圖形與顏色。</p></div>
+                    <div class="watermark-range-row vector-range"><label for="vectorSimplify"><span>幾何簡化</span><output id="vectorSimplifyValue">62%</output></label><input id="vectorSimplify" type="range" min="0" max="100" step="1" value="62" /><p class="helper">手動模式才需要調。提高後會更積極合併共線節點與近似曲線。</p></div>
+                    <div class="watermark-range-row vector-range"><label for="vectorSnap"><span>幾何吸附</span><output id="vectorSnapValue">72%</output></label><input id="vectorSnap" type="range" min="0" max="100" step="1" value="72" /><p class="helper">手動模式才需要調。提高後更容易把接近水平 / 垂直的邊緣校正成真正直線。</p></div>
+                  </div>
+                </details>
+                <div id="vectorStats" class="vector-stats" aria-live="polite">
+                  <div><span>PATHS</span><b id="vectorPathStat">—</b><small id="vectorPathRaw">等待轉換</small></div>
+                  <div><span>NODES</span><b id="vectorNodeStat">—</b><small id="vectorNodeRaw">等待轉換</small></div>
+                  <div><span>SIMILARITY</span><b id="vectorSimilarityStat">—</b><small>重新 Rasterize 比對</small></div>
+                  <div><span>SVG SIZE</span><b id="vectorSizeStat">—</b><small>實際輸出 bytes</small></div>
+                </div>
               </div>
               <button id="processBtn" class="process-button" type="button" disabled><span><b data-i18n="processButton">Fit images to the limit</b><small id="queueText" data-i18n="queueEmpty">Add images to begin</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 12 0m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <div id="watermarkBatchNote" class="watermark-note below-process" hidden><span>◆</span><p><b data-i18n="watermarkBatchTitle">Batch by design</b><small data-i18n="watermarkBatchHelp">Text and image watermarks can be used together and are applied locally to the whole batch.</small></p></div>

@@ -5,6 +5,7 @@ import { applyWatermarks, renderWatermarkPreview, clearWatermarkCache } from './
 import { applyRedactions, renderRedactPreview, clearRedactCache } from './redact.js';
 import { CROP_PRESETS, applyCrop, renderCropPreview, clearCropCache, defaultCropRect } from './crop.js';
 import { BACKGROUND_REMOVAL_ENGINE, removeBackgroundDemo, renderBackgroundRemovalPreview, renderBackgroundRemovalInspection, clearBackgroundRemovalCache, loadBackgroundAIModel, getBackgroundAIState, probeBackgroundAICache, hasBackgroundAIMatte } from './remove-bg.js';
+import { vectorizeImage, vectorOptionsKey, VECTOR_PRESETS } from './vectorize.js';
 import { createColorPicker } from './color-picker.js';
 import { strings, detectLocale } from './i18n.js';
 
@@ -18,7 +19,8 @@ const state = {
   redactMode:'pixelate', redactStrength:45, redactColor:'#111827', redactRegions:[], redactHistory:[], redactSelected:null, redactPreviewIndex:null, redactPreviewMeta:null, redactPreviewToken:0, redactView:'edit',
   cropPlatform:'instagram', cropPreset:'ig-tall', cropRects:[], cropSourceMeta:[],
   bgSensitivity:48, bgAiThreshold:50, bgAiFeather:18, bgPreviewIndex:null, bgPreviewMeta:null, bgPreviewToken:0, bgEngine:'demo',
-  outputGeneration:0, activeRun:null
+  outputGeneration:0, activeRun:null,
+  vectorPreset:'auto', vectorDetail:58, vectorSimplify:62, vectorSnap:72, vectorPreserveCorners:true, vectorStraightLines:true
 };
 const cfg = window.PIXELQUOTA_CONFIG || {};
 
@@ -106,6 +108,15 @@ function applyPageCopy() {
     $('seoParagraph2').textContent=t('bgSeoParagraph2');
     return;
   }
+  if (state.toolMode==='vectorize') {
+    document.querySelector('.hero-section .eyebrow').textContent='SVG PRO MAX · 本機向量化測試';
+    setHeroLines('把像素重新整理成乾淨幾何。','');
+    $('heroSub').textContent='優先讓 Logo、Icon 與 UI 圖形保留尖角、直線與更少的 path。測試版只做繁中介面，圖片不上傳。';
+    $('seoHeading').textContent='PNG → SVG，不只是描邊，而是盡量重建乾淨幾何。';
+    $('seoParagraph1').textContent='測試版會先做色彩量化與向量描邊，再把可安全簡化的線段、直角與節點重新整理，避免輸出大量不必要 path。';
+    $('seoParagraph2').textContent='整個流程在瀏覽器本機執行。現在先專注 Logo / Icon；正式上線前再補齊所有語系、更多幾何辨識與效能調校。';
+    return;
+  }
   document.querySelector('.hero-section .eyebrow').textContent=t('eyebrow');
   if (state.pageMode==='preset') {
     const limit=formatLimit(state.pagePresetKb);
@@ -188,6 +199,61 @@ function inputOptions() {
   };
 }
 function settingsKey(opts) { return JSON.stringify({compressionMode:opts.compressionMode,targetKb:opts.compressionMode==='convert'?null:opts.targetKb,outputFormat:opts.outputFormat,resizeMode:opts.resizeMode,maxWidth:opts.maxWidth,maxHeight:opts.maxHeight,stripMetadata:!!opts.stripMetadata}); }
+
+function vectorOptions(){
+  return{
+    preset:state.vectorPreset,
+    detail:Number($('vectorDetail')?.value||state.vectorDetail),
+    simplify:Number($('vectorSimplify')?.value||state.vectorSimplify),
+    snap:Number($('vectorSnap')?.value||state.vectorSnap),
+    preserveCorners:$('vectorPreserveCorners')?.checked!==false,
+    straightLines:$('vectorStraightLines')?.checked!==false
+  };
+}
+function vectorSettingsKey(opts=vectorOptions()){return vectorOptionsKey(opts);}
+function updateVectorStats(result=null){
+  const vector=result?.operation==='vectorize'?result:null;
+  if(!$('vectorPathStat'))return;
+  $('vectorPathStat').textContent=vector?String(vector.pathCount):'—';
+  $('vectorNodeStat').textContent=vector?String(vector.nodeCount):'—';
+  $('vectorSimilarityStat').textContent=vector?`${vector.similarity}%`:'—';
+  $('vectorSizeStat').textContent=vector?formatBytes(vector.blob.size):'—';
+  $('vectorPathRaw').textContent=vector?(vector.topologyLocked?`拓撲鎖定 · ${vector.pathCount} paths`:`描邊初稿 ${vector.rawPathCount} → 清理後 ${vector.pathCount}`):'等待轉換';
+  $('vectorNodeRaw').textContent=vector?(vector.vectorEngine==='pixelquota-monocurve'?`曲線 ${vector.curveCount} · 直線 ${vector.lineCount}`:`節點 ${vector.rawNodeCount} → ${vector.nodeCount}`):'等待轉換';
+  const summary=$('vectorAutoSummary');
+  if(summary){
+    const label=summary.querySelector('span'),title=summary.querySelector('b'),note=summary.querySelector('small');
+    if(vector){
+      label.textContent=vector.preset==='auto'?'自動判斷':'手動模式';
+      title.textContent=vector.autoLabel||'SVG 已完成';
+      const palette=vector.autoPalette?.length?`鎖定主色：${vector.autoPalette.join(' / ')} · `:'';
+      const engine=vector.curveEngineLabel?`曲線引擎：${vector.curveEngineLabel} · `:'';
+      note.textContent=`${palette}${engine}${vector.candidateCount||1} 種候選 · 原圖取樣色 ${vector.sourceColorCount??'—'} 色`;
+    }else{
+      label.textContent='自動模式';title.textContent='等待圖片分析';note.textContent='大多數情況不需要調整任何參數。';
+    }
+  }
+}
+function syncVectorUI(){
+  document.querySelectorAll('#vectorPresetSwitch [data-vector-preset]').forEach(button=>button.classList.toggle('active',button.dataset.vectorPreset===state.vectorPreset));
+  for(const [inputId,outputId,key] of [['vectorDetail','vectorDetailValue','vectorDetail'],['vectorSimplify','vectorSimplifyValue','vectorSimplify'],['vectorSnap','vectorSnapValue','vectorSnap']]){
+    const input=$(inputId),output=$(outputId);if(!input||!output)continue;input.value=String(state[key]);output.textContent=`${state[key]}%`;syncRangeVisual(input);
+  }
+  const auto=state.vectorPreset==='auto';
+  if($('vectorPreserveCorners')){$('vectorPreserveCorners').checked=state.vectorPreserveCorners;$('vectorPreserveCorners').disabled=auto;}
+  if($('vectorStraightLines')){$('vectorStraightLines').checked=state.vectorStraightLines;$('vectorStraightLines').disabled=auto;}
+  for(const id of ['vectorDetail','vectorSimplify','vectorSnap'])if($(id))$(id).disabled=auto;
+  $('vectorAdvanced')?.classList.toggle('auto-active',auto);
+}
+function vectorSettingsChanged(){
+  const opts=vectorOptions();
+  state.vectorDetail=opts.detail;state.vectorSimplify=opts.simplify;state.vectorSnap=opts.snap;state.vectorPreserveCorners=opts.preserveCorners;state.vectorStraightLines=opts.straightLines;
+  invalidateAllOutputs();updateVectorStats(null);updateQueue();renderComparison();
+}
+function setVectorPreset(preset){
+  if(!VECTOR_PRESETS[preset]||state.vectorPreset===preset)return;
+  state.vectorPreset=preset;invalidateAllOutputs();updateVectorStats(null);syncVectorUI();updateQueue();renderComparison();
+}
 
 let staleCardsFrame=0;
 function syncDownloadAvailability(){
@@ -551,11 +617,11 @@ function onCropPointerUp(event){
 }
 
 function updateToolModeUI(){
-  const isCompress=state.toolMode==='compress',isWatermark=state.toolMode==='watermark',isRedact=state.toolMode==='redact',isCrop=state.toolMode==='crop',isBackground=state.toolMode==='remove-bg';
-  $('compressSettings').hidden=!isCompress;$('watermarkSettings').hidden=!isWatermark;$('redactSettings').hidden=!isRedact;$('cropSettings').hidden=!isCrop;$('backgroundSettings').hidden=!isBackground;
+  const isCompress=state.toolMode==='compress',isWatermark=state.toolMode==='watermark',isRedact=state.toolMode==='redact',isCrop=state.toolMode==='crop',isBackground=state.toolMode==='remove-bg',isVector=state.toolMode==='vectorize';
+  $('compressSettings').hidden=!isCompress;$('watermarkSettings').hidden=!isWatermark;$('redactSettings').hidden=!isRedact;$('cropSettings').hidden=!isCrop;$('backgroundSettings').hidden=!isBackground;$('vectorSettings').hidden=!isVector;
   $('watermarkBatchNote').hidden=!isWatermark;$('gateBadge').hidden=!isCompress||state.compressionMode==='convert';
-  $('specLabel').textContent=t(isWatermark?'watermarkSettingsLabel':isRedact?'redactSettingsLabel':isCrop?'cropSettingsLabel':isBackground?'bgSettingsLabel':'outputSpec');
-  document.querySelector('#processBtn b').textContent=t(isWatermark?'watermarkProcessButton':isRedact?'redactProcessButton':isCrop?'cropProcessButton':isBackground?'bgProcessButton':state.compressionMode==='convert'?'convertProcessButton':'processButton');
+  $('specLabel').textContent=isVector?'SVG PRO MAX · 測試版':t(isWatermark?'watermarkSettingsLabel':isRedact?'redactSettingsLabel':isCrop?'cropSettingsLabel':isBackground?'bgSettingsLabel':'outputSpec');
+  document.querySelector('#processBtn b').textContent=isVector?'一鍵轉成 SVG':t(isWatermark?'watermarkProcessButton':isRedact?'redactProcessButton':isCrop?'cropProcessButton':isBackground?'bgProcessButton':state.compressionMode==='convert'?'convertProcessButton':'processButton');
   document.querySelectorAll('#toolModeSwitch [data-tool-mode]').forEach(b=>b.classList.toggle('active',b.dataset.toolMode===state.toolMode));
   $('compressOnlyLimits').hidden=!isCompress||state.compressionMode==='convert';
   const trust1Title=document.querySelector('[data-i18n="trust1Title"]'),trust1Body=document.querySelector('[data-i18n="trust1Body"]'),trust3Title=document.querySelector('[data-i18n="trust3Title"]'),trust3Body=document.querySelector('[data-i18n="trust3Body"]');
@@ -563,6 +629,7 @@ function updateToolModeUI(){
   else if(isRedact){trust1Title.textContent=t('redactTrust1Title');trust1Body.textContent=t('redactTrust1Body');trust3Title.textContent=t('redactTrust3Title');trust3Body.textContent=t('redactTrust3Body');}
   else if(isCrop){trust1Title.textContent=t('cropTrust1Title');trust1Body.textContent=t('cropTrust1Body');trust3Title.textContent=t('cropTrust3Title');trust3Body.textContent=t('cropTrust3Body');}
   else if(isBackground){trust1Title.textContent=t('bgTrust1Title');trust1Body.textContent=t('bgTrust1Body');trust3Title.textContent=t('bgTrust3Title');trust3Body.textContent=t('bgTrust3Body');}
+  else if(isVector){trust1Title.textContent='少 path，不亂圓角。';trust1Body.textContent='測試版優先把 Logo / Icon 的近似直線與直角重新整理成更乾淨的 SVG。';trust3Title.textContent='自己驗證輸出。';trust3Body.textContent='SVG 會重新 Rasterize 與原圖比對，讓簡化不是完全憑感覺。';}
   else{trust1Title.textContent=t('trust1Title');trust1Body.textContent=t('trust1Body');trust3Title.textContent=t('trust3Title');trust3Body.textContent=t('trust3Body');}
   if(isCompress)syncCompressionModeUI();
 }
@@ -582,7 +649,7 @@ async function initFormatCapabilities(){
   avif.disabled=!supported;avif.classList.toggle('unsupported',!supported);avif.title=supported?'':t('formatUnavailable');
 }
 function setToolMode(mode){
-  if(!['compress','watermark','redact','crop','remove-bg'].includes(mode)||state.toolMode===mode||state.busy)return;
+  if(!['compress','watermark','redact','crop','remove-bg','vectorize'].includes(mode)||state.toolMode===mode||state.busy)return;
   resetAll();clearWatermarkImage();state.toolMode=mode;state.redactSelected=null;updateToolModeUI();applyPageCopy();updateQueue();
 }
 function setWatermarkPanel(panel){
@@ -1070,6 +1137,29 @@ function renderComparison() {
     document.querySelectorAll('.result-card').forEach(card=>card.classList.toggle('selected',Number(card.dataset.resultIndex)===index));return;
   }
 
+  if(state.toolMode==='vectorize'){
+    document.querySelector('.comparison-copy p').textContent='VECTOR PREVIEW';
+    $('comparisonTitle').textContent=result?.operation==='vectorize'?'原圖 vs SVG Pro':'SVG Pro 向量化預覽';
+    comparisonHint.textContent=result?.operation==='vectorize'?'拖曳比較 Raster 原圖與 SVG 重新渲染後的差異。':'先轉換一次，就會看到 path / node 清理結果與視覺相似度。';
+    original.onload=()=>{unavailable.hidden=true;fitPreviewSurface(original.naturalWidth,original.naturalHeight);$('compareDimensions').textContent=sourceDimensionsText(result?.originalWidth||original.naturalWidth,result?.originalHeight||original.naturalHeight);};
+    original.onerror=()=>{unavailable.hidden=false;};
+    setImageSource(original,state.previews[index]||'',`${file.name} 原圖`);
+    if(result?.operation==='vectorize'){
+      mask.hidden=false;badge.hidden=false;divider.hidden=false;range.hidden=false;
+      if(!result.previewUrl)result.previewUrl=safeUrl(result.blob);
+      setImageSource(output,result.previewUrl,`${file.name} SVG`);
+      badge.querySelector('span').textContent='SVG';
+      $('compareOutputSize').textContent=formatBytes(result.blob.size);
+      $('compareDimensions').textContent=sourceDimensionsText(result.originalWidth,result.originalHeight);
+      $('compareSaving').textContent=`${result.pathCount} paths · ${result.nodeCount} nodes`;
+      $('compareStatus').className='status pass';$('compareStatus').textContent=`${result.similarity}% 相似`;
+      fitPreviewSurface(result.outputWidth,result.outputHeight);updateComparisonPosition();updateVectorStats(result);
+    }else{
+      $('compareOutputSize').textContent='—';$('compareSaving').textContent='尚未向量化';$('compareStatus').className='status pending';$('compareStatus').textContent='測試版';updateVectorStats(null);
+    }
+    document.querySelectorAll('.result-card').forEach(card=>card.classList.toggle('selected',Number(card.dataset.resultIndex)===index));return;
+  }
+
   original.onload=()=>{unavailable.hidden=true;fitPreviewSurface(original.naturalWidth,original.naturalHeight);$('compareDimensions').textContent=sourceDimensionsText(result?.originalWidth||original.naturalWidth,result?.originalHeight||original.naturalHeight);};original.onerror=()=>{unavailable.hidden=false;};setImageSource(original,state.previews[index]||'',`${file.name} ${t('original')}`);
   const showCompare=!!result?.metTarget;
   if(showCompare){
@@ -1114,20 +1204,20 @@ function selectResult(index,manual=true){
 function removeButtonHtml(index){return `<button class="remove-result" type="button" data-remove-index="${index}" aria-label="${escapeHtml(t('removeImage'))}" title="${escapeHtml(t('removeImage'))}">×</button>`;}
 function resultCardHtml(file,index,result) {
   if (!result.previewUrl) result.previewUrl=safeUrl(result.blob);
-  const isWatermark=result.operation==='watermark',isRedact=result.operation==='redact',isCrop=result.operation==='crop',isBackground=result.operation==='remove-bg',isConvert=result.operation==='convert';
+  const isWatermark=result.operation==='watermark',isRedact=result.operation==='redact',isCrop=result.operation==='crop',isBackground=result.operation==='remove-bg',isVector=result.operation==='vectorize',isConvert=result.operation==='convert';
   const saved=Math.max(0,Math.round((1-result.blob.size/file.size)*100));
   const reason=result.metTarget?'':failureReason(result,state.resultOptions[index]);
   const kinds=result.watermarkKinds||[],watermarkKind=kinds.length===2?t('textAndImage'):kinds.includes('image')?t('imageOnly'):t('textOnly');
   const cropLabel=CROP_PRESETS[result.cropPreset]?.label||`${result.outputWidth}×${result.outputHeight}`;
-  const detail=isWatermark?`<div class="saving-note"><span>${t('watermark')}</span><b>${watermarkKind}</b></div>`:isRedact?`<div class="saving-note"><span>${t('redact')}</span><b>${result.regionCount} ${t('redactRegions')}</b></div>`:isCrop?`<div class="saving-note"><span>${t('crop')}</span><b>${escapeHtml(cropLabel)}</b></div>`:isBackground?`<div class="saving-note"><span>${t('bgResultLabel')}</span><b>${result.engine===BACKGROUND_REMOVAL_ENGINE.aiId?'AI':t('bgEngineDemo')} · PNG</b></div>`:isConvert?`<div class="saving-note"><span>${t('converted')}</span><b>${formatName(result.outputType)}</b></div>`:`<div class="saving-note"><span>${t('saved')}</span><b>${saved}%</b></div>`;
-  const status=isWatermark||isRedact||isCrop||isBackground||isConvert?t('ready'):(result.metTarget?t('pass'):t('failed'));
+  const detail=isWatermark?`<div class="saving-note"><span>${t('watermark')}</span><b>${watermarkKind}</b></div>`:isRedact?`<div class="saving-note"><span>${t('redact')}</span><b>${result.regionCount} ${t('redactRegions')}</b></div>`:isCrop?`<div class="saving-note"><span>${t('crop')}</span><b>${escapeHtml(cropLabel)}</b></div>`:isBackground?`<div class="saving-note"><span>${t('bgResultLabel')}</span><b>${result.engine===BACKGROUND_REMOVAL_ENGINE.aiId?'AI':t('bgEngineDemo')} · PNG</b></div>`:isVector?`<div class="saving-note"><span>SVG Pro</span><b>${result.pathCount} paths · ${result.nodeCount} nodes</b></div>`:isConvert?`<div class="saving-note"><span>${t('converted')}</span><b>${formatName(result.outputType)}</b></div>`:`<div class="saving-note"><span>${t('saved')}</span><b>${saved}%</b></div>`;
+  const status=isVector?'SVG':isWatermark||isRedact||isCrop||isBackground||isConvert?t('ready'):(result.metTarget?t('pass'):t('failed'));
   return `<article class="result-card done${result.metTarget?'':' over-limit'}${selectedClass(index)}" data-result-index="${index}" data-select-result="${index}" tabindex="0">${removeButtonHtml(index)}<div class="thumb"><img src="${result.previewUrl}" alt="" /></div><div class="result-info"><strong title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</strong><span>${formatBytes(file.size)}</span></div><div class="size-flow"><div><span>${t('original')}</span><b>${formatBytes(file.size)}</b></div><i>→</i><div><span>${t('output')}</span><b>${formatBytes(result.blob.size)}</b></div><div class="dimension-note"><span>${t('dimensions')}</span><b>${result.outputWidth}×${result.outputHeight}</b></div>${detail}</div><div class="result-status"><span class="status ${result.metTarget?'pass':'fail'}">${status}</span></div>${reason?`<div class="result-reason"><strong>!</strong><span>${escapeHtml(reason)}</span></div>`:''}<div class="result-action"><button type="button" data-download-index="${index}">${t('download')}</button></div></article>`;
 }
 function errorCardHtml(file,index,error) {
   return `<article class="result-card failed${selectedClass(index)}" data-result-index="${index}" data-select-result="${index}" tabindex="0">${removeButtonHtml(index)}<div class="thumb placeholder error-thumb"><span>!</span></div><div class="result-info"><strong title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</strong><span>${formatBytes(file.size)}</span></div><div class="size-flow"><div><span>${t('original')}</span><b>${formatBytes(file.size)}</b></div><i>→</i><div><span>${t('output')}</span><b>—</b></div></div><div class="result-status"><span class="status fail">${t('failed')}</span></div><div class="result-reason"><strong>!</strong><span>${escapeHtml(errorReason(error))}</span></div></article>`;
 }
 function queuedCardHtml(file,index) {
-  const editable=state.toolMode==='watermark'||state.toolMode==='redact'||state.toolMode==='crop'||state.toolMode==='remove-bg',stateText=state.toolMode==='redact'?t('editing'):editable?t('preview'):t('waiting');
+  const editable=state.toolMode==='watermark'||state.toolMode==='redact'||state.toolMode==='crop'||state.toolMode==='remove-bg',stateText=state.toolMode==='vectorize'?'待向量化':state.toolMode==='redact'?t('editing'):editable?t('preview'):t('waiting');
   return `<article class="result-card queued${selectedClass(index)}" data-result-index="${index}" data-select-result="${index}" tabindex="0">${removeButtonHtml(index)}${queueThumb(file,index)}<div class="result-info"><strong title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</strong><span>${formatBytes(file.size)}</span></div><div class="size-flow"><div><span>${t('original')}</span><b>${formatBytes(file.size)}</b></div><i>→</i><div><span>${editable?t('export'):t('output')}</span><b>${stateText}</b></div></div><div class="result-status"><span class="status pending">${stateText}</span><div class="progress"><i></i></div></div></article>`;
 }
 function renderCard(index) {
@@ -1146,7 +1236,7 @@ function updateResultsSummary() {
   const completed=state.results.filter(Boolean).length+state.errors.filter(Boolean).length;
   if(!completed){$('resultsSummary').textContent=t('queuedTitle');return;}
   const passed=state.results.filter(r=>r?.metTarget).length;
-  let text=state.toolMode==='watermark'?`${passed}/${state.files.length} ${t('watermarkSummary')}`:state.toolMode==='redact'?`${passed}/${state.files.length} ${t('redactSummary')}`:state.toolMode==='crop'?`${passed}/${state.files.length} ${t('cropSummary')}`:state.toolMode==='remove-bg'?`${passed}/${state.files.length} ${t('bgSummary')}`:state.compressionMode==='convert'?`${passed}/${state.files.length} ${t('convertSummary')}`:`${passed}/${state.files.length} ${t('passSummary')}`;
+  let text=state.toolMode==='vectorize'?`${passed}/${state.files.length} 個 SVG 已完成`:state.toolMode==='watermark'?`${passed}/${state.files.length} ${t('watermarkSummary')}`:state.toolMode==='redact'?`${passed}/${state.files.length} ${t('redactSummary')}`:state.toolMode==='crop'?`${passed}/${state.files.length} ${t('cropSummary')}`:state.toolMode==='remove-bg'?`${passed}/${state.files.length} ${t('bgSummary')}`:state.compressionMode==='convert'?`${passed}/${state.files.length} ${t('convertSummary')}`:`${passed}/${state.files.length} ${t('passSummary')}`;
   if(state.lastSkipped) text+=` · ${state.lastSkipped} ${t('skippedSummary')}`;
   $('resultsSummary').textContent=text;
 }
@@ -1162,7 +1252,7 @@ function resetAll() {
   bumpOutputGeneration();
   clearLiveWatermarkPreview();clearRedactPreview();clearCropEditor();clearBackgroundPreview();clearWatermarkCache();clearRedactCache();clearCropCache();state.files.forEach(file=>clearBackgroundRemovalCache(file));state.results.forEach(r=>r?.previewUrl&&URL.revokeObjectURL(r.previewUrl));state.previews.forEach(url=>URL.revokeObjectURL(url));
   state.files=[];state.results=[];state.errors=[];state.previews=[];state.processKeys=[];state.resultOptions=[];state.redactRegions=[];state.redactHistory=[];state.cropRects=[];state.cropSourceMeta=[];state.busy=false;state.lastSkipped=0;state.selectedIndex=null;state.selectionManual=false;state.comparePosition=50;state.redactSelected=null;state.redactView='edit';
-  $('fileInput').value='';$('resultsSection').hidden=true;$('emptyResults').hidden=false;$('comparisonPanel').hidden=true;$('resultList').innerHTML='';syncDownloadAvailability();updateQueue();updateRedactActions();
+  $('fileInput').value='';$('resultsSection').hidden=true;$('emptyResults').hidden=false;$('comparisonPanel').hidden=true;$('resultList').innerHTML='';updateVectorStats(null);syncDownloadAvailability();updateQueue();updateRedactActions();
 }
 function removeFile(index){
   if(state.busy||!Number.isInteger(index)||index<0||index>=state.files.length)return;
@@ -1185,11 +1275,11 @@ function updateCardProgress(index,pct) {
 
 async function processAll() {
   if(!state.files.length)return toast(t('addFirst'));
-  const isWatermark=state.toolMode==='watermark',isRedact=state.toolMode==='redact',isCrop=state.toolMode==='crop',isBackground=state.toolMode==='remove-bg';
-  const opts=isWatermark?watermarkOptions():isBackground?backgroundOptions():isCrop?null:isRedact?null:inputOptions();
+  const isWatermark=state.toolMode==='watermark',isRedact=state.toolMode==='redact',isCrop=state.toolMode==='crop',isBackground=state.toolMode==='remove-bg',isVector=state.toolMode==='vectorize';
+  const opts=isWatermark?watermarkOptions():isBackground?backgroundOptions():isVector?vectorOptions():isCrop?null:isRedact?null:inputOptions();
   if(isWatermark&&!opts.text&&!opts.imageFile)return toast(t('watermarkContentRequired'));
   if(isBackground&&opts.engine==='ai'&&!getBackgroundAIState().ready)return toast(t('bgModelRequiredToast'));
-  if(!isWatermark&&!isRedact&&!isCrop&&!isBackground&&opts.resizeMode==='exact'&&(!opts.maxWidth||!opts.maxHeight))return toast(t('invalidExact'));
+  if(!isWatermark&&!isRedact&&!isCrop&&!isBackground&&!isVector&&opts.resizeMode==='exact'&&(!opts.maxWidth||!opts.maxHeight))return toast(t('invalidExact'));
   const todo=[];let skipped=0;
   if(isRedact){
     let anyRegion=false;
@@ -1201,12 +1291,12 @@ async function processAll() {
   }else if(isCrop){
     for(let i=0;i<state.files.length;i++){const key=cropSettingsKey(i);if(state.processKeys[i]===key)skipped++;else todo.push(i);}
   }else{
-    const key=isWatermark?watermarkSettingsKey(opts):isBackground?backgroundSettingsKey(opts):settingsKey(opts);
+    const key=isWatermark?watermarkSettingsKey(opts):isBackground?backgroundSettingsKey(opts):isVector?vectorSettingsKey(opts):settingsKey(opts);
     for(let i=0;i<state.files.length;i++){if(state.processKeys[i]===key)skipped++;else todo.push(i);}
   }
   state.lastSkipped=skipped;
   if(!todo.length){updateResultsSummary();toast(t('alreadyProcessed'));return;}
-  state.busy=true;syncDownloadAvailability();updateQueue();$('processBtn').classList.add('busy');toast(t(isWatermark?'watermarkWorking':isRedact?'redactWorking':isCrop?'cropWorking':isBackground?'bgWorking':state.compressionMode==='convert'?'convertWorking':'working'));
+  state.busy=true;syncDownloadAvailability();updateQueue();$('processBtn').classList.add('busy');toast(isVector?'正在重建 SVG 幾何…':t(isWatermark?'watermarkWorking':isRedact?'redactWorking':isCrop?'cropWorking':isBackground?'bgWorking':state.compressionMode==='convert'?'convertWorking':'working'));
   const generation=state.outputGeneration,run={};state.activeRun=run;let staleRun=false;
   const isStale=()=>state.outputGeneration!==generation;
   // Undo the in-progress card for file i, but only if that file is still in the list at the same index.
@@ -1217,11 +1307,11 @@ async function processAll() {
     const file=state.files[i];
     prepareCard(i);
     const itemOpts=isCrop?cropOptions(i):opts;
-    const key=isRedact?redactSettingsKey(i):isWatermark?watermarkSettingsKey(opts):isCrop?cropSettingsKey(itemOpts):isBackground?backgroundSettingsKey(opts):settingsKey(opts);
+    const key=isRedact?redactSettingsKey(i):isWatermark?watermarkSettingsKey(opts):isCrop?cropSettingsKey(itemOpts):isBackground?backgroundSettingsKey(opts):isVector?vectorSettingsKey(opts):settingsKey(opts);
     state.resultOptions[i]=isRedact?{regions:cloneRegions(redactRegionsFor(i))}:{...itemOpts};
     try{
       const progress=p=>{if(!isStale()&&state.files[i]===file)updateCardProgress(i,p);};
-      const result=await (isWatermark? applyWatermarks(state.files[i],opts,progress):isRedact?await applyRedactions(state.files[i],cloneRegions(redactRegionsFor(i)),progress):isCrop?await applyCrop(state.files[i],itemOpts,progress):isBackground?await removeBackgroundDemo(state.files[i],opts,progress):compressImage(state.files[i],opts,progress));
+      const result=await (isWatermark? applyWatermarks(state.files[i],opts,progress):isRedact?await applyRedactions(state.files[i],cloneRegions(redactRegionsFor(i)),progress):isCrop?await applyCrop(state.files[i],itemOpts,progress):isBackground?await removeBackgroundDemo(state.files[i],opts,progress):isVector?await vectorizeImage(state.files[i],opts,progress):compressImage(state.files[i],opts,progress));
       if(isStale()){abandon(i,file,result);break;}
       state.results[i]=result;state.errors[i]=null;state.processKeys[i]=key;if(result.metTarget&&!state.selectionManual&&!state.results[state.selectedIndex]?.metTarget)state.selectedIndex=i;renderCard(i);
     }catch(error){
@@ -1236,11 +1326,11 @@ async function processAll() {
     state.activeRun=null;state.busy=false;$('processBtn').classList.remove('busy');
   }
   if(!state.files.length){syncDownloadAvailability();updateQueue();return;}
-  state.busy=false;if(isRedact&&!staleRun){state.redactView='compare';renderComparison();}$('processBtn').classList.remove('busy');syncDownloadAvailability();updateQueue();updateResultsSummary();if(staleRun)return toast(t('settingsChangedRerun'));toast(t(isWatermark?'watermarkDone':isRedact?'redactDone':isCrop?'cropDone':isBackground?'bgDone':state.compressionMode==='convert'?'convertDone':'done'));
+  state.busy=false;if(isRedact&&!staleRun){state.redactView='compare';renderComparison();}$('processBtn').classList.remove('busy');syncDownloadAvailability();updateQueue();updateResultsSummary();if(staleRun)return toast(t('settingsChangedRerun'));toast(isVector?'SVG Pro 轉換完成。':t(isWatermark?'watermarkDone':isRedact?'redactDone':isCrop?'cropDone':isBackground?'bgDone':state.compressionMode==='convert'?'convertDone':'done'));
 }
 
 function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1600);}
-async function downloadAll(){const good=state.results.filter(Boolean);if(!good.length)return toast(t('noOutputs'));const entries={};for(const r of good){let name=r.outputName,n=2;const dot=name.lastIndexOf('.'),stem=dot>0?name.slice(0,dot):name,ext=dot>0?name.slice(dot):'';while(name in entries)name=`${stem} (${n++})${ext}`;entries[name]=new Uint8Array(await r.blob.arrayBuffer());}const zipped=zipSync(entries,{level:6});const name=state.toolMode==='watermark'?'pixelquota-watermarked.zip':state.toolMode==='redact'?'pixelquota-redacted.zip':state.toolMode==='crop'?'pixelquota-social-crops.zip':state.toolMode==='remove-bg'?'pixelquota-background-removed.zip':'pixelquota-images.zip';downloadBlob(new Blob([zipped],{type:'application/zip'}),name);toast(t('zipReady'));}
+async function downloadAll(){const good=state.results.filter(Boolean);if(!good.length)return toast(t('noOutputs'));const entries={};for(const r of good){let name=r.outputName,n=2;const dot=name.lastIndexOf('.'),stem=dot>0?name.slice(0,dot):name,ext=dot>0?name.slice(dot):'';while(name in entries)name=`${stem} (${n++})${ext}`;entries[name]=new Uint8Array(await r.blob.arrayBuffer());}const zipped=zipSync(entries,{level:6});const name=state.toolMode==='vectorize'?'pixelquota-svg-pro.zip':state.toolMode==='watermark'?'pixelquota-watermarked.zip':state.toolMode==='redact'?'pixelquota-redacted.zip':state.toolMode==='crop'?'pixelquota-social-crops.zip':state.toolMode==='remove-bg'?'pixelquota-background-removed.zip':'pixelquota-images.zip';downloadBlob(new Blob([zipped],{type:'application/zip'}),name);toast(t('zipReady'));}
 function setPreset(kb){const changed=targetKb()!==kb;state.customMode=false;$('targetKb').value=kb;if(changed)invalidateAllOutputs();updateGate();}
 function setCustom(){state.customMode=true;updateGate();$('targetKb').focus();$('targetKb').select();}
 function setFormat(format){const button=document.querySelector(`#formatButtons [data-format="${format}"]`);if(button?.disabled)return toast(t('formatUnavailable'));const changed=state.outputFormat!==format;state.outputFormat=format;if(changed)invalidateAllOutputs();document.querySelectorAll('#formatButtons [data-format]').forEach(b=>b.classList.toggle('active',b.dataset.format===format));}
@@ -1275,6 +1365,14 @@ function initColorPickers(){
 function bind(){
   $('toolModeSwitch').onclick=e=>{const b=e.target.closest('[data-tool-mode]');if(b)setToolMode(b.dataset.toolMode);};
   $('compressModeSwitch').onclick=e=>{const b=e.target.closest('[data-compress-mode]');if(b)setCompressionMode(b.dataset.compressMode);};
+  $('vectorPresetSwitch').onclick=e=>{const b=e.target.closest('[data-vector-preset]');if(b)setVectorPreset(b.dataset.vectorPreset);};
+  for(const [inputId,outputId,key] of [['vectorDetail','vectorDetailValue','vectorDetail'],['vectorSimplify','vectorSimplifyValue','vectorSimplify'],['vectorSnap','vectorSnapValue','vectorSnap']]){
+    const input=$(inputId),output=$(outputId);
+    input.oninput=()=>{state[key]=Number(input.value);output.textContent=`${input.value}%`;syncRangeVisual(input);vectorSettingsChanged();};
+    syncRangeVisual(input);
+  }
+  $('vectorPreserveCorners').onchange=vectorSettingsChanged;
+  $('vectorStraightLines').onchange=vectorSettingsChanged;
   $('watermarkSubtoolSwitch').onclick=e=>{const b=e.target.closest('[data-watermark-panel]');if(b)setWatermarkPanel(b.dataset.watermarkPanel);};
   $('watermarkPresets').onclick=e=>{const b=e.target.closest('[data-watermark-preset]');if(b)applyWatermarkPreset(b.dataset.watermarkPreset);};
   $('watermarkAlignButtons').onclick=e=>{const b=e.target.closest('[data-align]');if(b)setWatermarkTextAlign(b.dataset.align);};
@@ -1348,5 +1446,5 @@ function initPressedStateSync(){
     new MutationObserver(records=>{for(const r of records)if(r.target.tagName==='BUTTON')sync(r.target);}).observe(group,{subtree:true,attributes:true,attributeFilter:['class']});
   }
 }
-function init(){initPressedStateSync();initPageMode();initColorPickers();bind();applyLocale(state.locale);setFormat(state.outputFormat);setResize(state.resizeMode);syncCompressionModeUI();initFormatCapabilities();setWatermarkPanel(state.watermarkPanel);setWatermarkColor('#ffffff');setRedactMode(state.redactMode);setRedactStrength(state.redactStrength,false);redactColorPicker.setColor(state.redactColor,false);setCropPlatform(state.cropPlatform);setCropPreset(state.cropPreset);updateWatermarkStateIndicators();updateRedactActions();syncBackgroundEngineUI();initBackgroundAICacheState();syncDownloadAvailability();initMonetization();window.PixelQuotaTest={addFiles,removeFile,processAll,state,compressImage,detectEncoderSupport,applyWatermarks,renderWatermarkPreview,applyRedactions,renderRedactPreview,applyCrop,renderCropPreview,removeBackgroundDemo,renderBackgroundRemovalPreview,renderBackgroundRemovalInspection,BACKGROUND_REMOVAL_ENGINE,loadBackgroundAIModel,getBackgroundAIState,probeBackgroundAICache,setPreset,setCustom,setFormat,setResize,setCompressionMode,setToolMode,setWatermarkPanel,setWatermarkPosition,setWatermarkImagePosition,setWatermarkTextAlign,setWatermarkColor,setRedactMode,setRedactStrength,setRedactView,setBackgroundEngine,loadBackgroundModelUI,syncBackgroundEngineUI,setCropPlatform,setCropPreset,resetCropFrame,applyWatermarkPreset,settingsKey,inputOptions,watermarkOptions,backgroundOptions,backgroundSettingsKey,cropOptions,cropSettingsKey,redactRegionsFor,redactSettingsKey,undoRedact,redoRedact,deleteRedactRegion,selectRedactLayer,deleteRedactLayer,renderRedactLayers,renderRedactOverlay,renderCropOverlay,redactHandle,updateRedactCursor,syncRangeVisual,selectResult,renderComparison,fitPreviewSurface,updateComparisonPosition,updateWatermarkLivePreview,updateRedactPreview,updateBackgroundPreview,openBackgroundInspector,closeBackgroundInspector,setBackgroundInspectorZoom,backgroundInspector};}
+function init(){initPressedStateSync();initPageMode();initColorPickers();bind();applyLocale(state.locale);setFormat(state.outputFormat);setResize(state.resizeMode);syncCompressionModeUI();syncVectorUI();initFormatCapabilities();setWatermarkPanel(state.watermarkPanel);setWatermarkColor('#ffffff');setRedactMode(state.redactMode);setRedactStrength(state.redactStrength,false);redactColorPicker.setColor(state.redactColor,false);setCropPlatform(state.cropPlatform);setCropPreset(state.cropPreset);updateWatermarkStateIndicators();updateRedactActions();syncBackgroundEngineUI();initBackgroundAICacheState();syncDownloadAvailability();initMonetization();window.PixelQuotaTest={addFiles,removeFile,processAll,state,compressImage,detectEncoderSupport,applyWatermarks,renderWatermarkPreview,applyRedactions,renderRedactPreview,applyCrop,renderCropPreview,removeBackgroundDemo,renderBackgroundRemovalPreview,renderBackgroundRemovalInspection,BACKGROUND_REMOVAL_ENGINE,loadBackgroundAIModel,getBackgroundAIState,probeBackgroundAICache,vectorizeImage,vectorOptions,vectorSettingsKey,setVectorPreset,syncVectorUI,updateVectorStats,setPreset,setCustom,setFormat,setResize,setCompressionMode,setToolMode,setWatermarkPanel,setWatermarkPosition,setWatermarkImagePosition,setWatermarkTextAlign,setWatermarkColor,setRedactMode,setRedactStrength,setRedactView,setBackgroundEngine,loadBackgroundModelUI,syncBackgroundEngineUI,setCropPlatform,setCropPreset,resetCropFrame,applyWatermarkPreset,settingsKey,inputOptions,watermarkOptions,backgroundOptions,backgroundSettingsKey,cropOptions,cropSettingsKey,redactRegionsFor,redactSettingsKey,undoRedact,redoRedact,deleteRedactRegion,selectRedactLayer,deleteRedactLayer,renderRedactLayers,renderRedactOverlay,renderCropOverlay,redactHandle,updateRedactCursor,syncRangeVisual,selectResult,renderComparison,fitPreviewSurface,updateComparisonPosition,updateWatermarkLivePreview,updateRedactPreview,updateBackgroundPreview,openBackgroundInspector,closeBackgroundInspector,setBackgroundInspectorZoom,backgroundInspector};}
 init();
