@@ -70,7 +70,10 @@ async function cachedDecode(file){
 }
 
 export function clearBackgroundRemovalCache(file){
-  if(file){decodeCache.delete(file);aiMatteCache.delete(file);}
+  if(!file)return;
+  const pending=decodeCache.get(file);
+  decodeCache.delete(file);aiMatteCache.delete(file);
+  pending?.then(image=>setTimeout(()=>image?.close?.(),750)).catch(()=>{});
 }
 
 export function hasBackgroundAIMatte(file){return !!(file&&aiMatteCache.has(file));}

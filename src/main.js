@@ -17,7 +17,8 @@ const state = {
   watermarkImageFile:null, watermarkImagePreviewUrl:null, liveWatermarkPreviewIndex:null, liveWatermarkPreviewMeta:null, watermarkPreviewToken:0, watermarkPanel:'text',
   redactMode:'pixelate', redactStrength:45, redactColor:'#111827', redactRegions:[], redactHistory:[], redactSelected:null, redactPreviewIndex:null, redactPreviewMeta:null, redactPreviewToken:0, redactView:'edit',
   cropPlatform:'instagram', cropPreset:'ig-tall', cropRects:[], cropSourceMeta:[],
-  bgSensitivity:48, bgAiThreshold:50, bgAiFeather:18, bgPreviewIndex:null, bgPreviewMeta:null, bgPreviewToken:0, bgEngine:'demo'
+  bgSensitivity:48, bgAiThreshold:50, bgAiFeather:18, bgPreviewIndex:null, bgPreviewMeta:null, bgPreviewToken:0, bgEngine:'demo',
+  outputGeneration:0, activeRun:null
 };
 const cfg = window.PIXELQUOTA_CONFIG || {};
 
@@ -194,6 +195,8 @@ function syncDownloadAvailability(){
   const available=state.results.some(Boolean);
   button.hidden=!available;button.disabled=!available||state.busy;
 }
+// Any in-flight processAll() run started before a bump must not commit its results.
+function bumpOutputGeneration(){state.outputGeneration=(state.outputGeneration||0)+1;}
 function invalidateAllOutputs(){
   let changed=false;
   for(let i=0;i<state.files.length;i++){
@@ -203,6 +206,7 @@ function invalidateAllOutputs(){
       state.results[i]=null;state.errors[i]=null;state.processKeys[i]=null;state.resultOptions[i]=null;changed=true;
     }
   }
+  bumpOutputGeneration();
   state.lastSkipped=0;syncDownloadAvailability();
   document.querySelectorAll('#resultList [data-download-index]').forEach(button=>button.closest('.result-action')?.remove());
   if(changed&&!staleCardsFrame){
@@ -442,6 +446,7 @@ function setCropPlatform(platform){
   if(changed||!current||current.dataset.cropPlatform!==platform)setCropPreset(CROP_PLATFORM_DEFAULTS[platform]);
 }
 function invalidateCropResult(index){
+  bumpOutputGeneration();
   const result=state.results[index];if(result?.previewUrl)URL.revokeObjectURL(result.previewUrl);
   state.results[index]=null;state.errors[index]=null;state.processKeys[index]=null;state.resultOptions[index]=null;syncDownloadAvailability();
 }
@@ -450,6 +455,7 @@ function setCropPreset(preset){
   const changed=state.cropPreset!==preset;state.cropPreset=preset;
   document.querySelectorAll('#cropPresetGrid [data-crop-preset]').forEach(button=>button.classList.toggle('active',button.dataset.cropPreset===preset));
   if(!changed)return;
+  bumpOutputGeneration();
   state.cropRects=state.cropRects.map(()=>null);
   state.files.forEach((_,index)=>{if(state.results[index]?.operation==='crop'||state.processKeys[index]?.includes('"mode":"crop"'))invalidateCropResult(index);});
   if(state.files.length){renderCards();requestCropOverlayRender();}
@@ -652,6 +658,7 @@ function redactHistoryFor(index){
 function cloneRegions(regions){return regions.map(region=>({...region}));}
 function redactSettingsKey(index){return JSON.stringify({mode:'redact',regions:redactRegionsFor(index)});}
 function invalidateRedactResult(index){
+  bumpOutputGeneration();
   const result=state.results[index];if(result?.previewUrl)URL.revokeObjectURL(result.previewUrl);
   state.results[index]=null;state.errors[index]=null;state.processKeys[index]=null;state.resultOptions[index]=null;state.redactView='edit';syncDownloadAvailability();
 }
@@ -943,6 +950,7 @@ function failureReason(result,opts) {
 function errorReason(error) {
   const message=String(error?.message||error||'');
   if(/encode_unsupported/.test(message))return t('formatUnavailableError');
+  if(/^too_large:/.test(message))return t('failTooLarge');
   if(/ai_mask|background ai|model|onnx|transformers/i.test(message))return t('bgAiInferenceError');
   return /decode_failed|heic|decoder|image/i.test(message)?t('failDecode'):t('failUnknown');
 }
@@ -1151,6 +1159,7 @@ function addFiles(files) {
   if(state.selectedIndex===null)state.selectedIndex=0; state.lastSkipped=0;$('fileInput').value='';renderCards();updateQueue();if(state.toolMode==='watermark')scheduleWatermarkPreview();if(state.toolMode==='redact'){updateRedactActions();scheduleRedactPreview();}if(state.toolMode==='crop')requestCropOverlayRender();if(state.toolMode==='remove-bg')scheduleBackgroundPreview();
 }
 function resetAll() {
+  bumpOutputGeneration();
   clearLiveWatermarkPreview();clearRedactPreview();clearCropEditor();clearBackgroundPreview();clearWatermarkCache();clearRedactCache();clearCropCache();state.files.forEach(file=>clearBackgroundRemovalCache(file));state.results.forEach(r=>r?.previewUrl&&URL.revokeObjectURL(r.previewUrl));state.previews.forEach(url=>URL.revokeObjectURL(url));
   state.files=[];state.results=[];state.errors=[];state.previews=[];state.processKeys=[];state.resultOptions=[];state.redactRegions=[];state.redactHistory=[];state.cropRects=[];state.cropSourceMeta=[];state.busy=false;state.lastSkipped=0;state.selectedIndex=null;state.selectionManual=false;state.comparePosition=50;state.redactSelected=null;state.redactView='edit';
   $('fileInput').value='';$('resultsSection').hidden=true;$('emptyResults').hidden=false;$('comparisonPanel').hidden=true;$('resultList').innerHTML='';syncDownloadAvailability();updateQueue();updateRedactActions();
@@ -1198,24 +1207,40 @@ async function processAll() {
   state.lastSkipped=skipped;
   if(!todo.length){updateResultsSummary();toast(t('alreadyProcessed'));return;}
   state.busy=true;syncDownloadAvailability();updateQueue();$('processBtn').classList.add('busy');toast(t(isWatermark?'watermarkWorking':isRedact?'redactWorking':isCrop?'cropWorking':isBackground?'bgWorking':state.compressionMode==='convert'?'convertWorking':'working'));
+  const generation=state.outputGeneration,run={};state.activeRun=run;let staleRun=false;
+  const isStale=()=>state.outputGeneration!==generation;
+  // Undo the in-progress card for file i, but only if that file is still in the list at the same index.
+  const abandon=(i,file,result)=>{if(result?.previewUrl)URL.revokeObjectURL(result.previewUrl);if(state.files[i]===file){state.resultOptions[i]=null;renderCard(i);}staleRun=true;};
+  try{
   for(const i of todo){
+    if(isStale()){staleRun=true;break;}
+    const file=state.files[i];
     prepareCard(i);
     const itemOpts=isCrop?cropOptions(i):opts;
     const key=isRedact?redactSettingsKey(i):isWatermark?watermarkSettingsKey(opts):isCrop?cropSettingsKey(itemOpts):isBackground?backgroundSettingsKey(opts):settingsKey(opts);
     state.resultOptions[i]=isRedact?{regions:cloneRegions(redactRegionsFor(i))}:{...itemOpts};
     try{
-      const result=isWatermark?await applyWatermarks(state.files[i],opts,p=>updateCardProgress(i,p)):isRedact?await applyRedactions(state.files[i],cloneRegions(redactRegionsFor(i)),p=>updateCardProgress(i,p)):isCrop?await applyCrop(state.files[i],itemOpts,p=>updateCardProgress(i,p)):isBackground?await removeBackgroundDemo(state.files[i],opts,p=>updateCardProgress(i,p)):await compressImage(state.files[i],opts,p=>updateCardProgress(i,p));
+      const progress=p=>{if(!isStale()&&state.files[i]===file)updateCardProgress(i,p);};
+      const result=await (isWatermark? applyWatermarks(state.files[i],opts,progress):isRedact?await applyRedactions(state.files[i],cloneRegions(redactRegionsFor(i)),progress):isCrop?await applyCrop(state.files[i],itemOpts,progress):isBackground?await removeBackgroundDemo(state.files[i],opts,progress):compressImage(state.files[i],opts,progress));
+      if(isStale()){abandon(i,file,result);break;}
       state.results[i]=result;state.errors[i]=null;state.processKeys[i]=key;if(result.metTarget&&!state.selectionManual&&!state.results[state.selectedIndex]?.metTarget)state.selectedIndex=i;renderCard(i);
     }catch(error){
+      if(isStale()){abandon(i,file,null);break;}
       console.warn('PixelQuota processing failure:',state.files[i]?.name,error);
       state.results[i]=null;state.errors[i]={message:String(error?.message||error)};state.processKeys[i]=key;renderCard(i);
     }
   }
-  state.busy=false;if(isRedact){state.redactView='compare';renderComparison();}$('processBtn').classList.remove('busy');syncDownloadAvailability();updateQueue();updateResultsSummary();toast(t(isWatermark?'watermarkDone':isRedact?'redactDone':isCrop?'cropDone':isBackground?'bgDone':state.compressionMode==='convert'?'convertDone':'done'));
+  }finally{
+    // A newer run (possible after Clear all) owns the busy state and UI from here.
+    if(state.activeRun!==run)return;
+    state.activeRun=null;state.busy=false;$('processBtn').classList.remove('busy');
+  }
+  if(!state.files.length){syncDownloadAvailability();updateQueue();return;}
+  state.busy=false;if(isRedact&&!staleRun){state.redactView='compare';renderComparison();}$('processBtn').classList.remove('busy');syncDownloadAvailability();updateQueue();updateResultsSummary();if(staleRun)return toast(t('settingsChangedRerun'));toast(t(isWatermark?'watermarkDone':isRedact?'redactDone':isCrop?'cropDone':isBackground?'bgDone':state.compressionMode==='convert'?'convertDone':'done'));
 }
 
 function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1600);}
-async function downloadAll(){const good=state.results.filter(Boolean);if(!good.length)return toast(t('noOutputs'));const entries={};for(const r of good)entries[r.outputName]=new Uint8Array(await r.blob.arrayBuffer());const zipped=zipSync(entries,{level:6});const name=state.toolMode==='watermark'?'pixelquota-watermarked.zip':state.toolMode==='redact'?'pixelquota-redacted.zip':state.toolMode==='crop'?'pixelquota-social-crops.zip':state.toolMode==='remove-bg'?'pixelquota-background-removed.zip':'pixelquota-images.zip';downloadBlob(new Blob([zipped],{type:'application/zip'}),name);toast(t('zipReady'));}
+async function downloadAll(){const good=state.results.filter(Boolean);if(!good.length)return toast(t('noOutputs'));const entries={};for(const r of good){let name=r.outputName,n=2;const dot=name.lastIndexOf('.'),stem=dot>0?name.slice(0,dot):name,ext=dot>0?name.slice(dot):'';while(name in entries)name=`${stem} (${n++})${ext}`;entries[name]=new Uint8Array(await r.blob.arrayBuffer());}const zipped=zipSync(entries,{level:6});const name=state.toolMode==='watermark'?'pixelquota-watermarked.zip':state.toolMode==='redact'?'pixelquota-redacted.zip':state.toolMode==='crop'?'pixelquota-social-crops.zip':state.toolMode==='remove-bg'?'pixelquota-background-removed.zip':'pixelquota-images.zip';downloadBlob(new Blob([zipped],{type:'application/zip'}),name);toast(t('zipReady'));}
 function setPreset(kb){const changed=targetKb()!==kb;state.customMode=false;$('targetKb').value=kb;if(changed)invalidateAllOutputs();updateGate();}
 function setCustom(){state.customMode=true;updateGate();$('targetKb').focus();$('targetKb').select();}
 function setFormat(format){const button=document.querySelector(`#formatButtons [data-format="${format}"]`);if(button?.disabled)return toast(t('formatUnavailable'));const changed=state.outputFormat!==format;state.outputFormat=format;if(changed)invalidateAllOutputs();document.querySelectorAll('#formatButtons [data-format]').forEach(b=>b.classList.toggle('active',b.dataset.format===format));}
@@ -1314,5 +1339,14 @@ function bind(){
   $('languageMenu').onkeydown=e=>{const options=[...document.querySelectorAll('#languageOptions [data-locale]')];if(e.key==='Escape'){e.preventDefault();closeLanguageMenu();$('languageToggle').focus();return;}if((e.key==='ArrowDown'||e.key==='ArrowUp')&&!$('languageOptions').hidden){e.preventDefault();const current=Math.max(0,options.indexOf(document.activeElement)),next=(current+(e.key==='ArrowDown'?1:-1)+options.length)%options.length;options[next]?.focus();}};
   let resizeFrame=0;window.addEventListener('resize',()=>{if(resizeFrame)return;resizeFrame=requestAnimationFrame(()=>{resizeFrame=0;fitCurrentPreviewSurface();requestCropOverlayRender();if(!$('backgroundInspectModal').hidden){const canvas=$('backgroundInspectCanvas');backgroundInspector.baseWidth=canvas.getBoundingClientRect().width/backgroundInspector.zoom;backgroundInspector.baseHeight=canvas.getBoundingClientRect().height/backgroundInspector.zoom;applyBackgroundInspectorTransform();}});});
 }
-function init(){initPageMode();initColorPickers();bind();applyLocale(state.locale);setFormat(state.outputFormat);setResize(state.resizeMode);syncCompressionModeUI();initFormatCapabilities();setWatermarkPanel(state.watermarkPanel);setWatermarkColor('#ffffff');setRedactMode(state.redactMode);setRedactStrength(state.redactStrength,false);redactColorPicker.setColor(state.redactColor,false);setCropPlatform(state.cropPlatform);setCropPreset(state.cropPreset);updateWatermarkStateIndicators();updateRedactActions();syncBackgroundEngineUI();initBackgroundAICacheState();syncDownloadAvailability();initMonetization();window.PixelQuotaTest={addFiles,removeFile,processAll,state,compressImage,detectEncoderSupport,applyWatermarks,renderWatermarkPreview,applyRedactions,renderRedactPreview,applyCrop,renderCropPreview,removeBackgroundDemo,renderBackgroundRemovalPreview,renderBackgroundRemovalInspection,BACKGROUND_REMOVAL_ENGINE,loadBackgroundAIModel,getBackgroundAIState,probeBackgroundAICache,setPreset,setCustom,setFormat,setResize,setCompressionMode,setToolMode,setWatermarkPanel,setWatermarkPosition,setWatermarkImagePosition,setWatermarkTextAlign,setWatermarkColor,setRedactMode,setRedactStrength,setRedactView,setBackgroundEngine,loadBackgroundModelUI,syncBackgroundEngineUI,setCropPlatform,setCropPreset,resetCropFrame,applyWatermarkPreset,settingsKey,inputOptions,watermarkOptions,backgroundOptions,backgroundSettingsKey,cropOptions,cropSettingsKey,redactRegionsFor,redactSettingsKey,undoRedact,redoRedact,deleteRedactRegion,selectRedactLayer,deleteRedactLayer,renderRedactLayers,renderRedactOverlay,renderCropOverlay,redactHandle,updateRedactCursor,syncRangeVisual,selectResult,renderComparison,fitPreviewSurface,updateComparisonPosition,updateWatermarkLivePreview,updateRedactPreview,updateBackgroundPreview,openBackgroundInspector,closeBackgroundInspector,setBackgroundInspectorZoom,backgroundInspector};}
+// Selection is shown with an .active class; mirror it to aria-pressed so assistive tech can read it.
+function initPressedStateSync(){
+  const groups=['toolModeSwitch','compressModeSwitch','formatButtons','resizeButtons','watermarkAlignButtons','redactModeButtons','cropPlatformButtons','cropPresetGrid','bgEngineSwitch','redactViewSwitch'].map(id=>$(id)).filter(Boolean);
+  const sync=button=>button.setAttribute('aria-pressed',String(button.classList.contains('active')));
+  for(const group of groups){
+    group.querySelectorAll('button').forEach(sync);
+    new MutationObserver(records=>{for(const r of records)if(r.target.tagName==='BUTTON')sync(r.target);}).observe(group,{subtree:true,attributes:true,attributeFilter:['class']});
+  }
+}
+function init(){initPressedStateSync();initPageMode();initColorPickers();bind();applyLocale(state.locale);setFormat(state.outputFormat);setResize(state.resizeMode);syncCompressionModeUI();initFormatCapabilities();setWatermarkPanel(state.watermarkPanel);setWatermarkColor('#ffffff');setRedactMode(state.redactMode);setRedactStrength(state.redactStrength,false);redactColorPicker.setColor(state.redactColor,false);setCropPlatform(state.cropPlatform);setCropPreset(state.cropPreset);updateWatermarkStateIndicators();updateRedactActions();syncBackgroundEngineUI();initBackgroundAICacheState();syncDownloadAvailability();initMonetization();window.PixelQuotaTest={addFiles,removeFile,processAll,state,compressImage,detectEncoderSupport,applyWatermarks,renderWatermarkPreview,applyRedactions,renderRedactPreview,applyCrop,renderCropPreview,removeBackgroundDemo,renderBackgroundRemovalPreview,renderBackgroundRemovalInspection,BACKGROUND_REMOVAL_ENGINE,loadBackgroundAIModel,getBackgroundAIState,probeBackgroundAICache,setPreset,setCustom,setFormat,setResize,setCompressionMode,setToolMode,setWatermarkPanel,setWatermarkPosition,setWatermarkImagePosition,setWatermarkTextAlign,setWatermarkColor,setRedactMode,setRedactStrength,setRedactView,setBackgroundEngine,loadBackgroundModelUI,syncBackgroundEngineUI,setCropPlatform,setCropPreset,resetCropFrame,applyWatermarkPreset,settingsKey,inputOptions,watermarkOptions,backgroundOptions,backgroundSettingsKey,cropOptions,cropSettingsKey,redactRegionsFor,redactSettingsKey,undoRedact,redoRedact,deleteRedactRegion,selectRedactLayer,deleteRedactLayer,renderRedactLayers,renderRedactOverlay,renderCropOverlay,redactHandle,updateRedactCursor,syncRangeVisual,selectResult,renderComparison,fitPreviewSurface,updateComparisonPosition,updateWatermarkLivePreview,updateRedactPreview,updateBackgroundPreview,openBackgroundInspector,closeBackgroundInspector,setBackgroundInspectorZoom,backgroundInspector};}
 init();
