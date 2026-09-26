@@ -72,75 +72,11 @@ function applyRouteMeta() {
 
 function applyPageCopy() {
   applyRouteMeta();
-  if (state.toolMode==='watermark') {
-    document.querySelector('.hero-section .eyebrow').textContent=t('watermarkEyebrow');
-    setHeroLines(t('watermarkHeroTitle'),'');
-    $('heroSub').textContent=t('watermarkHeroSub');
-    $('seoHeading').textContent=t('watermarkSeoHeading');
-    $('seoParagraph1').textContent=t('watermarkSeoParagraph1');
-    $('seoParagraph2').textContent=t('watermarkSeoParagraph2');
-    return;
-  }
-  if (state.toolMode==='redact') {
-    document.querySelector('.hero-section .eyebrow').textContent=t('redactEyebrow');
-    setHeroLines(t('redactHeroTitle'),'');
-    $('heroSub').textContent=t('redactHeroSub');
-    $('seoHeading').textContent=t('redactSeoHeading');
-    $('seoParagraph1').textContent=t('redactSeoParagraph1');
-    $('seoParagraph2').textContent=t('redactSeoParagraph2');
-    return;
-  }
-  if (state.toolMode==='crop') {
-    document.querySelector('.hero-section .eyebrow').textContent=t('cropEyebrow');
-    setHeroLines(t('cropHeroTitle'),'');
-    $('heroSub').textContent=t('cropHeroSub');
-    $('seoHeading').textContent=t('cropSeoHeading');
-    $('seoParagraph1').textContent=t('cropSeoParagraph1');
-    $('seoParagraph2').textContent=t('cropSeoParagraph2');
-    return;
-  }
-  if (state.toolMode==='remove-bg') {
-    document.querySelector('.hero-section .eyebrow').textContent=t('bgEyebrow');
-    setHeroLines(t('bgHeroTitle'),'');
-    $('heroSub').textContent=t('bgHeroSub');
-    $('seoHeading').textContent=t('bgSeoHeading');
-    $('seoParagraph1').textContent=t('bgSeoParagraph1');
-    $('seoParagraph2').textContent=t('bgSeoParagraph2');
-    return;
-  }
-  if (state.toolMode==='vectorize') {
-    document.querySelector('.hero-section .eyebrow').textContent=t('vectorEyebrow');
-    setHeroLines(t('vectorHeroTitle'),'');
-    $('heroSub').textContent=t('vectorHeroSub');
-    $('seoHeading').textContent=t('vectorSeoHeading');
-    $('seoParagraph1').textContent=t('vectorSeoParagraph1');
-    $('seoParagraph2').textContent=t('vectorSeoParagraph2');
-    return;
-  }
-  document.querySelector('.hero-section .eyebrow').textContent=t('eyebrow');
-  if (state.pageMode==='preset') {
-    const limit=formatLimit(state.pagePresetKb);
-    setHeroLines(template('presetHeroLine1',{limit}),t('presetHeroLine2'));
-    $('heroSub').textContent=template('presetHeroSub',{limit});
-    $('seoHeading').textContent=template('presetSeoHeading',{limit});
-    $('seoParagraph1').textContent=template('presetSeoParagraph1',{limit});
-    $('seoParagraph2').textContent=t('seoParagraph2');
-    return;
-  }
-  if (state.pageMode==='heic') {
-    setHeroLines(t('heicHeroLine1'),t('heicHeroLine2'));
-    $('heroSub').textContent=t('heicHeroSub');
-    $('seoHeading').textContent=t('seoHeading');
-    $('seoParagraph1').textContent=t('seoParagraph1');
-    $('seoParagraph2').textContent=t('seoParagraph2');
-    return;
-  }
-  const lines=t('heroTitle').split('\n');
-  setHeroLines(lines[0]||'',lines[1]||'');
-  $('heroSub').textContent=t('heroSub');
-  $('seoHeading').textContent=t('seoHeading');
-  $('seoParagraph1').textContent=t('seoParagraph1');
-  $('seoParagraph2').textContent=t('seoParagraph2');
+  const heroKeys={watermark:'watermarkHeroTitle',redact:'redactHeroTitle',crop:'cropHeroTitle','remove-bg':'bgHeroTitle',vectorize:'vectorHeroTitle'};
+  if (heroKeys[state.toolMode]) { setHeroLines(t(heroKeys[state.toolMode]),''); return; }
+  if (state.pageMode==='preset') { setHeroLines(template('presetHeroLine1',{limit:formatLimit(state.pagePresetKb)}),t('presetHeroLine2')); return; }
+  if (state.pageMode==='heic') { setHeroLines(t('heicHeroLine1'),t('heicHeroLine2')); return; }
+  setHeroLines(t('heroTitle'),'');
 }
 
 function syncLanguageMenu(){
