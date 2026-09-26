@@ -224,3 +224,9 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 .watermark-position-wrap .position-grid{height:40px;min-height:40px;display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}
 .watermark-position-wrap .position-grid button{height:40px;min-width:0}
 @media(max-width:760px){.watermark-controls-row{grid-template-columns:minmax(0,1fr)}.watermark-color-field{grid-template-columns:minmax(0,1fr) auto}.watermark-more-grid .watermark-section{gap:10px}.image-watermark-section>.more-range-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+/* v1.6 pass 3: selection belongs to the thumbnail, not its caption. */
+.result-card.selected{border-color:transparent;outline:none;background:transparent}
+.result-card.selected .thumb{outline:2px solid var(--accent);outline-offset:2px}
+.result-card .progress.mini-meter{display:block;visibility:visible;width:96px;height:3px;min-height:3px;margin:0;flex:none}
+.result-card .result-info{width:96px;height:16px;min-height:16px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:16px;text-align:left}
+.result-card .result-info strong,.result-card .result-info .result-size{font-size:11.5px;line-height:16px;white-space:nowrap}
