@@ -263,3 +263,6 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 :root[data-theme=night] .crop-preset-grid button.active *{color:var(--ink)}
 :root[data-theme=night] button:disabled{background:var(--line-2);border-color:var(--line-2);color:var(--ink-3);opacity:1}
 :root[data-theme=night] .crop-preset-grid button:disabled *{color:var(--ink-3)}
+
+/* Give the horizontally scrolled mobile result strip breathing room at its end. */
+@media(max-width:760px){.result-list{padding-right:14px}}
