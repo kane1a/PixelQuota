@@ -237,3 +237,7 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 .settings-primary.bar button[hidden]{display:none!important}
 @media(max-width:760px){.canvas-nav{width:32px;height:32px;font-size:21px}}
 [hidden]{display:none!important}
+
+/* Keep controls and actions on the same baseline; mobile gets a full-width action row. */
+.settings-primary.bar{align-items:flex-end}
+@media(max-width:760px){.settings-primary.bar{align-items:stretch}}
