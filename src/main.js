@@ -960,6 +960,8 @@ function fitPreviewSurface(width,height){
   const panel=$('comparisonPanel'),stage=$('comparisonStage'),surface=$('previewSurface');
   width=Number(width)||0;height=Number(height)||0;
   if(!panel||!stage||!surface||width<=0||height<=0)return;
+  const canvas=$('canvas');
+  if(canvas){if(window.matchMedia('(max-width:760px)').matches&&state.files.length){const availableWidth=Math.max(1,canvas.clientWidth-2);canvas.style.height=`${Math.min(340,Math.max(1,Math.round(availableWidth*height/width)))}px`;}else canvas.style.removeProperty('height');}
   // The stage is the canvas. Only the image surface scales inside it, so switching
   // between portrait and landscape never shrinks or moves the comparison chrome.
   const stageStyle=getComputedStyle(stage);
@@ -1202,7 +1204,7 @@ function resetAll() {
   bumpOutputGeneration();
   clearLiveWatermarkPreview();clearRedactPreview();clearCropEditor();clearBackgroundPreview();clearWatermarkCache();clearRedactCache();clearCropCache();state.files.forEach(file=>clearBackgroundRemovalCache(file));state.results.forEach(r=>r?.previewUrl&&URL.revokeObjectURL(r.previewUrl));state.previews.forEach(url=>URL.revokeObjectURL(url));
   state.files=[];state.results=[];state.errors=[];state.previews=[];state.processKeys=[];state.resultOptions=[];state.redactRegions=[];state.redactHistory=[];state.cropRects=[];state.cropSourceMeta=[];state.busy=false;state.lastSkipped=0;state.selectedIndex=null;state.selectionManual=false;state.comparePosition=50;state.redactSelected=null;state.redactView='edit';
-  $('fileInput').value='';$('resultsSection').hidden=true;$('emptyResults').hidden=false;$('dropZone').hidden=false;$('comparisonPanel').hidden=true;$('resultList').hidden=true;$('resultList').innerHTML='';updateVectorStats(null);syncDownloadAvailability();updateQueue();updateRedactActions();
+  $('fileInput').value='';$('canvas')?.style.removeProperty('height');$('resultsSection').hidden=true;$('emptyResults').hidden=false;$('dropZone').hidden=false;$('comparisonPanel').hidden=true;$('resultList').hidden=true;$('resultList').innerHTML='';updateVectorStats(null);syncDownloadAvailability();updateQueue();updateRedactActions();
 }
 function removeFile(index){
   if(state.busy||!Number.isInteger(index)||index<0||index>=state.files.length)return;
@@ -1378,7 +1380,7 @@ function bind(){
   $('presetRow').onclick=e=>{const preset=e.target.closest('[data-kb]');if(preset)return setPreset(Number(preset.dataset.kb));const custom=e.target.closest('[data-custom]');if(custom)setCustom();};
   $('targetKb').addEventListener('input',()=>{state.customMode=true;invalidateAllOutputs();updateGate();});
   ['maxWidth','maxHeight'].forEach(id=>$(id).addEventListener('input',invalidateAllOutputs));$('stripMetadata').addEventListener('change',invalidateAllOutputs);
-  $('moreSettingsBtn').onclick=()=>{const more=$('moreSettings'),open=more.hidden;more.hidden=!open;$('moreSettingsBtn').setAttribute('aria-expanded',String(open));};
+  $('moreSettingsBtn').onclick=()=>{const more=$('moreSettings'),active=more?.querySelector('.more-tool-section:not([hidden])');if(!active){if(more)more.hidden=true;$('moreSettingsBtn').setAttribute('aria-expanded','false');return;}const open=more.hidden;more.hidden=!open;$('moreSettingsBtn').setAttribute('aria-expanded',String(open));};
   $('formatButtons').onclick=e=>{const b=e.target.closest('[data-format]');if(b)setFormat(b.dataset.format);};
   $('resizeButtons').onclick=e=>{const b=e.target.closest('[data-resize]');if(b)setResize(b.dataset.resize);};
   $('processBtn').onclick=processAll;$('clearBtn').onclick=resetAll;$('downloadAllBtn').onclick=downloadAll;$('downloadCurrentBtn').onclick=downloadCurrent;

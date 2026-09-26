@@ -230,3 +230,8 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 .result-card .progress.mini-meter{display:block;visibility:visible;width:96px;height:3px;min-height:3px;margin:0;flex:none}
 .result-card .result-info{width:96px;height:16px;min-height:16px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:16px;text-align:left}
 .result-card .result-info strong,.result-card .result-info .result-size{font-size:11.5px;line-height:16px;white-space:nowrap}
+/* v1.6 pass 3: never paint an empty drawer when a tool has no extra settings. */
+#moreSettings:not(:has(>.more-tool-section:not([hidden]))){display:none!important}
+#moreSettings:empty{display:none!important}
+.batch-summary{width:100%;flex:0 0 100%}
+.settings-primary.bar button[hidden]{display:none!important}
