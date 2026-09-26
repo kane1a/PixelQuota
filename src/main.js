@@ -72,11 +72,11 @@ function applyRouteMeta() {
 
 function applyPageCopy() {
   applyRouteMeta();
-  const heroKeys={watermark:'watermarkHeroTitle',redact:'redactHeroTitle',crop:'cropHeroTitle','remove-bg':'bgHeroTitle',vectorize:'vectorHeroTitle'};
-  if (heroKeys[state.toolMode]) { setHeroLines(t(heroKeys[state.toolMode]),''); return; }
-  if (state.pageMode==='preset') { setHeroLines(template('presetHeroLine1',{limit:formatLimit(state.pagePresetKb)}),t('presetHeroLine2')); return; }
-  if (state.pageMode==='heic') { setHeroLines(t('heicHeroLine1'),t('heicHeroLine2')); return; }
-  setHeroLines(t('heroTitle'),'');
+  const tool={watermark:'watermark',redact:'redact',crop:'crop','remove-bg':'bg',vectorize:'vector'}[state.toolMode];
+  if (tool) { setHeroLines(t(tool+'HeroTitle'),''); $('heroSub').textContent=t(tool+'HeroSub'); return; }
+  if (state.pageMode==='preset') { const limit=formatLimit(state.pagePresetKb); setHeroLines(template('presetHeroLine1',{limit}),''); $('heroSub').textContent=template('presetHeroSub',{limit}); return; }
+  if (state.pageMode==='heic') { setHeroLines(t('heicHeroLine1'),''); $('heroSub').textContent=t('heicHeroSub'); return; }
+  setHeroLines(t('heroTitle'),''); $('heroSub').textContent=t('heroSub');
 }
 
 function syncLanguageMenu(){

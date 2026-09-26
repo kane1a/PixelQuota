@@ -54,3 +54,5 @@
 #heroTitle{font-weight:760;letter-spacing:-.035em}
 .app-bar{display:flex;justify-content:space-between}
 .window-header{justify-content:center}
+.hero-sub{margin-top:14px;font-weight:500}
+footer{margin-top:40px}

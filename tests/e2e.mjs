@@ -54,7 +54,7 @@ for(const locale of ['en','zh-TW','zh-CN','ja','ko']){
 await setLocale('zh-TW');
 
 const zh=await page.evaluate(()=>({hero:document.querySelector('#heroTitle').textContent,drop:document.querySelector('.drop-zone strong').textContent,privacy:document.querySelector('footer [data-i18n="privacyLink"]').textContent,placeholder:document.querySelector('#maxWidth').placeholder}));
-if(!zh.hero.includes('小得剛剛好')||!zh.drop.includes('圖片')||zh.privacy!=='隱私說明'||zh.placeholder!=='不限')throw new Error(`zh translation incomplete ${JSON.stringify(zh)}`);
+if(!zh.hero.includes('恰到好處')||!zh.drop.includes('圖片')||zh.privacy!=='隱私說明'||zh.placeholder!=='不限')throw new Error(`zh translation incomplete ${JSON.stringify(zh)}`);
 const zhPageTitle=await page.title();if(zhPageTitle!=='PixelQuota - 本機隱私圖片工具，不上傳')throw new Error(`localized multi-tool title failed: ${zhPageTitle}`);
 const customLanguage=await page.evaluate(()=>({nativeSelect:!!document.querySelector('.header-tools select'),value:document.querySelector('#languageValue').textContent,selected:document.querySelector('#languageOptions [aria-selected="true"]')?.dataset.locale||'',toggleAppearance:getComputedStyle(document.querySelector('#languageToggle')).appearance}));
 if(customLanguage.nativeSelect||customLanguage.value!=='繁中'||customLanguage.selected!=='zh-TW'||customLanguage.toggleAppearance==='auto')throw new Error(`custom language control failed ${JSON.stringify(customLanguage)}`);
@@ -76,7 +76,7 @@ const beforeCommon=await page.url();
 await page.click('#commonLimitButtons [data-kb="50"]');
 await new Promise(r=>setTimeout(r,250));
 const commonZh=await page.evaluate(()=>({href:location.href,target:document.querySelector('#targetKb').value,lang:document.documentElement.lang,hero:document.querySelector('#heroTitle').textContent,labels:[...document.querySelectorAll('#commonLimitButtons span')].map(x=>x.textContent)}));
-if(commonZh.href!==beforeCommon||commonZh.target!=='50'||commonZh.lang!=='zh-TW'||!commonZh.hero.includes('小得剛剛好')||commonZh.labels.some(x=>/applications|photo uploads|common limit/i.test(x)))throw new Error(`common limit language/navigation regression ${JSON.stringify(commonZh)}`);
+if(commonZh.href!==beforeCommon||commonZh.target!=='50'||commonZh.lang!=='zh-TW'||!commonZh.hero.includes('恰到好處')||commonZh.labels.some(x=>/applications|photo uploads|common limit/i.test(x)))throw new Error(`common limit language/navigation regression ${JSON.stringify(commonZh)}`);
 
 await page.click('#presetRow [data-custom]');
 await page.$eval('#targetKb',e=>{e.value='137';e.dispatchEvent(new Event('input',{bubbles:true}))});
@@ -163,7 +163,7 @@ if(zhFail.result.met||zhFail.result.w!==600||zhFail.result.h!==600||!zhFail.reas
 
 await setLocale('en');
 const enAfter=await page.evaluate(()=>({reason:document.querySelector('.result-reason')?.textContent||'',hero:document.querySelector('#heroTitle').textContent,common:[...document.querySelectorAll('#commonLimitButtons span')].map(x=>x.textContent)}));
-if(!enAfter.reason.includes('Could not reach')||!enAfter.hero.includes('Exactly small enough.')||enAfter.common.some(x=>/[\u4e00-\u9fff]/.test(x)))throw new Error(`english rerender incomplete ${JSON.stringify(enAfter)}`);
+if(!enAfter.reason.includes('Could not reach')||!enAfter.hero.includes('Just right.')||enAfter.common.some(x=>/[\u4e00-\u9fff]/.test(x)))throw new Error(`english rerender incomplete ${JSON.stringify(enAfter)}`);
 
 const widths=[320,375,768,1024,1440];const layouts=[];
 for(const w of widths){await page.setViewport({width:w,height:w<500?844:1000,deviceScaleFactor:1});await new Promise(r=>setTimeout(r,80));const layout=await page.evaluate(()=>({w:innerWidth,scroll:document.documentElement.scrollWidth,browseH:document.querySelector('#browseBtn').getBoundingClientRect().height,processH:document.querySelector('#processBtn').getBoundingClientRect().height,helper:parseFloat(getComputedStyle(document.querySelector('.helper')).fontSize)}));if(layout.scroll>layout.w+2||layout.browseH<44||layout.processH<58||layout.helper<10)throw new Error(`responsive/readability failed ${JSON.stringify(layout)}`);layouts.push(layout);}

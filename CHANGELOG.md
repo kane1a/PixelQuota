@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.5.0 - 2026-09-26
+
+### New
+
+- SVG Pro: new vectorizer for logos, icons and flat graphics. Each color becomes one clean path, with straight edges and sharp corners kept, fine hairline strokes preserved, and linear or radial gradients exported as real SVG gradients. Single-color logos stay a single color. Settings are chosen automatically.
+- Social Crop: added Threads, TikTok and Pinterest, plus Instagram 1:1 and the 3:4 Reels cover.
+
+### Changes
+
+- Remove Background now runs on the AI model only; the quick mode and manual sliders are gone, and the panel shows just the model name and its status.
+- New headline and a short one-line description for every tool, in all five languages.
+- Removed the top navigation, highlight pills, the guide section, the duplicate logo inside the tool window, and several secondary hints.
+- Larger text for the tool switcher and other small labels; lighter bold weights; text inputs now use the page font.
+- The privacy note moved below the settings column so it no longer sits inside the workspace.
+- More consistent spacing between panels and above the footer.
+
 ## 1.4.2 — 2026-09-25
 
 ### Fixes
