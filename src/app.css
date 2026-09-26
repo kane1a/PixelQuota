@@ -244,3 +244,16 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 
 /* Reserve the minimum useful KB preset width so format stays on the desktop control row. */
 @media(min-width:761px){.settings-primary.bar .tool-settings>#compressTargetSettings{flex:1 1 326px;min-width:326px}}
+
+/* Watermark drawer: matching field labels, slider values, and the same 3×3 position control. */
+#watermarkMoreSettings .watermark-more-grid .watermark-field>.control-label,
+#watermarkMoreSettings .watermark-more-grid .watermark-position-wrap>.control-label,
+#watermarkMoreSettings .watermark-more-grid .watermark-color-field .color-preset-block>span,
+#watermarkMoreSettings .watermark-more-grid .range-control>.control-label{color:var(--ink-3);font-size:12px;font-weight:400}
+#watermarkMoreSettings .watermark-more-grid .range-control>.control-label{width:100%;justify-content:space-between}
+#watermarkMoreSettings .watermark-more-grid .range-control>.control-label output,.range-control>.control-label output{margin-left:auto}
+#watermarkMoreSettings .watermark-more-grid .range-control>input[type=range]{display:block;align-self:stretch;width:100%;height:40px;min-height:40px;margin:0}
+#watermarkMoreSettings .watermark-more-grid .more-section-heading{color:var(--ink);font-size:13px;font-weight:600}
+#watermarkMoreSettings .image-watermark-section>.watermark-position-wrap{align-items:flex-start}
+#watermarkMoreSettings .watermark-position-wrap .position-grid{width:96px;height:40px;min-height:40px;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:2px;padding:3px}
+#watermarkMoreSettings .watermark-position-wrap .position-grid button{width:100%;height:10px;min-width:0}
