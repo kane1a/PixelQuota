@@ -3,25 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#f6f9ff" />
-  <meta name="description" content="Private image tools that run in your browser: compress, watermark, redact, crop, and remove backgrounds without uploading your originals." />
-  <meta property="og:title" content="PixelQuota - Private Image Tools, No Uploads" />
-  <meta property="og:description" content="Compress, watermark, redact, crop, and remove backgrounds locally in your browser." />
+  <meta name="theme-color" content="#ece8e1" />
+  <meta name="description" content="Six focused image tools for compression, watermarks, redaction, social crops, background removal, and SVG conversion." />
+  <meta property="og:title" content="PixelQuota | Image tools" />
+  <meta property="og:description" content="Six focused image tools for everyday image work." />
   <meta property="og:type" content="website" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231f7cff'/%3E%3Cpath d='M15 43l12-14 9 10 7-8 8 12H15z' fill='white'/%3E%3Ccircle cx='46' cy='20' r='5' fill='white'/%3E%3C/svg%3E" />
-  <title>PixelQuota - Private Image Tools, No Uploads</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232b2824'/%3E%3Crect x='4' y='4' width='24' height='24' rx='6.5' fill='none' stroke='%23f6f3ee' stroke-width='2.3'/%3E%3Crect x='6.1' y='17' width='12.2' height='8.9' rx='1.6' fill='%23f6f3ee'/%3E%3Cpath d='M22.2 11.2v14.6' stroke='%23f6f3ee' stroke-width='2.3' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <title>PixelQuota | Image tools</title>
 </head>
 <body>
   <div class="page-shell">
-    <header class="app-bar">
-      <a class="brand" href="./index.html" aria-label="PixelQuota home">
-        <span class="brand-glyph" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></span>
-        <span class="brand-name"><span>Pixel</span><strong>Quota</strong></span>
-      </a>
+    <svg class="icon-defs" aria-hidden="true" focusable="false"><symbol id="brandMark" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="24" height="24" rx="6.5" stroke-width="2.3"/><rect x="6.1" y="17" width="12.2" height="8.9" rx="1.6" fill="currentColor" stroke="none"/><path d="M22.2 11.2v14.6" stroke-width="2.3"/></symbol></svg>
+    <header class="app-header">
+      <a class="brand" href="./index.html" aria-label="PixelQuota home"><svg class="brand-icon" aria-hidden="true"><use href="#brandMark" /></svg><span>PixelQuota</span></a>
+      <nav id="toolModeSwitch" class="tool-mode-switch" role="tablist" aria-label="Image tools">
+        <button type="button" class="active" role="tab" aria-selected="true" data-tool-mode="compress" data-i18n="modeCompress">Compress / Convert</button>
+        <button type="button" role="tab" aria-selected="false" data-tool-mode="watermark" data-i18n="modeWatermark">Watermark</button>
+        <button type="button" role="tab" aria-selected="false" data-tool-mode="redact" data-i18n="modeRedact">Redact</button>
+        <button type="button" role="tab" aria-selected="false" data-tool-mode="crop" data-i18n="modeCrop">Social crop</button>
+        <button type="button" role="tab" aria-selected="false" data-tool-mode="remove-bg" data-i18n="modeRemoveBg">Remove BG</button>
+        <button type="button" role="tab" aria-selected="false" data-tool-mode="vectorize" data-i18n="modeVectorize">SVG Pro</button>
+      </nav>
       <div class="header-tools">
-        <span class="local-badge"><span class="local-dot"></span><span data-i18n="localBadge">Files stay on this device</span></span>
         <div id="languageMenu" class="language-menu">
-          <button id="languageToggle" class="language-toggle" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="languageOptions"><span id="languageValue">EN</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 6 3.5 3.5L11.5 6"/></svg></button>
+          <button id="languageToggle" class="language-toggle" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="languageOptions"><span id="languageValue">EN</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 6 3.5 3.5L11.5 6" /></svg></button>
           <div id="languageOptions" class="language-options" role="listbox" aria-label="Language" hidden>
             <button type="button" role="option" aria-selected="true" data-locale="en">English</button>
             <button type="button" role="option" aria-selected="false" data-locale="zh-TW">繁體中文</button>
@@ -35,230 +40,131 @@
 
     <main>
       <section class="hero-section">
-        <h1 id="heroTitle" data-i18n="heroTitle">Exact KB. Exact pixels. No uploads.</h1>
+        <h1 id="heroTitle" data-i18n="heroTitle">Just right.</h1>
         <p id="heroSub" class="hero-sub" data-i18n="heroSub"></p>
       </section>
 
-      <section class="app-window" id="app" aria-labelledby="toolHeading">
-        <div class="window-header">
-          
-          <div id="toolModeSwitch" class="tool-mode-switch" role="group" aria-label="Image tool"><button type="button" class="active" data-tool-mode="compress" data-i18n="modeCompress">Compress</button><button type="button" data-tool-mode="watermark" data-i18n="modeWatermark">Watermark</button><button type="button" data-tool-mode="redact" data-i18n="modeRedact">Redact</button><button type="button" data-tool-mode="crop" data-i18n="modeCrop">Social crop</button><button type="button" data-tool-mode="remove-bg" data-i18n="modeRemoveBg">Remove BG</button><button type="button" data-tool-mode="vectorize">SVG Pro</button></div>
-          
-        </div>
-
-        <div class="workbench">
-          <div class="controls-column">
-            <section class="tool-card image-pane">
-              <div class="pane-heading">
-                <div><span class="step-chip">01</span><div><p data-i18n="addImages">ADD IMAGES</p><h2 id="toolHeading" data-i18n="dropTitle">Bring in the files that need fixing.</h2></div></div>
-                <button id="clearBtn" class="quiet-button" type="button" hidden data-i18n="clearAll">Clear all</button>
-              </div>
-              <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-describedby="dropHint">
-                <input id="fileInput" type="file" accept="image/*,.heic,.heif,.avif,.bmp" multiple hidden />
-                <div class="drop-visual" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M7 23 14 14l5 6 3-4 4 7H7Z" fill="currentColor" opacity=".22"/><circle cx="22" cy="10" r="3" fill="currentColor"/><rect x="4.5" y="5.5" width="23" height="21" rx="4" stroke="currentColor" stroke-width="1.5"/></svg></div>
-                <strong data-i18n="dropFiles">Drop images here</strong>
-                <span id="dropHint" data-i18n="dropHint">Choose files, drag them here, or paste from the clipboard.</span>
-                <div class="drop-actions"><button id="browseBtn" class="button primary" type="button" data-i18n="chooseButton">Choose images</button></div>
-                <small>JPG · PNG · WebP · AVIF · HEIC · BMP</small>
-              </div>
-            </section>
-
-            <aside class="tool-card spec-pane" aria-label="Tool settings">
-              <div class="spec-topline"><div><span class="step-chip inverse">02</span><p id="specLabel" data-i18n="outputSpec">OUTPUT SPEC</p></div><span id="gateBadge" class="gate-badge">≤ 200 KB</span></div>
-              <div id="compressSettings" class="compress-settings">
-                <div id="compressModeSwitch" class="compress-mode-switch" role="group" aria-label="Compression or conversion mode"><button type="button" class="active" data-compress-mode="limit"><b data-i18n="compressModeLimit">Compress to a KB limit</b><small data-i18n="compressModeLimitHint">Control the final file size</small></button><button type="button" data-compress-mode="convert"><b data-i18n="compressModeConvert">Convert only · no KB compression</b><small data-i18n="compressModeConvertHint">Keep source pixels and high quality</small></button></div>
-                <div id="compressTargetSettings" class="target-control"><label for="targetKb" data-i18n="maxFileSize">Maximum file size</label><div class="target-input"><input id="targetKb" type="number" min="5" max="100000" step="1" value="200" inputmode="decimal" /><span>KB</span></div><div class="preset-row" id="presetRow" aria-label="File size presets"><button type="button" data-kb="20">20</button><button type="button" data-kb="50">50</button><button type="button" data-kb="100">100</button><button type="button" data-kb="200" class="active">200</button><button type="button" data-kb="500">500</button><button type="button" data-kb="1000">1 MB</button><button type="button" data-custom="true" data-i18n="customSize">Custom</button></div><p class="helper" data-i18n="safeMargin">A 2% safety margin keeps strict upload forms from rejecting a borderline file.</p></div>
-                <div class="spec-section"><div class="section-label"><span data-i18n="format">Format</span></div><div id="formatButtons" class="format-choice-wrap" role="group" aria-label="Output format"><div class="segment-grid format-common"><button type="button" data-format="auto" class="active" data-i18n="autoFormat">Auto</button><button type="button" data-format="image/jpeg">JPG</button><button type="button" data-format="image/webp">WebP</button><button type="button" data-format="image/png">PNG</button></div><details id="moreFormats" class="more-formats"><summary><span data-i18n="moreFormats">More formats</span></summary><div class="segment-grid two"><button type="button" data-format="image/avif" data-format-capability="avif">AVIF</button><button type="button" data-format="image/bmp">BMP</button></div></details></div></div>
-                <details class="advanced-settings" id="advancedSettings"><summary><span data-i18n="advanced">Dimensions & privacy</span><i aria-hidden="true"></i></summary><div class="advanced-inner"><div class="section-label"><span data-i18n="resizeMode">Resize mode</span></div><div class="segment-grid two" id="resizeButtons" role="group" aria-label="Resize mode"><button type="button" data-resize="limit" class="active" data-i18n="fitWithin">Fit within</button><button type="button" data-resize="exact" data-i18n="exactCrop">Exact crop</button></div><div class="dimension-grid"><label><span data-i18n="width">Width</span><div><input id="maxWidth" type="number" min="1" max="16000" placeholder="Any" data-i18n-placeholder="any" /><em>px</em></div></label><label><span data-i18n="height">Height</span><div><input id="maxHeight" type="number" min="1" max="16000" placeholder="Any" data-i18n-placeholder="any" /><em>px</em></div></label></div><label class="check-row"><input id="stripMetadata" type="checkbox" checked /><span><b data-i18n="stripMetadata">Remove EXIF and location</b><small data-i18n="stripHelp">Re-encoded images leave camera and GPS metadata behind.</small></span></label></div></details>
-              </div>
-              <div id="watermarkSettings" class="watermark-settings" hidden>
-                <div id="watermarkSubtoolSwitch" class="watermark-subtool-switch" role="tablist" aria-label="Watermark type">
-                  <button type="button" class="active" role="tab" aria-selected="true" data-watermark-panel="text"><span data-i18n="textWatermark">Text watermark</span><i id="textWatermarkState"></i></button>
-                  <button type="button" role="tab" aria-selected="false" data-watermark-panel="image"><span data-i18n="imageWatermark">Image watermark</span><i id="imageWatermarkState"></i></button>
-                </div>
-                <section id="textWatermarkPanel" class="watermark-section watermark-panel" data-watermark-panel-content="text">
-                  <div class="section-label"><span data-i18n="textWatermark">Text watermark</span></div>
-                  <div id="watermarkPresets" class="watermark-presets"><button type="button" data-watermark-preset="bank" data-i18n="presetBank">Bank account</button><button type="button" data-watermark-preset="job" data-i18n="presetJob">Job</button><button type="button" data-watermark-preset="rent" data-i18n="presetRent">Rental</button><button type="button" data-watermark-preset="card" data-i18n="presetCard">Credit card</button></div>
-                  <div class="watermark-field"><label for="watermarkText" data-i18n="watermarkTextLabel">Watermark text</label><textarea id="watermarkText" rows="2" maxlength="120" placeholder="Enter watermark text" data-i18n-placeholder="watermarkTextPlaceholder">PixelQuota</textarea></div>
-                  <div class="watermark-align-row"><span data-i18n="watermarkTextAlign">Text alignment</span><div id="watermarkAlignButtons" class="align-buttons" role="group" aria-label="Text alignment"><button type="button" class="active" data-align="left"><span class="align-icon left" aria-hidden="true"></span><b data-i18n="alignLeft">Left</b></button><button type="button" data-align="center"><span class="align-icon center" aria-hidden="true"></span><b data-i18n="alignCenter">Center</b></button><button type="button" data-align="right"><span class="align-icon right" aria-hidden="true"></span><b data-i18n="alignRight">Right</b></button></div></div>
-                  <div class="watermark-color-row">
-                    <div class="color-preset-block"><span data-i18n="watermarkColor">Text color</span><div id="watermarkColorPresets" class="color-presets"><button type="button" class="active light" data-color="#ffffff" aria-label="White"></button><button type="button" data-color="#111827" aria-label="Black"></button><button type="button" data-color="#ef4444" aria-label="Red"></button><button type="button" data-color="#2563eb" aria-label="Blue"></button><button type="button" data-color="#facc15" aria-label="Yellow"></button></div></div>
-                    <div class="custom-color-picker">
-                      <span class="custom-color-label" data-i18n="customColor">Custom</span>
-                      <input id="watermarkColor" type="hidden" value="#ffffff" />
-                      <button id="colorPickerToggle" class="color-picker-toggle" type="button" aria-haspopup="dialog" aria-expanded="false"><span id="colorPickerPreview" class="color-picker-preview"></span><b id="colorPickerHex">#FFFFFF</b><span class="color-picker-chevron">⌄</span></button>
-                      <div id="colorPickerPopover" class="color-picker-popover" role="dialog" aria-label="Custom color" hidden>
-                        <div id="colorField" class="color-field" tabindex="0"><span id="colorFieldCursor"></span></div>
-                        <div class="hue-row"><span data-i18n="hue">Hue</span><input id="colorHue" class="hue-slider" type="range" min="0" max="360" value="0" /></div>
-                        <label class="hex-field"><span>HEX</span><input id="colorHexInput" type="text" value="#FFFFFF" maxlength="7" spellcheck="false" /></label>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="watermark-range-row"><label for="watermarkOpacity"><span data-i18n="watermarkOpacity">Opacity</span><output id="watermarkOpacityValue">55%</output></label><input id="watermarkOpacity" type="range" min="10" max="100" value="55" /></div>
-                  <div class="watermark-range-row"><label for="watermarkSize"><span data-i18n="watermarkSize">Size</span><output id="watermarkSizeValue">6%</output></label><input id="watermarkSize" type="range" min="2" max="30" value="6" /></div>
-                  <div class="watermark-position-wrap"><div class="section-label"><span data-i18n="watermarkPosition">Position</span></div><div id="watermarkPositions" class="position-grid" role="group" aria-label="Text watermark position"><button type="button" data-position="tl" aria-label="Top left"></button><button type="button" data-position="tc" aria-label="Top center"></button><button type="button" data-position="tr" aria-label="Top right"></button><button type="button" data-position="ml" aria-label="Middle left"></button><button type="button" data-position="mc" aria-label="Center"></button><button type="button" data-position="mr" aria-label="Middle right"></button><button type="button" data-position="bl" aria-label="Bottom left"></button><button type="button" data-position="bc" aria-label="Bottom center"></button><button type="button" class="active" data-position="br" aria-label="Bottom right"></button></div></div>
-                </section>
-                <section id="imageWatermarkPanel" class="watermark-section watermark-panel image-watermark-section" data-watermark-panel-content="image" hidden>
-                  <div class="section-label"><span data-i18n="imageWatermark">Image watermark</span></div>
-                  <input id="watermarkImageInput" type="file" accept="image/png,image/jpeg,image/webp,image/avif" hidden />
-                  <div class="watermark-image-picker"><button id="watermarkImageBtn" class="button secondary" type="button" data-i18n="chooseWatermarkImage">Choose logo / image</button><div id="watermarkImageInfo" class="watermark-image-info" hidden><img id="watermarkImageThumb" alt="" /><span id="watermarkImageName"></span><button id="watermarkImageClear" type="button" aria-label="Remove image watermark">×</button></div></div>
-                  <div class="watermark-range-row"><label for="watermarkImageOpacity"><span data-i18n="watermarkImageOpacity">Image opacity</span><output id="watermarkImageOpacityValue">80%</output></label><input id="watermarkImageOpacity" type="range" min="10" max="100" value="80" /></div>
-                  <div class="watermark-range-row"><label for="watermarkImageSize"><span data-i18n="watermarkImageSize">Image size</span><output id="watermarkImageSizeValue">20%</output></label><input id="watermarkImageSize" type="range" min="5" max="50" value="20" /></div>
-                  <div class="watermark-position-wrap"><div class="section-label"><span data-i18n="watermarkImagePosition">Image position</span><small data-i18n="maxImageWatermark">Maximum 50% of the source image</small></div><div id="watermarkImagePositions" class="position-grid" role="group" aria-label="Image watermark position"><button type="button" class="active" data-position="tl" aria-label="Top left"></button><button type="button" data-position="tc" aria-label="Top center"></button><button type="button" data-position="tr" aria-label="Top right"></button><button type="button" data-position="ml" aria-label="Middle left"></button><button type="button" data-position="mc" aria-label="Center"></button><button type="button" data-position="mr" aria-label="Middle right"></button><button type="button" data-position="bl" aria-label="Bottom left"></button><button type="button" data-position="bc" aria-label="Bottom center"></button><button type="button" data-position="br" aria-label="Bottom right"></button></div></div>
-                </section>
-              </div>
-              <div id="redactSettings" class="redact-settings" hidden>
-                <div class="section-label"><span data-i18n="redactMethod">Redaction method</span><small data-i18n="redactMethodHint">Draw directly on the preview</small></div>
-                <div id="redactModeButtons" class="redact-mode-grid" role="group" aria-label="Redaction method">
-                  <button type="button" class="active" data-redact-mode="pixelate" data-i18n="redactPixelate">Pixelate</button>
-                  <button type="button" data-redact-mode="blur" data-i18n="redactBlur">Blur</button>
-                  <button type="button" data-redact-mode="block" data-i18n="redactBlock">Solid block</button>
-                </div>
-                <div id="redactStrengthWrap" class="watermark-range-row redact-strength"><label for="redactStrength"><span data-i18n="redactStrength">Strength</span><output id="redactStrengthValue">45%</output></label><input id="redactStrength" type="range" min="1" max="100" step="1" value="45" /></div>
-                <div id="redactColorWrap" class="redact-color-wrap" hidden>
-                  <div class="color-preset-block"><span data-i18n="redactBlockColor">Block color</span><div id="redactColorPresets" class="color-presets"><button type="button" class="active" data-redact-color="#111827" aria-label="Black"></button><button type="button" data-redact-color="#ffffff" aria-label="White"></button><button type="button" data-redact-color="#ef4444" aria-label="Red"></button><button type="button" data-redact-color="#2563eb" aria-label="Blue"></button></div></div>
-                  <div class="custom-color-picker">
-                    <span class="custom-color-label" data-i18n="customColor">Custom</span>
-                    <input id="redactColor" type="hidden" value="#111827" />
-                    <button id="redactColorPickerToggle" class="color-picker-toggle" type="button" aria-haspopup="dialog" aria-expanded="false"><span id="redactColorPickerPreview" class="color-picker-preview"></span><b id="redactColorPickerHex">#111827</b><span class="color-picker-chevron">⌄</span></button>
-                    <div id="redactColorPickerPopover" class="color-picker-popover" role="dialog" aria-label="Custom redaction color" hidden>
-                      <div id="redactColorField" class="color-field" tabindex="0"><span id="redactColorFieldCursor"></span></div>
-                      <div class="hue-row"><span data-i18n="hue">Hue</span><input id="redactColorHue" class="hue-slider" type="range" min="0" max="360" value="220" /></div>
-                      <label class="hex-field"><span>HEX</span><input id="redactColorHexInput" type="text" value="#111827" maxlength="7" spellcheck="false" /></label>
-                    </div>
-                  </div>
-                </div>
-                <div class="redact-actions">
-                  <button id="redactUndo" type="button" disabled data-i18n="undo">Undo</button>
-                  <button id="redactRedo" type="button" disabled data-i18n="redo">Redo</button>
-                  <button id="redactDelete" type="button" disabled data-i18n="deleteRegion">Delete selected</button>
-                </div>
-              </div>
-              <div id="cropSettings" class="crop-settings" hidden>
-                <div class="section-label"><span data-i18n="cropPlatformLabel">Platform</span></div>
-                <div id="cropPlatformButtons" class="crop-platform-switch" role="group" aria-label="Social platform">
-                  <button type="button" class="active" data-crop-platform="instagram">Instagram</button>
-                  <button type="button" data-crop-platform="x">X</button>
-                  <button type="button" data-crop-platform="youtube">YouTube</button>
-                  <button type="button" data-crop-platform="facebook">Facebook</button>
-                  <button type="button" data-crop-platform="linkedin">LinkedIn</button>
-                  <button type="button" data-crop-platform="threads">Threads</button>
-                  <button type="button" data-crop-platform="tiktok">TikTok</button>
-                  <button type="button" data-crop-platform="pinterest">Pinterest</button>
-                </div>
-                <div class="section-label crop-size-label"><span data-i18n="cropPreset">Social size</span></div>
-                <div id="cropPresetGrid" class="crop-preset-grid" role="group" aria-label="Social crop preset">
-                  <button type="button" class="active" data-crop-platform="instagram" data-crop-preset="ig-tall"><strong data-i18n="cropFeed">Feed</strong><span>1080 × 1440</span><small data-i18n="cropIgTall">Feed · 3:4</small></button>
-                  <button type="button" data-crop-platform="instagram" data-crop-preset="ig-portrait"><strong data-i18n="cropFeed">Feed</strong><span>1080 × 1350</span><small data-i18n="cropIgPortrait">Feed · 4:5</small></button>
-                  <button type="button" data-crop-platform="instagram" data-crop-preset="ig-square"><strong data-i18n="cropFeed">Feed</strong><span>1080 × 1080</span><small data-i18n="cropIgSquare">Feed · 1:1</small></button>
-                  <button type="button" data-crop-platform="instagram" data-crop-preset="ig-story"><strong data-i18n="cropStoryReel">Story / Reels</strong><span>1080 × 1920</span><small>9:16</small></button>
-                  <button type="button" data-crop-platform="instagram" data-crop-preset="ig-reel-cover"><strong data-i18n="cropReelCover">Reels cover</strong><span>1080 × 1440</span><small data-i18n="cropReelCoverHint">Profile grid · 3:4</small></button>
-                  <button type="button" data-crop-platform="x" data-crop-preset="x-header" hidden><strong data-i18n="cropHeader">Header</strong><span>1500 × 500</span><small>3:1</small></button>
-                  <button type="button" data-crop-platform="youtube" data-crop-preset="youtube-thumb" hidden><strong data-i18n="cropThumbnailTitle">Thumbnail</strong><span>1280 × 720</span><small data-i18n="cropThumbnail">Thumbnail · 16:9</small></button>
-                  <button type="button" data-crop-platform="facebook" data-crop-preset="facebook-cover" hidden><strong data-i18n="cropPageCover">Page cover</strong><span>851 × 315</span><small>851 × 315</small></button>
-                  <button type="button" data-crop-platform="linkedin" data-crop-preset="linkedin-cover" hidden><strong data-i18n="cropPageCover">Page cover</strong><span>1512 × 256</span><small>1512 × 256</small></button>
-                  <button type="button" data-crop-platform="linkedin" data-crop-preset="linkedin-link" hidden><strong data-i18n="cropLinkPreview">Link preview</strong><span>1200 × 627</span><small>1.91:1</small></button>
-                  <button type="button" data-crop-platform="threads" data-crop-preset="threads-portrait" hidden><strong data-i18n="cropPost">Post</strong><span>1080 × 1350</span><small>4:5</small></button>
-                  <button type="button" data-crop-platform="threads" data-crop-preset="threads-square" hidden><strong data-i18n="cropPost">Post</strong><span>1080 × 1080</span><small>1:1</small></button>
-                  <button type="button" data-crop-platform="tiktok" data-crop-preset="tiktok-vertical" hidden><strong data-i18n="cropTikTokPhoto">Photo / cover</strong><span>1080 × 1920</span><small>9:16</small></button>
-                  <button type="button" data-crop-platform="pinterest" data-crop-preset="pinterest-pin" hidden><strong data-i18n="cropPin">Pin</strong><span>1000 × 1500</span><small>2:3</small></button>
-                  <button type="button" data-crop-platform="pinterest" data-crop-preset="pinterest-square" hidden><strong data-i18n="cropPin">Pin</strong><span>1000 × 1000</span><small>1:1</small></button>
-                </div>
-                <div class="crop-manual-note"><div><b data-i18n="cropManualTitle">Crop it yourself</b><small data-i18n="cropManualHelp">Drag the frame on the preview. Pull a corner to resize it while the platform ratio stays locked.</small></div><button id="cropReset" type="button" data-i18n="cropReset">Reset frame</button></div>
-              </div>
-              <div id="backgroundSettings" class="background-settings" hidden>
-                <div class="background-engine-card">
-                  <div class="background-engine-head"><div><span data-i18n="bgModelLabel">AI MODEL</span><strong id="bgEngineTitle">BiRefNet Lite</strong></div><span id="bgEngineBadge" class="engine-badge" data-i18n="bgModelNotLoaded">Not loaded</span></div>
-                  <div id="bgAiModelPanel" class="bg-ai-model-panel">
-                    <button id="bgLoadModel" class="button secondary" type="button" data-i18n="bgLoadModel">Download AI model</button>
-                    <div id="bgModelProgress" class="bg-model-progress" hidden><i id="bgModelProgressBar"></i></div>
-                    <p id="bgModelProgressText" class="helper" data-i18n="bgModelInitialHint">First use downloads about 100 MB of FP16 model data. The model is stored in this browser for reuse; your image is never uploaded.</p>
-                  </div>
-                </div>
-              </div>
-              <div id="vectorSettings" class="vector-settings" hidden>
-                <div class="vector-pro-card smart">
-                  <div class="vector-pro-head"><div><span data-i18n="vectorEngineLabel">SMART VECTORIZE</span><strong data-i18n="vectorCardTitle">One click to SVG. PixelQuota picks the settings.</strong></div></div>
-                  <div id="vectorAutoSummary" class="vector-auto-summary"><span data-i18n="vectorAutoLabel">Auto</span><b data-i18n="vectorWaiting">Waiting for an image</b><small></small></div>
-                </div>
-                <div id="vectorStats" class="vector-stats" aria-live="polite">
-                  <div><span>PATHS</span><b id="vectorPathStat">—</b><small id="vectorPathRaw" data-i18n="vectorStatWaiting">Not converted yet</small></div>
-                  <div><span>NODES</span><b id="vectorNodeStat">—</b><small id="vectorNodeRaw" data-i18n="vectorStatWaiting">Not converted yet</small></div>
-                  <div><span>SIMILARITY</span><b id="vectorSimilarityStat">—</b><small data-i18n="vectorStatSimilarity">Re-rendered and compared</small></div>
-                  <div><span>SVG SIZE</span><b id="vectorSizeStat">—</b><small data-i18n="vectorStatSize">Actual output size</small></div>
-                </div>
-              </div>
-              <button id="processBtn" class="process-button" type="button" disabled><span><b data-i18n="processButton">Fit images to the limit</b><small id="queueText" data-i18n="queueEmpty">Add images to begin</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 12 0m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-              
-              
-            </aside>
-            <div class="privacy-card privacy-inline" id="privacy"><span class="privacy-icon">◆</span><div><h3 data-i18n="privateTitle">100% private</h3><p data-i18n="privacyLine">Images are processed in this browser. PixelQuota never receives the file.</p></div></div>
+      <section class="workspace-shell" id="app" aria-label="PixelQuota workspace">
+        <div class="canvas" id="canvas">
+          <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-describedby="dropHint">
+            <input id="fileInput" type="file" accept="image/*,.heic,.heif,.avif,.bmp" multiple hidden />
+            <div class="drop-visual" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M7 23 14 14l5 6 3-4 4 7H7Z" fill="currentColor" opacity=".22"/><circle cx="22" cy="10" r="3" fill="currentColor"/><rect x="4.5" y="5.5" width="23" height="21" rx="4" stroke="currentColor" stroke-width="1.5"/></svg></div>
+            <strong data-i18n="dropFiles">Drop images here</strong>
+            <span id="dropHint" data-i18n="dropHint">Choose files, drag them here, or paste from the clipboard.</span>
+            <button id="browseBtn" class="button primary" type="button" data-i18n="chooseButton">Choose images</button>
+            <small>JPG · PNG · WebP · AVIF · HEIC · BMP</small>
           </div>
 
-          <section class="results-panel" aria-label="Results">
-            <div id="emptyResults" class="empty-results"><span class="empty-ring"></span><h3 data-i18n="emptyResultsTitle">No images yet</h3><p data-i18n="emptyResultsBody">Add one or more images to see the processed files here.</p></div>
-            <section id="resultsSection" class="results-section" hidden aria-live="polite">
-              <div class="results-heading"><div><p data-i18n="results">RESULTS</p><h3 id="resultsSummary" data-i18n="queuedTitle">Queued for processing.</h3></div><button id="downloadAllBtn" class="button secondary compact" type="button" hidden disabled data-i18n="downloadAll">Download ZIP</button></div>
-              <div class="results-workspace">
-                <section id="comparisonPanel" class="comparison-panel" hidden aria-labelledby="comparisonTitle">
-                  <div class="comparison-copy"><div><p data-i18n="compareLabel">QUALITY PREVIEW</p><h3 id="comparisonTitle" data-i18n="compareTitle">Original vs compressed</h3></div><div class="comparison-copy-actions"><div id="redactViewSwitch" class="redact-view-switch" role="group" aria-label="Redaction editor view" hidden><button type="button" class="active" data-redact-view="edit" data-i18n="redactContinueEditing">Continue editing</button><button type="button" data-redact-view="compare" data-i18n="redactCompareResult">Compare result</button></div><button id="backgroundInspectBtn" class="edge-inspect-button" type="button" hidden aria-haspopup="dialog"><span aria-hidden="true">⌕</span><span data-i18n="bgInspectButton">Enlarge preview</span></button><span data-i18n="compareHint">Drag across the image to compare quality.</span></div></div>
-                  <div id="comparisonStage" class="comparison-stage" style="--compare-position:50%">
-                    <div id="previewSurface" class="preview-surface">
-                      <img id="compareOriginal" class="comparison-image comparison-original" alt="" />
-                      <canvas id="watermarkLiveCanvas" class="comparison-image watermark-live-canvas" hidden aria-label="Watermark live preview"></canvas>
-                      <canvas id="redactCanvas" class="comparison-image redact-canvas" hidden aria-hidden="true"></canvas>
-                      <canvas id="redactOverlayCanvas" class="comparison-image redact-overlay-canvas" hidden aria-label="Redaction editor"></canvas>
-                      <canvas id="cropOverlayCanvas" class="comparison-image crop-overlay-canvas" hidden aria-label="Social crop editor"></canvas>
-                      <canvas id="backgroundPreviewCanvas" class="comparison-image background-preview-canvas" hidden aria-label="Background removal preview"></canvas>
-                      <div id="backgroundBusy" class="background-busy" hidden aria-live="polite"><span class="background-busy-spinner" aria-hidden="true"></span><div><b data-i18n="bgBusyTitle">AI background removal</b><small id="backgroundBusyText" data-i18n="bgBusyAnalyze">Analyzing subject…</small></div></div>
-                      <div id="compareOutputMask" class="comparison-output-mask"><img id="compareOutput" class="comparison-image comparison-output" alt="" /></div>
-                      <div id="compareOriginalBadge" class="comparison-badge original-badge"><span data-i18n="original">Original</span><strong id="compareOriginalSize">—</strong></div>
-                      <div id="compareOutputBadge" class="comparison-badge output-badge"><span data-i18n="compressed">Compressed</span><strong id="compareOutputSize">—</strong></div>
-                      <div id="compareDivider" class="comparison-divider"><span aria-hidden="true">↔</span></div>
-                      <input id="compareRange" class="comparison-range" type="range" min="0" max="100" value="50" aria-label="Original and compressed comparison" />
-                      <div id="compareUnavailable" class="comparison-unavailable" hidden data-i18n="previewUnavailable">Preview unavailable for this file format.</div>
-                    </div>
-                  </div>
-                  <section id="redactLayersDock" class="redact-layers redact-layers-dock" hidden aria-labelledby="redactLayersTitle">
-                    <div class="redact-layers-head"><div><span id="redactLayersTitle" data-i18n="redactLayers">Redaction layers</span><small data-i18n="redactLayersHint">Current image</small></div></div>
-                    <div class="redact-summary redact-summary-dock"><span><b id="redactRegionCount">0</b> <span data-i18n="redactRegions">regions</span></span><small data-i18n="redactHelp">Drag to draw. Select a region to move or resize it.</small></div>
-                    <div id="redactLayerList" class="redact-layer-list"><div class="redact-layer-empty" data-i18n="redactLayerEmpty">Draw a region to create your first layer.</div></div>
-                  </section>
-                  <div class="comparison-meta"><div><strong id="compareFilename">—</strong><span id="compareDimensions">—</span></div><div class="comparison-stats"><span id="compareSaving">—</span><span id="compareStatus" class="status pending">—</span></div></div>
-                  <div id="compareFailure" class="comparison-failure" hidden><strong>!</strong><span id="compareFailureText"></span></div>
-                </section>
-                <div id="resultList" class="result-list" aria-label="Processed images"></div>
+          <section id="resultsSection" class="canvas-results" hidden aria-live="polite">
+            <section id="comparisonPanel" class="comparison-panel" hidden aria-labelledby="comparisonTitle">
+              <div class="comparison-copy">
+                <div class="comparison-copy-title"><p data-i18n="previewLabel">PREVIEW</p><h2 id="comparisonTitle" data-i18n="previewTitle">Image preview</h2></div>
+                <div class="comparison-copy-actions">
+                  <div id="redactViewSwitch" class="redact-view-switch" role="group" aria-label="Redaction editor view" hidden><button type="button" class="active" data-redact-view="edit" data-i18n="redactContinueEditing">Continue editing</button><button type="button" data-redact-view="compare" data-i18n="redactCompareResult">Compare result</button></div>
+                  <button id="backgroundInspectBtn" class="edge-inspect-button" type="button" hidden aria-haspopup="dialog"><span aria-hidden="true">⌕</span><span data-i18n="bgInspectButton">Enlarge preview</span></button>
+                  <span data-i18n="compareHint">Drag across the image to compare quality.</span>
+                </div>
               </div>
+              <div id="comparisonStage" class="comparison-stage" style="--compare-position:50%">
+                <div class="canvas-file-label" id="canvasFileLabel"><span id="canvasFileIndex">1 / 1</span><strong id="canvasFileName">—</strong><span id="canvasFileModes">Original | Output</span></div>
+                <button id="canvasPrevBtn" class="canvas-nav canvas-nav-prev" type="button" data-canvas-step="-1" aria-label="Previous image">‹</button>
+                <div id="previewSurface" class="preview-surface">
+                  <img id="compareOriginal" class="comparison-image comparison-original" alt="" />
+                  <canvas id="watermarkLiveCanvas" class="comparison-image watermark-live-canvas" hidden aria-label="Watermark live preview"></canvas>
+                  <canvas id="redactCanvas" class="comparison-image redact-canvas" hidden aria-hidden="true"></canvas>
+                  <canvas id="redactOverlayCanvas" class="comparison-image redact-overlay-canvas" hidden aria-label="Redaction editor"></canvas>
+                  <canvas id="cropOverlayCanvas" class="comparison-image crop-overlay-canvas" hidden aria-label="Social crop editor"></canvas>
+                  <canvas id="backgroundPreviewCanvas" class="comparison-image background-preview-canvas" hidden aria-label="Background removal preview"></canvas>
+                  <div id="backgroundBusy" class="background-busy" hidden aria-live="polite"><span class="background-busy-spinner" aria-hidden="true"></span><div><b data-i18n="bgBusyTitle">AI background removal</b><small id="backgroundBusyText" data-i18n="bgBusyAnalyze">Analyzing subject…</small></div></div>
+                  <div id="compareOutputMask" class="comparison-output-mask" hidden><img id="compareOutput" class="comparison-image comparison-output" alt="" /></div>
+                  <div id="compareOriginalBadge" class="comparison-badge original-badge"><span data-i18n="original">Original</span><strong id="compareOriginalSize">—</strong></div>
+                  <div id="compareOutputBadge" class="comparison-badge output-badge" hidden><span data-i18n="compressed">Compressed</span><strong id="compareOutputSize">—</strong></div>
+                  <div id="compareDivider" class="comparison-divider" hidden><span aria-hidden="true">↔</span></div>
+                  <input id="compareRange" class="comparison-range" type="range" min="0" max="100" value="50" aria-label="Original and compressed comparison" hidden />
+                  <div id="compareUnavailable" class="comparison-unavailable" hidden data-i18n="previewUnavailable">Preview unavailable for this file format.</div>
+                </div>
+                <button id="canvasNextBtn" class="canvas-nav canvas-nav-next" type="button" data-canvas-step="1" aria-label="Next image">›</button>
+              </div>
+              <div class="comparison-meta"><div><strong id="compareFilename">—</strong><span id="compareDimensions">—</span></div><div class="comparison-stats"><span id="compareSaving">—</span><span id="compareStatus" class="status pending">—</span></div></div>
+              <div id="compareFailure" class="comparison-failure" hidden><strong>!</strong><span id="compareFailureText"></span></div>
             </section>
           </section>
         </div>
+
+        <div id="resultList" class="result-list" aria-label="Processed images" hidden></div>
+
+        <section class="settings-sheet" aria-label="Tool settings">
+          <div class="settings-primary">
+            <div class="settings-context"><span id="specLabel" class="settings-eyebrow" data-i18n="outputSpec">OUTPUT SPEC</span><span id="gateBadge" class="gate-badge">≤ 200 KB</span></div>
+            <div class="settings-tools">
+              <div id="compressSettings" class="tool-settings">
+                <div id="compressModeSwitch" class="compress-mode-switch" role="group" aria-label="Compression or conversion mode"><button type="button" class="active" data-compress-mode="limit"><span data-i18n="compressModeLimit">Compress to a KB limit</span></button><button type="button" data-compress-mode="convert"><span data-i18n="compressModeConvert">Convert only</span></button></div>
+                <div id="compressTargetSettings" class="setting-control target-control"><label for="targetKb" data-i18n="maxFileSize">Maximum file size</label><div class="target-input"><input id="targetKb" type="number" min="5" max="100000" step="1" value="200" inputmode="decimal" /><span>KB</span></div><div class="preset-row" id="presetRow" aria-label="File size presets"><button type="button" data-kb="20">20</button><button type="button" data-kb="50">50</button><button type="button" data-kb="100">100</button><button type="button" data-kb="200" class="active">200</button><button type="button" data-kb="500">500</button><button type="button" data-kb="1000">1 MB</button><button type="button" data-custom="true" data-i18n="customSize">Custom</button></div></div>
+                <div class="setting-control format-control"><span class="control-label" data-i18n="format">Format</span><div id="formatButtons" class="segment-grid format-common" role="group" aria-label="Output format"><button type="button" data-format="auto" class="active" data-i18n="autoFormat">Auto</button><button type="button" data-format="image/jpeg">JPG</button><button type="button" data-format="image/webp">WebP</button><button type="button" data-format="image/png">PNG</button></div></div>
+              </div>
+
+              <div id="watermarkSettings" class="tool-settings" hidden>
+                <label class="setting-control text-control" for="watermarkText"><span class="control-label" data-i18n="watermarkTextLabel">Watermark text</span><input id="watermarkText" class="field" value="PixelQuota" maxlength="120" placeholder="Enter watermark text" data-i18n-placeholder="watermarkTextPlaceholder" /></label>
+                <div class="setting-control"><span class="control-label" data-i18n="watermarkPosition">Position</span><div id="watermarkPositions" class="position-grid" role="group" aria-label="Text watermark position"><button type="button" data-position="tl" aria-label="Top left"></button><button type="button" data-position="tc" aria-label="Top center"></button><button type="button" data-position="tr" aria-label="Top right"></button><button type="button" data-position="ml" aria-label="Middle left"></button><button type="button" data-position="mc" aria-label="Center"></button><button type="button" data-position="mr" aria-label="Middle right"></button><button type="button" data-position="bl" aria-label="Bottom left"></button><button type="button" data-position="bc" aria-label="Bottom center"></button><button type="button" class="active" data-position="br" aria-label="Bottom right"></button></div></div>
+                <label class="setting-control range-control" for="watermarkOpacity"><span class="control-label"><span data-i18n="watermarkOpacity">Opacity</span><output id="watermarkOpacityValue">55%</output></span><input id="watermarkOpacity" type="range" min="10" max="100" value="55" /></label>
+              </div>
+
+              <div id="redactSettings" class="tool-settings" hidden>
+                <div class="setting-control"><span class="control-label" data-i18n="redactMethod">Redaction method</span><div id="redactModeButtons" class="segment-grid three" role="group" aria-label="Redaction method"><button type="button" class="active" data-redact-mode="pixelate" data-i18n="redactPixelate">Pixelate</button><button type="button" data-redact-mode="blur" data-i18n="redactBlur">Blur</button><button type="button" data-redact-mode="block" data-i18n="redactBlock">Solid block</button></div></div>
+                <label id="redactStrengthWrap" class="setting-control range-control" for="redactStrength"><span class="control-label"><span data-i18n="redactStrength">Strength</span><output id="redactStrengthValue">45%</output></span><input id="redactStrength" type="range" min="1" max="100" step="1" value="45" /></label>
+                <div id="redactColorWrap" class="setting-control color-control" hidden><span class="control-label" data-i18n="redactBlockColor">Block color</span><div class="color-inline"><div id="redactColorPresets" class="color-presets"><button type="button" class="active" data-redact-color="#111827" aria-label="Black"></button><button type="button" data-redact-color="#ffffff" aria-label="White"></button><button type="button" data-redact-color="#ef4444" aria-label="Red"></button><button type="button" data-redact-color="#2563eb" aria-label="Blue"></button></div><div class="custom-color-picker"><input id="redactColor" type="hidden" value="#111827" /><button id="redactColorPickerToggle" class="color-picker-toggle" type="button" aria-haspopup="dialog" aria-expanded="false"><span id="redactColorPickerPreview" class="color-picker-preview"></span><b id="redactColorPickerHex">#111827</b><span class="color-picker-chevron">⌄</span></button><div id="redactColorPickerPopover" class="color-picker-popover" role="dialog" aria-label="Custom redaction color" hidden><div id="redactColorField" class="color-field" tabindex="0"><span id="redactColorFieldCursor"></span></div><div class="hue-row"><span data-i18n="hue">Hue</span><input id="redactColorHue" class="hue-slider" type="range" min="0" max="360" value="220" /></div><label class="hex-field"><span>HEX</span><input id="redactColorHexInput" type="text" value="#111827" maxlength="7" spellcheck="false" /></label></div></div></div></div>
+                <div class="redact-actions"><span class="region-count"><b id="redactToolbarRegionCount">0</b> <span data-i18n="redactRegions">regions</span></span><button id="redactUndo" type="button" disabled data-i18n="undo">Undo</button><button id="redactRedo" type="button" disabled data-i18n="redo">Redo</button><button id="redactDelete" type="button" disabled data-i18n="deleteRegion">Delete selected</button></div>
+              </div>
+
+              <div id="cropSettings" class="tool-settings" hidden>
+                <div class="setting-control"><span class="control-label" data-i18n="cropPlatformLabel">Platform</span><div id="cropPlatformButtons" class="segment-grid platform-grid" role="group" aria-label="Social platform"><button type="button" class="active" data-crop-platform="instagram">Instagram</button><button type="button" data-crop-platform="x">X</button><button type="button" data-crop-platform="youtube">YouTube</button><button type="button" data-crop-platform="facebook">Facebook</button><button type="button" data-crop-platform="linkedin">LinkedIn</button><button type="button" data-crop-platform="threads">Threads</button><button type="button" data-crop-platform="tiktok">TikTok</button><button type="button" data-crop-platform="pinterest">Pinterest</button></div></div>
+                <div class="setting-control"><span class="control-label" data-i18n="cropPreset">Social size</span><div id="cropPresetGrid" class="crop-preset-grid" role="group" aria-label="Social crop preset"><button type="button" class="active" data-crop-platform="instagram" data-crop-preset="ig-tall"><strong data-i18n="cropFeed">Feed</strong><span>1080 × 1440</span><small data-i18n="cropIgTall">Feed · 3:4</small></button><button type="button" data-crop-platform="instagram" data-crop-preset="ig-portrait"><strong data-i18n="cropFeed">Feed</strong><span>1080 × 1350</span><small data-i18n="cropIgPortrait">Feed · 4:5</small></button><button type="button" data-crop-platform="instagram" data-crop-preset="ig-square"><strong data-i18n="cropFeed">Feed</strong><span>1080 × 1080</span><small data-i18n="cropIgSquare">Feed · 1:1</small></button><button type="button" data-crop-platform="instagram" data-crop-preset="ig-story"><strong data-i18n="cropStoryReel">Story / Reels</strong><span>1080 × 1920</span><small>9:16</small></button><button type="button" data-crop-platform="instagram" data-crop-preset="ig-reel-cover"><strong data-i18n="cropReelCover">Reels cover</strong><span>1080 × 1440</span><small data-i18n="cropReelCoverHint">Profile grid · 3:4</small></button><button type="button" data-crop-platform="x" data-crop-preset="x-header" hidden><strong data-i18n="cropHeader">Header</strong><span>1500 × 500</span><small>3:1</small></button><button type="button" data-crop-platform="youtube" data-crop-preset="youtube-thumb" hidden><strong data-i18n="cropThumbnailTitle">Thumbnail</strong><span>1280 × 720</span><small data-i18n="cropThumbnail">Thumbnail · 16:9</small></button><button type="button" data-crop-platform="facebook" data-crop-preset="facebook-cover" hidden><strong data-i18n="cropPageCover">Page cover</strong><span>851 × 315</span><small>851 × 315</small></button><button type="button" data-crop-platform="linkedin" data-crop-preset="linkedin-cover" hidden><strong data-i18n="cropPageCover">Page cover</strong><span>1512 × 256</span><small>1512 × 256</small></button><button type="button" data-crop-platform="linkedin" data-crop-preset="linkedin-link" hidden><strong data-i18n="cropLinkPreview">Link preview</strong><span>1200 × 627</span><small>1.91:1</small></button><button type="button" data-crop-platform="threads" data-crop-preset="threads-portrait" hidden><strong data-i18n="cropPost">Post</strong><span>1080 × 1350</span><small>4:5</small></button><button type="button" data-crop-platform="threads" data-crop-preset="threads-square" hidden><strong data-i18n="cropPost">Post</strong><span>1080 × 1080</span><small>1:1</small></button><button type="button" data-crop-platform="tiktok" data-crop-preset="tiktok-vertical" hidden><strong data-i18n="cropTikTokPhoto">Photo / cover</strong><span>1080 × 1920</span><small>9:16</small></button><button type="button" data-crop-platform="pinterest" data-crop-preset="pinterest-pin" hidden><strong data-i18n="cropPin">Pin</strong><span>1000 × 1500</span><small>2:3</small></button><button type="button" data-crop-platform="pinterest" data-crop-preset="pinterest-square" hidden><strong data-i18n="cropPin">Pin</strong><span>1000 × 1000</span><small>1:1</small></button></div></div>
+                <div class="crop-manual-note"><b data-i18n="cropManualTitle">Crop it yourself</b><button id="cropReset" type="button" data-i18n="cropReset">Reset frame</button></div>
+              </div>
+
+              <div id="backgroundSettings" class="tool-settings" hidden>
+                <div class="background-engine-card"><div class="background-engine-head"><div><span class="control-label" data-i18n="bgModelLabel">AI MODEL</span><strong id="bgEngineTitle">BiRefNet Lite</strong></div><span id="bgEngineBadge" class="engine-badge" data-i18n="bgModelNotLoaded">Not loaded</span></div><div id="bgAiModelPanel" class="bg-ai-model-panel"><button id="bgLoadModel" class="button secondary" type="button" data-i18n="bgLoadModel">Download AI model</button><div id="bgModelProgress" class="bg-model-progress" hidden><i id="bgModelProgressBar"></i></div><p id="bgModelProgressText" class="helper" data-i18n="bgModelInitialHint">First use downloads about 100 MB of FP16 model data.</p></div></div>
+              </div>
+
+              <div id="vectorSettings" class="tool-settings" hidden>
+                <div class="vector-pro-card smart"><div class="vector-pro-head"><div><span class="control-label" data-i18n="vectorEngineLabel">SMART VECTORIZE</span><strong data-i18n="vectorCardTitle">One click to SVG. PixelQuota picks the settings.</strong></div></div><div id="vectorAutoSummary" class="vector-auto-summary"><span data-i18n="vectorAutoLabel">Auto</span><b data-i18n="vectorWaiting">Waiting for an image</b><small></small></div></div><div id="vectorStats" class="vector-stats" aria-live="polite"><div><span>PATHS</span><b id="vectorPathStat">—</b><small id="vectorPathRaw" data-i18n="vectorStatWaiting">Not converted yet</small></div><div><span>NODES</span><b id="vectorNodeStat">—</b><small id="vectorNodeRaw" data-i18n="vectorStatWaiting">Not converted yet</small></div><div><span>SIMILARITY</span><b id="vectorSimilarityStat">—</b><small data-i18n="vectorStatSimilarity">Re-rendered and compared</small></div><div><span>SVG SIZE</span><b id="vectorSizeStat">—</b><small data-i18n="vectorStatSize">Actual output size</small></div></div>
+              </div>
+            </div>
+            <div class="download-actions"><button id="downloadAllBtn" class="button secondary download-all" type="button" hidden disabled data-i18n="downloadAll">Download all (ZIP)</button><button id="downloadCurrentBtn" class="button primary download-current" type="button" hidden disabled data-i18n="download">Download</button></div>
+          </div>
+
+          <div class="settings-underbar"><button id="moreSettingsBtn" class="more-settings-button" type="button" aria-expanded="false" aria-controls="moreSettings"><span data-i18n="moreSettings">More settings</span><span aria-hidden="true">⌄</span></button><button id="clearBtn" class="clear-button" type="button" hidden data-i18n="clearAll">Clear all</button><span id="queueText" class="sr-only" data-i18n="queueEmpty">Add images to begin</span></div>
+
+          <div id="moreSettings" class="settings-more" hidden>
+            <div id="compressMoreSettings" class="more-tool-section">
+              <details id="advancedSettings" open><summary><span data-i18n="advanced">Dimensions & privacy</span></summary><div class="advanced-inner"><div class="setting-control"><span class="control-label" data-i18n="resizeMode">Resize mode</span><div class="segment-grid two" id="resizeButtons" role="group" aria-label="Resize mode"><button type="button" data-resize="limit" class="active" data-i18n="fitWithin">Fit within</button><button type="button" data-resize="exact" data-i18n="exactCrop">Exact crop</button></div></div><div class="dimension-grid"><label class="setting-control"><span class="control-label" data-i18n="width">Width</span><div><input id="maxWidth" type="number" min="1" max="16000" placeholder="Any" data-i18n-placeholder="any" /><em>px</em></div></label><label class="setting-control"><span class="control-label" data-i18n="height">Height</span><div><input id="maxHeight" type="number" min="1" max="16000" placeholder="Any" data-i18n-placeholder="any" /><em>px</em></div></label></div><label class="check-row"><input id="stripMetadata" type="checkbox" checked /><span data-i18n="stripMetadata">Remove EXIF and location</span></label></div></details><details id="moreFormats" class="more-formats"><summary><span data-i18n="moreFormats">More formats</span></summary><div id="moreFormatButtons" class="segment-grid two"><button type="button" data-format="image/avif" data-format-capability="avif">AVIF</button><button type="button" data-format="image/bmp">BMP</button></div></details>
+            </div>
+            <div id="watermarkMoreSettings" class="more-tool-section" hidden>
+              <div id="watermarkSubtoolSwitch" class="watermark-subtool-switch" role="tablist" aria-label="Watermark type"><button type="button" class="active" role="tab" aria-selected="true" data-watermark-panel="text"><span data-i18n="textWatermark">Text watermark</span><i id="textWatermarkState"></i></button><button type="button" role="tab" aria-selected="false" data-watermark-panel="image"><span data-i18n="imageWatermark">Image watermark</span><i id="imageWatermarkState"></i></button></div>
+              <section id="textWatermarkPanel" class="watermark-section watermark-panel" data-watermark-panel-content="text"><div class="more-section-heading" data-i18n="textWatermark">Text watermark</div><div id="watermarkPresets" class="watermark-presets"><button type="button" data-watermark-preset="bank" data-i18n="presetBank">Bank account</button><button type="button" data-watermark-preset="job" data-i18n="presetJob">Job</button><button type="button" data-watermark-preset="rent" data-i18n="presetRent">Rental</button><button type="button" data-watermark-preset="card" data-i18n="presetCard">Credit card</button></div><div class="watermark-align-row"><span data-i18n="watermarkTextAlign">Text alignment</span><div id="watermarkAlignButtons" class="align-buttons" role="group" aria-label="Text alignment"><button type="button" class="active" data-align="left"><span class="align-icon left" aria-hidden="true"></span><b data-i18n="alignLeft">Left</b></button><button type="button" data-align="center"><span class="align-icon center" aria-hidden="true"></span><b data-i18n="alignCenter">Center</b></button><button type="button" data-align="right"><span class="align-icon right" aria-hidden="true"></span><b data-i18n="alignRight">Right</b></button></div></div><div class="watermark-color-row"><div class="color-preset-block"><span data-i18n="watermarkColor">Text color</span><div id="watermarkColorPresets" class="color-presets"><button type="button" class="active light" data-color="#ffffff" aria-label="White"></button><button type="button" data-color="#111827" aria-label="Black"></button><button type="button" data-color="#ef4444" aria-label="Red"></button><button type="button" data-color="#2563eb" aria-label="Blue"></button><button type="button" data-color="#facc15" aria-label="Yellow"></button></div></div><div class="custom-color-picker"><span class="custom-color-label" data-i18n="customColor">Custom</span><input id="watermarkColor" type="hidden" value="#ffffff" /><button id="colorPickerToggle" class="color-picker-toggle" type="button" aria-haspopup="dialog" aria-expanded="false"><span id="colorPickerPreview" class="color-picker-preview"></span><b id="colorPickerHex">#FFFFFF</b><span class="color-picker-chevron">⌄</span></button><div id="colorPickerPopover" class="color-picker-popover" role="dialog" aria-label="Custom color" hidden><div id="colorField" class="color-field" tabindex="0"><span id="colorFieldCursor"></span></div><div class="hue-row"><span data-i18n="hue">Hue</span><input id="colorHue" class="hue-slider" type="range" min="0" max="360" value="0" /></div><label class="hex-field"><span>HEX</span><input id="colorHexInput" type="text" value="#FFFFFF" maxlength="7" spellcheck="false" /></label></div></div></div><div class="more-range-row"><span data-i18n="watermarkSize">Size</span><label for="watermarkSize"><output id="watermarkSizeValue">6%</output><input id="watermarkSize" type="range" min="2" max="30" value="6" /></label></div></section>
+              <section id="imageWatermarkPanel" class="watermark-section watermark-panel image-watermark-section" data-watermark-panel-content="image" hidden><div class="more-section-heading" data-i18n="imageWatermark">Image watermark</div><input id="watermarkImageInput" type="file" accept="image/png,image/jpeg,image/webp,image/avif" hidden /><div class="watermark-image-picker"><button id="watermarkImageBtn" class="button secondary" type="button" data-i18n="chooseWatermarkImage">Choose logo / image</button><div id="watermarkImageInfo" class="watermark-image-info" hidden><img id="watermarkImageThumb" alt="" /><span id="watermarkImageName"></span><button id="watermarkImageClear" type="button" aria-label="Remove image watermark">×</button></div></div><div class="more-range-grid"><label for="watermarkImageOpacity"><span data-i18n="watermarkImageOpacity">Image opacity</span><output id="watermarkImageOpacityValue">80%</output><input id="watermarkImageOpacity" type="range" min="10" max="100" value="80" /></label><label for="watermarkImageSize"><span data-i18n="watermarkImageSize">Image size</span><output id="watermarkImageSizeValue">20%</output><input id="watermarkImageSize" type="range" min="5" max="50" value="20" /></label></div><div class="watermark-position-wrap"><span class="control-label" data-i18n="watermarkImagePosition">Image position</span><div id="watermarkImagePositions" class="position-grid" role="group" aria-label="Image watermark position"><button type="button" class="active" data-position="tl" aria-label="Top left"></button><button type="button" data-position="tc" aria-label="Top center"></button><button type="button" data-position="tr" aria-label="Top right"></button><button type="button" data-position="ml" aria-label="Middle left"></button><button type="button" data-position="mc" aria-label="Center"></button><button type="button" data-position="mr" aria-label="Middle right"></button><button type="button" data-position="bl" aria-label="Bottom left"></button><button type="button" data-position="bc" aria-label="Bottom center"></button><button type="button" data-position="br" aria-label="Bottom right"></button></div></div></section>
+            </div>
+            <div id="redactMoreSettings" class="more-tool-section" hidden><section id="redactLayersDock" class="redact-layers" hidden aria-labelledby="redactLayersTitle"><div class="redact-layers-head"><div><span id="redactLayersTitle" data-i18n="redactLayers">Redaction layers</span><small data-i18n="redactLayersHint">Current image</small></div></div><div class="redact-summary"><span><b id="redactRegionCount">0</b> <span data-i18n="redactRegions">regions</span></span><small data-i18n="redactHelp">Drag to draw. Select a region to move or resize it.</small></div><div id="redactLayerList" class="redact-layer-list"><div class="redact-layer-empty" data-i18n="redactLayerEmpty">Draw a region to create your first layer.</div></div></section></div>
+          </div>
+
+          <div id="batchSummary" class="batch-summary" hidden><div class="batch-summary-line"><span id="resultsSummary" data-i18n="queuedTitle">Queued for processing.</span><b id="batchSummaryTotal"></b></div><div id="batchMeter" class="batch-meter"><span class="batch-meter-ok"></span><span class="batch-meter-over"></span><span class="batch-meter-wait"></span></div></div>
+        </section>
       </section>
 
+      <section id="emptyResults" hidden aria-hidden="true"></section>
       <section id="adTop" class="ad-slot" hidden aria-label="Advertisement"><span data-i18n="adLabel">ADVERTISEMENT</span><div id="adTopInner"></div></section>
-      <section class="trust-strip" id="features" aria-label="Product principles"><article><b>01</b><div><h3 data-i18n="trust1Title">The byte count is the judge.</h3><p data-i18n="trust1Body">PixelQuota checks the actual encoded file, not an estimate from a quality slider.</p></div></article><article><b>02</b><div><h3 data-i18n="trust2Title">Your image never leaves.</h3><p data-i18n="trust2Body">Compression, conversion, previews, and ZIP creation all run on your device.</p></div></article><article><b>03</b><div><h3 data-i18n="trust3Title">One pass for annoying forms.</h3><p data-i18n="trust3Body">KB cap, exact pixels, JPG-only portals, and iPhone HEIC can be handled together.</p></div></article></section>
-      <section id="compressOnlyLimits" class="limit-section"><div class="limit-copy"><p class="eyebrow" data-i18n="commonLimits">COMMON LIMITS</p><h2 data-i18n="oneClickTargets">Start with the number the form gave you.</h2></div><div class="limit-links" id="commonLimitButtons"><button type="button" data-kb="20"><strong>20 KB</strong><span data-i18n="limitTight">tight forms</span></button><button type="button" data-kb="50"><strong>50 KB</strong><span data-i18n="limitPhoto">photo uploads</span></button><button type="button" data-kb="100"><strong>100 KB</strong><span data-i18n="limitApps">applications</span></button><button type="button" data-kb="200"><strong>200 KB</strong><span data-i18n="limitCommon">common limit</span></button><button type="button" data-kb="500"><strong>500 KB</strong><span data-i18n="limitQuality">high quality</span></button><button type="button" data-kb="1000"><strong>1 MB</strong><span data-i18n="limitWeb">email & web</span></button></div></section>
     </main>
 
-    <footer><a class="brand footer-brand" href="./index.html"><span class="brand-glyph small" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></span><span class="brand-name"><span>Pixel</span><strong>Quota</strong></span></a><p data-i18n="footerText">Exact image limits. No upload.</p><nav><a href="./privacy.html" data-i18n="privacyLink">Privacy</a></nav></footer>
+    <footer><a class="footer-brand" href="./index.html"><svg class="brand-icon small" aria-hidden="true"><use href="#brandMark" /></svg><span>PixelQuota</span></a><a href="./privacy.html" data-i18n="privacyLink">Privacy</a></footer>
   </div>
+
+  <button id="processBtn" class="sr-only" type="button" disabled aria-hidden="true"><b data-i18n="processButton">Process</b><small id="processStatus"><span id="processQueueText">Add images to begin</span></small></button>
+
   <div id="backgroundInspectModal" class="edge-inspect-modal" hidden role="dialog" aria-modal="true" aria-labelledby="backgroundInspectTitle">
     <div class="edge-inspect-shell">
-      <header class="edge-inspect-head">
-        <div><span data-i18n="bgInspectEyebrow">EDGE INSPECTION</span><h2 id="backgroundInspectTitle" data-i18n="bgInspectTitle">Zoom in on hair and transparent edges</h2></div>
-        <button id="backgroundInspectClose" class="edge-inspect-close" type="button" aria-label="Close" data-i18n-aria-label="bgInspectClose">×</button>
-      </header>
-      <div class="edge-inspect-toolbar">
-        <div class="edge-inspect-zoom" role="group" aria-label="Preview zoom" data-i18n-aria-label="bgInspectZoomAria">
-          <button type="button" class="active" data-edge-zoom="1">100%</button>
-          <button type="button" data-edge-zoom="2">200%</button>
-          <button type="button" data-edge-zoom="4">400%</button>
-        </div>
-        <div class="edge-inspect-meta"><strong id="backgroundInspectZoomLabel">100%</strong><span id="backgroundInspectDimensions">—</span></div>
-      </div>
-      <div id="backgroundInspectViewport" class="edge-inspect-viewport">
-        <canvas id="backgroundInspectCanvas" aria-label="Background edge inspection"></canvas>
-        <div id="backgroundInspectBusy" class="edge-inspect-busy"><span class="background-busy-spinner" aria-hidden="true"></span><div><b data-i18n="bgInspectPreparing">Preparing high-detail preview</b><small data-i18n="bgInspectPreparingHint">Reuses the current AI matte without rerunning the model.</small></div></div>
-      </div>
+      <header class="edge-inspect-head"><div><span data-i18n="bgInspectEyebrow">EDGE INSPECTION</span><h2 id="backgroundInspectTitle" data-i18n="bgInspectTitle">Zoom in on hair and transparent edges</h2></div><button id="backgroundInspectClose" class="edge-inspect-close" type="button" aria-label="Close" data-i18n-aria-label="bgInspectClose">×</button></header>
+      <div class="edge-inspect-toolbar"><div class="edge-inspect-zoom" role="group" aria-label="Preview zoom" data-i18n-aria-label="bgInspectZoomAria"><button type="button" class="active" data-edge-zoom="1">100%</button><button type="button" data-edge-zoom="2">200%</button><button type="button" data-edge-zoom="4">400%</button></div><div class="edge-inspect-meta"><strong id="backgroundInspectZoomLabel">100%</strong><span id="backgroundInspectDimensions">—</span></div></div>
+      <div id="backgroundInspectViewport" class="edge-inspect-viewport"><canvas id="backgroundInspectCanvas" aria-label="Background edge inspection"></canvas><div id="backgroundInspectBusy" class="edge-inspect-busy"><span class="background-busy-spinner" aria-hidden="true"></span><div><b data-i18n="bgInspectPreparing">Preparing high-detail preview</b><small data-i18n="bgInspectPreparingHint">Reuses the current AI matte without rerunning the model.</small></div></div></div>
       <footer class="edge-inspect-foot"><span data-i18n="bgInspectDragHint">Drag the image while zoomed to inspect different areas.</span><span data-i18n="bgInspectFinalHint">Inspection canvas up to 3072 px; export still keeps the source pixel dimensions.</span></footer>
     </div>
   </div>

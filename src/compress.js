@@ -249,6 +249,7 @@ async function compressDecoded(image, file, opts, onProgress) {
       outputWidth:src.width,
       outputHeight:src.height,
       sourceName:file.name,
+      operation:'compress',
       unchanged:true
     };
   }
@@ -324,6 +325,7 @@ async function compressDecoded(image, file, opts, onProgress) {
     originalHeight:src.height,
     outputWidth:dims.width,
     outputHeight:dims.height,
-    sourceName:file.name
+    sourceName:file.name,
+    operation:'compress'
   };
 }
