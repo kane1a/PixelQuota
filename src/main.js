@@ -1403,4 +1403,40 @@ function initPressedStateSync(){
   }
 }
 function init(){initPressedStateSync();initPageMode();initColorPickers();bind();applyLocale(state.locale);setFormat(state.outputFormat);setResize(state.resizeMode);syncCompressionModeUI();initFormatCapabilities();setWatermarkPanel(state.watermarkPanel);setWatermarkColor('#ffffff');setRedactMode(state.redactMode);setRedactStrength(state.redactStrength,false);redactColorPicker.setColor(state.redactColor,false);setCropPlatform(state.cropPlatform);setCropPreset(state.cropPreset);updateWatermarkStateIndicators();updateRedactActions();syncBackgroundEngineUI();initBackgroundAICacheState();syncDownloadAvailability();initMonetization();window.PixelQuotaTest={addFiles,removeFile,processAll,state,compressImage,detectEncoderSupport,applyWatermarks,renderWatermarkPreview,applyRedactions,renderRedactPreview,applyCrop,renderCropPreview,removeBackgroundDemo,renderBackgroundRemovalPreview,renderBackgroundRemovalInspection,BACKGROUND_REMOVAL_ENGINE,loadBackgroundAIModel,getBackgroundAIState,probeBackgroundAICache,vectorizeImage,vectorOptions,vectorSettingsKey,updateVectorStats,setPreset,setCustom,setFormat,setResize,setCompressionMode,setToolMode,setWatermarkPanel,setWatermarkPosition,setWatermarkImagePosition,setWatermarkTextAlign,setWatermarkColor,setRedactMode,setRedactStrength,setRedactView,loadBackgroundModelUI,syncBackgroundEngineUI,setCropPlatform,setCropPreset,resetCropFrame,applyWatermarkPreset,settingsKey,inputOptions,watermarkOptions,backgroundOptions,backgroundSettingsKey,cropOptions,cropSettingsKey,redactRegionsFor,redactSettingsKey,undoRedact,redoRedact,deleteRedactRegion,selectRedactLayer,deleteRedactLayer,renderRedactLayers,renderRedactOverlay,renderCropOverlay,redactHandle,updateRedactCursor,syncRangeVisual,selectResult,renderComparison,fitPreviewSurface,updateComparisonPosition,updateWatermarkLivePreview,updateRedactPreview,updateBackgroundPreview,openBackgroundInspector,closeBackgroundInspector,setBackgroundInspectorZoom,backgroundInspector};}
+
+/* ---- motion: jelly indicators, hover compare, hero swap ---- */
+function installMotion(){
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+  const ids=['toolModeSwitch','compressModeSwitch','presetRow','formatButtons','moreFormatButtons','resizeButtons','redactModeButtons','cropPlatformButtons','watermarkAlignButtons','redactViewSwitch'];
+  const box=a=>({l:a.offsetLeft,t:a.offsetTop,w:a.offsetWidth,h:a.offsetHeight});
+  const place=(g,ind,animate)=>{
+    const a=[...g.children].find(b=>b.classList.contains('active')&&!b.hidden&&b.offsetWidth);
+    if(!a){ind.style.opacity='0';ind._b=null;return;}
+    const n=box(a),o=ind._b; ind._b=n; ind.style.opacity='1';
+    const px=v=>v+'px',set=b=>({left:px(b.l),top:px(b.t),width:px(b.w),height:px(b.h)});
+    Object.assign(ind.style,set(n));
+    if(!animate||!o||reduce.matches||(o.l===n.l&&o.w===n.w))return;
+    const l=Math.min(o.l,n.l),r=Math.max(o.l+o.w,n.l+n.w);
+    ind.getAnimations().forEach(x=>x.cancel());
+    ind.animate([{...set(o),easing:'cubic-bezier(.5,0,.7,.4)'},{left:px(l),width:px(r-l),top:px(n.t),height:px(n.h),offset:.4,easing:'cubic-bezier(.2,1.5,.35,1)'},set(n)],{duration:520});
+  };
+  ids.map(id=>document.getElementById(id)).filter(Boolean).forEach(g=>{
+    const ind=document.createElement('span');ind.className='seg-ind';ind.setAttribute('aria-hidden','true');g.prepend(ind);g.classList.add('has-ind');
+    let raf=0;const q=anim=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>place(g,ind,anim));};
+    new MutationObserver(()=>q(true)).observe(g,{attributes:true,attributeFilter:['class','hidden'],subtree:true});
+    new ResizeObserver(()=>q(false)).observe(g);q(false);
+  });
+  const stage=$('comparisonStage');
+  if(stage){
+    const live=()=>{const r=$('compareRange');return r&&!r.hidden&&!$('compareOutputMask')?.hidden;};
+    stage.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||!live())return;const s=$('previewSurface').getBoundingClientRect();if(!s.width||e.clientX<s.left||e.clientX>s.right||e.clientY<s.top||e.clientY>s.bottom)return;cancelAnimationFrame(back);stage.classList.add('is-scrubbing');updateComparisonPosition((e.clientX-s.left)/s.width*100);});
+    let back=0;const glide=to=>{cancelAnimationFrame(back);const from=state.comparePosition,t0=performance.now(),d=reduce.matches?0:520;const step=now=>{const k=d?Math.min(1,(now-t0)/d):1,e=1-Math.pow(1-k,3);updateComparisonPosition(from+(to-from)*e);if(k<1)back=requestAnimationFrame(step);};back=requestAnimationFrame(step);};
+    stage.addEventListener('pointerenter',()=>cancelAnimationFrame(back));
+    stage.addEventListener('pointerleave',e=>{if(e.pointerType!=='mouse')return;stage.classList.remove('is-scrubbing');});
+  }
+  const hero=[$('heroTitle'),$('heroSub')].filter(Boolean);
+  let heroRaf=0;
+  new MutationObserver(()=>{if(reduce.matches)return;cancelAnimationFrame(heroRaf);heroRaf=requestAnimationFrame(()=>hero.forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(8px)',filter:'blur(6px)'},{opacity:1,transform:'none',filter:'blur(0)'}],{duration:460,delay:i*50,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'})));}).observe(hero[0],{childList:true,characterData:true,subtree:true});
+}
 init();
+installMotion();

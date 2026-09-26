@@ -455,3 +455,32 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 #app#app .settings-sheet .more-settings-button{padding:0 2px}
 #app#app .settings-sheet .more-settings-button{width:max-content!important;max-width:none!important;min-width:max-content!important;flex:none!important;overflow:visible!important}
 #app#app .settings-sheet .more-settings-button span[aria-hidden]{font-size:0;overflow:hidden}#app#app .settings-sheet .more-settings-button span[aria-hidden]:before{content:"";width:5px;height:5px;border-right:1.3px solid currentColor;border-bottom:1.3px solid currentColor;transform:translateY(-2px) rotate(45deg)}
+
+/* ==== motion ==== */
+.has-ind{position:relative;isolation:isolate}
+.has-ind>button{position:relative;z-index:1}
+.seg-ind{position:absolute;z-index:0;pointer-events:none;border-radius:7px;background:var(--sheet);box-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 .5px color-mix(in srgb,var(--ink) 12%,transparent);transition:opacity .2s}
+#app#app .settings-sheet .has-ind>button.active,.has-ind>button.active{background:transparent!important;box-shadow:none!important;border-color:transparent!important}
+#toolModeSwitch .seg-ind{border-radius:999px;background:var(--ink);box-shadow:none}
+@media(max-width:760px){#toolModeSwitch .seg-ind{border-radius:6px}}
+@media(prefers-color-scheme:dark){:root:not([data-theme=day]) #toolModeSwitch .seg-ind{background:var(--line-2)}:root:not([data-theme=day]) .settings-sheet .seg-ind{background:var(--line-2)}}
+:root[data-theme=night] #toolModeSwitch .seg-ind,:root[data-theme=night] .settings-sheet .seg-ind{background:var(--line-2)}
+#toolModeSwitch button,#toolModeSwitch button.active,.settings-sheet .has-ind>button,.settings-sheet .has-ind>button.active,.settings-sheet .crop-preset-grid button,.settings-sheet .crop-preset-grid button.active{font-weight:500!important}
+#toolModeSwitch button{transition:color .25s}
+.comparison-range{cursor:col-resize}
+@media(prefers-reduced-motion:no-preference){
+ .settings-more:not([hidden]){animation:pq-drawer .34s cubic-bezier(.2,.8,.2,1)}
+ .tool-settings:not([hidden]){animation:pq-fade .3s cubic-bezier(.2,.8,.2,1)}
+ #cropPresetGrid button:not([hidden]){animation:pq-pop .34s cubic-bezier(.3,1.35,.5,1) both}
+ .settings-sheet button,.app-header button,.result-add,.drop-zone .button{transition:transform .16s cubic-bezier(.3,1.4,.5,1),background-color .2s,color .2s,border-color .2s,opacity .2s}
+ .settings-sheet button:active:not(:disabled),.drop-zone .button:active,.result-add:active{transform:scale(.96)}
+ .batch-meter span,.mini-meter i{transition:width .6s cubic-bezier(.2,.8,.2,1)}
+ .result-card .thumb{transition:transform .25s cubic-bezier(.3,1.4,.5,1),outline-color .2s}
+ .result-card:hover .thumb{transform:translateY(-2px)}
+ .canvas-nav{transition:background-color .2s,transform .2s}
+}
+@keyframes pq-drawer{from{opacity:0;transform:translateY(-6px)}}
+@keyframes pq-fade{from{opacity:0;transform:translateY(4px)}}
+@keyframes pq-pop{from{opacity:0;transform:scale(.92)}}
+#app#app .settings-sheet .crop-preset-grid button:not([hidden]){min-width:168px;justify-content:flex-start}
+#app#app .settings-sheet .crop-preset-grid{min-height:40px}
