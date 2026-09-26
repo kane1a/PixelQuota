@@ -257,3 +257,9 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 #watermarkMoreSettings .image-watermark-section>.watermark-position-wrap{align-items:flex-start}
 #watermarkMoreSettings .watermark-position-wrap .position-grid{width:96px;height:40px;min-height:40px;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:2px;padding:3px}
 #watermarkMoreSettings .watermark-position-wrap .position-grid button{width:100%;height:10px;min-width:0}
+
+/* Night mode: retain legible text in active crop cards and quiet disabled controls. */
+@media(prefers-color-scheme:dark){:root:not([data-theme=day]) .crop-preset-grid button.active *{color:var(--ink)}:root:not([data-theme=day]) button:disabled{background:var(--line-2);border-color:var(--line-2);color:var(--ink-3);opacity:1}:root:not([data-theme=day]) .crop-preset-grid button:disabled *{color:var(--ink-3)}}
+:root[data-theme=night] .crop-preset-grid button.active *{color:var(--ink)}
+:root[data-theme=night] button:disabled{background:var(--line-2);border-color:var(--line-2);color:var(--ink-3);opacity:1}
+:root[data-theme=night] .crop-preset-grid button:disabled *{color:var(--ink-3)}
