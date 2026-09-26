@@ -267,3 +267,191 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 
 /* Give the horizontally scrolled mobile result strip breathing room at its end. */
 @media(max-width:760px){.result-list{padding-right:14px}}
+/* ==== v1.6 refine layer ==== */
+/* one card, one level: bar / more / summary separated by hairlines */
+#app#app .settings-sheet{background:var(--sheet);border:1px solid var(--line);border-radius:14px;box-shadow:none;overflow:visible;margin-top:12px}
+#app#app .settings-sheet .bar{background:transparent;border:0;box-shadow:none;border-radius:0;margin:0;padding:16px 20px;display:flex;flex-wrap:wrap;align-items:flex-end;column-gap:28px;row-gap:14px}
+#app#app .settings-sheet .settings-context{display:none}
+#app#app .settings-sheet .settings-tools{flex:1 1 auto;width:auto;min-width:0;order:0}
+#app#app .settings-sheet .tool-settings{width:auto;display:flex;flex-wrap:wrap;align-items:flex-end;column-gap:24px;row-gap:14px}
+#app#app .settings-sheet .tool-settings>*{flex:none!important;min-width:0!important;width:auto}
+#app#app .settings-sheet .settings-actions{display:flex;align-items:flex-end;gap:16px;margin-left:auto;order:1}
+#app#app .settings-sheet .settings-underbar{display:flex;align-items:center;gap:16px;height:40px;margin:0;padding:0;border:0}
+#app#app .settings-sheet .download-actions{display:flex;align-items:flex-end;gap:8px}
+/* labels */
+#app#app .settings-sheet .control-label,#app#app .settings-sheet .setting-control>label,#app#app .settings-sheet .color-preset-block>span{display:flex;justify-content:space-between;gap:12px;font-size:12px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink-3);margin:0 0 6px;line-height:16px}
+#app#app .settings-sheet .control-label output{color:var(--ink-2);font-variant-numeric:tabular-nums}
+#app#app .settings-sheet .setting-control{display:flex;flex-direction:column;gap:0}
+/* segmented groups: one track, quiet active */
+#app#app .settings-sheet .compress-mode-switch,#app#app .settings-sheet .segment-grid,#app#app .settings-sheet .preset-row,#app#app .settings-sheet .align-buttons,#app#app .settings-sheet .redact-view-switch{display:inline-flex!important;grid-template-columns:none!important;gap:2px;height:40px;padding:3px;border:0;border-radius:10px;background:color-mix(in srgb,var(--ink) 6%,transparent);width:auto!important}
+#app#app .settings-sheet .compress-mode-switch button,#app#app .settings-sheet .segment-grid button,#app#app .settings-sheet .preset-row button,#app#app .settings-sheet .align-buttons button{height:34px;min-width:0;width:auto;padding:0 12px;border:0!important;border-radius:7px;background:transparent;color:var(--ink-2);font-size:13px;font-weight:400;box-shadow:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+#app#app .settings-sheet .compress-mode-switch button:hover,#app#app .settings-sheet .segment-grid button:hover,#app#app .settings-sheet .preset-row button:hover,#app#app .settings-sheet .align-buttons button:hover{color:var(--ink)}
+#app#app .settings-sheet .compress-mode-switch button.active,#app#app .settings-sheet .segment-grid button.active,#app#app .settings-sheet .preset-row button.active,#app#app .settings-sheet .align-buttons button.active{background:var(--sheet);color:var(--ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 .5px color-mix(in srgb,var(--ink) 12%,transparent)}
+#app#app .settings-sheet .align-buttons b{font-weight:inherit}
+/* KB target: the number is the hero */
+#app#app .settings-sheet #compressTargetSettings{display:grid!important;grid-template-columns:auto auto;grid-template-rows:auto 40px;column-gap:16px;align-items:end;min-width:0!important}
+#app#app .settings-sheet #compressTargetSettings>label{grid-column:1 / 3}
+#app#app .settings-sheet .target-input{display:flex;align-items:baseline;gap:4px;height:40px;padding:0;border:0;background:transparent;box-shadow:none;width:auto}
+#app#app .settings-sheet .target-input input{width:4.2ch;height:40px;padding:0;border:0;border-bottom:1px solid transparent;border-radius:0;background:transparent;font-size:30px;font-weight:500;letter-spacing:-.02em;line-height:40px;color:var(--ink);font-variant-numeric:tabular-nums;box-shadow:none;-moz-appearance:textfield}
+#app#app .settings-sheet .target-input input::-webkit-inner-spin-button{-webkit-appearance:none}
+#app#app .settings-sheet .target-input input:hover,#app#app .settings-sheet .target-input input:focus{border-bottom-color:var(--line-2);outline:none}
+#app#app .settings-sheet .target-input span{font-size:13px;color:var(--ink-3)}
+#app#app .settings-sheet .preset-row [data-kb="20"]{display:none}
+/* fields */
+#app#app .settings-sheet input.field,#app#app .settings-sheet .field,#app#app .settings-sheet .dimension-grid input,#app#app .settings-sheet select{height:40px;border:1px solid var(--line-2);border-radius:9px;background:var(--bg);padding:0 12px;font-size:14px;color:var(--ink);box-shadow:none}
+#app#app .settings-sheet input.field:focus,#app#app .settings-sheet .dimension-grid input:focus{border-color:var(--accent);outline:none}
+#app#app .settings-sheet input[type=range]{height:40px;accent-color:var(--accent);width:140px;margin:0}
+#app#app .settings-sheet .range-control{min-width:140px}
+/* buttons */
+#app#app .settings-sheet .button,#app#app .settings-sheet .download-actions button{height:40px;padding:0 18px;border-radius:10px;font-size:14px;font-weight:500;box-shadow:none;white-space:nowrap}
+#app#app .settings-sheet .button.secondary{background:transparent;border:1px solid var(--line-2);color:var(--ink)}
+#app#app .settings-sheet .button.secondary:hover{border-color:var(--ink-3)}
+#app#app .settings-sheet .button.primary{background:var(--accent);border:0;color:var(--accent-ink)}
+#app#app .settings-sheet .button:disabled{opacity:.45;filter:none}
+#app#app .settings-sheet .more-settings-button,#app#app .settings-sheet .clear-button{height:40px;padding:0;border:0;background:none;text-decoration:none;font-size:13px;font-weight:400;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px;box-shadow:none}
+#app#app .settings-sheet .more-settings-button span[aria-hidden]{display:inline-block;font-size:11px;transform:translateY(-1px);transition:transform .15s}
+#app#app .settings-sheet .more-settings-button[aria-expanded=true] span[aria-hidden]{transform:rotate(180deg) translateY(1px)}
+#app#app .settings-sheet .clear-button{color:var(--ink-3)}
+#app#app .settings-sheet .more-settings-button:hover,#app#app .settings-sheet .clear-button:hover{color:var(--ink)}
+/* more settings: flat, same card */
+#app#app .settings-sheet .settings-more{flex:1 1 100%;order:3;margin:2px -20px -16px;padding:16px 20px 18px;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none}
+#app#app .settings-sheet .settings-more *{box-shadow:none}
+#app#app .settings-sheet .advanced-settings,#app#app .settings-sheet .more-tool-section,#app#app .settings-sheet .watermark-section,#app#app .settings-sheet .advanced-inner,#app#app .settings-sheet .redact-layers{background:transparent!important;border:0!important;padding:0;margin:0;border-radius:0}
+#app#app .settings-sheet .advanced-inner{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 28px}
+#app#app .settings-sheet .dimension-grid{display:flex;gap:12px}
+#app#app .settings-sheet .dimension-grid .setting-control>div{position:relative}
+#app#app .settings-sheet .dimension-grid input{width:112px;padding-right:30px}
+#app#app .settings-sheet .dimension-grid em{position:absolute;right:11px;top:0;line-height:40px;font-style:normal;font-size:12px;color:var(--ink-3)}
+#app#app .settings-sheet .check-row{display:inline-flex;align-items:center;gap:8px;height:40px;font-size:13px;color:var(--ink-2)}
+#app#app .settings-sheet .check-row input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+#app#app .settings-sheet .watermark-more-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+#app#app .settings-sheet .watermark-section+.watermark-section{padding-left:40px!important;border-left:1px solid var(--line)!important}
+#app#app .settings-sheet .more-section-heading{font-size:13px;font-weight:600;color:var(--ink);margin:0 0 14px}
+/* summary: hairline, not a box */
+#app#app .settings-sheet .batch-summary{margin:0;padding:12px 20px 16px;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;font-size:13px;color:var(--ink-2)}
+#app#app .settings-sheet .batch-summary-line b{color:var(--ok);font-weight:500}
+#app#app .settings-sheet .batch-meter{height:4px;margin-top:8px}
+/* canvas: image on a quiet mat, badges on the image edge */
+.comparison-stage{background:color-mix(in srgb,var(--ink) 4%,var(--sheet))!important}
+.comparison-badge{background:var(--scrim)!important;color:#f3efe8!important;border:0!important;border-radius:999px!important;font-size:12px!important;padding:4px 10px!important;box-shadow:none!important}
+.comparison-badge strong{font-weight:600}
+/* thumbnail meter visible */
+.result-card .progress.mini-meter{height:3px;background:var(--line);border-radius:2px;margin-top:6px!important}
+.result-card .progress.mini-meter i{background:var(--ok);border-radius:2px}
+.result-card .progress.mini-meter.over-limit i{background:var(--over)}
+.result-card .progress.mini-meter.waiting i{background:var(--wait)}
+@media(max-width:760px){
+ #app#app .settings-sheet .bar{padding:14px;column-gap:16px}
+ #app#app .settings-sheet .settings-tools,#app#app .settings-sheet .tool-settings{width:100%}
+ #app#app .settings-sheet .tool-settings>*{max-width:100%}
+ #app#app .settings-sheet .compress-mode-switch{width:100%!important;display:flex!important}
+ #app#app .settings-sheet .compress-mode-switch button{flex:1}
+ #app#app .settings-sheet .preset-row{max-width:100%;overflow-x:auto;scrollbar-width:none}
+ #app#app .settings-sheet #compressTargetSettings{grid-template-columns:1fr;grid-template-rows:auto 40px 40px;row-gap:10px}
+ #app#app .settings-sheet #compressTargetSettings>label{grid-column:1}
+ #app#app .settings-sheet .settings-actions{width:100%;margin:0;flex-direction:column;align-items:stretch;gap:10px}
+ #app#app .settings-sheet .settings-underbar{justify-content:space-between}
+ #app#app .settings-sheet .download-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ #app#app .settings-sheet .download-actions>button:only-of-type,#app#app .settings-sheet .download-actions>button[hidden]+button{grid-column:1 / -1}
+ #app#app .settings-sheet .download-actions button{width:100%}
+ #app#app .settings-sheet .settings-more{margin:2px -14px -14px;padding:14px}
+ #app#app .settings-sheet .watermark-more-grid{grid-template-columns:1fr;gap:20px}
+ #app#app .settings-sheet .watermark-section+.watermark-section{padding:20px 0 0!important;border-left:0!important;border-top:1px solid var(--line)!important}
+ #app#app .settings-sheet .batch-summary{padding:12px 14px 14px}
+}
+
+/* row structure: [controls ........ downloads] / hairline / [summary ... more · clear] / drawer */
+#app#app .settings-sheet .bar{column-gap:20px}
+#app#app .settings-sheet .tool-settings{column-gap:20px}
+#app#app .settings-sheet .settings-actions{display:contents}
+#app#app .settings-sheet .download-actions{order:1;margin-left:auto}
+#app#app .settings-sheet .bar-rule{order:2;flex:1 1 100%;height:0;margin:2px -20px 0;border-top:1px solid var(--line)}
+#app#app .settings-sheet .batch-summary{order:3;flex:1 1 320px;min-width:0;max-width:720px;padding:0;border:0;margin:0;align-self:center}
+#app#app .settings-sheet .settings-underbar{order:4;margin-left:auto;height:24px}
+#app#app .settings-sheet .more-settings-button,#app#app .settings-sheet .clear-button{height:24px}
+#app#app .settings-sheet .settings-more{order:5;margin:0 -20px -16px}
+#app#app .settings-sheet .compress-mode-switch button,#app#app .settings-sheet .segment-grid button,#app#app .settings-sheet .preset-row button,#app#app .settings-sheet .align-buttons button{padding:0 11px;font-size:13px}
+#app#app .settings-sheet .dimension-grid em{display:block;width:auto;height:auto;top:50%;transform:translateY(-50%);line-height:1}
+#app#app .settings-sheet .batch-meter{max-width:none}
+.comparison-badge{z-index:6}
+@media(max-width:760px){
+ #app#app .settings-sheet .bar-rule{margin:2px -14px 0}
+ #app#app .settings-sheet .download-actions{order:1;width:100%;margin:0}
+ #app#app .settings-sheet .batch-summary{flex:1 1 100%}
+ #app#app .settings-sheet .settings-underbar{width:100%;justify-content:space-between;margin:0}
+ #app#app .settings-sheet .settings-more{margin:0 -14px -14px}
+}
+
+/* refine 2 */
+#app#app .settings-sheet .range-control{width:160px;min-width:160px}
+#app#app .settings-sheet .range-control input[type=range]{width:160px}
+#app#app .settings-sheet .position-grid{display:grid!important;grid-template-columns:repeat(3,10px)!important;grid-auto-rows:10px;gap:4px!important;width:auto!important;height:40px;padding:0!important;border:0!important;background:transparent!important;align-content:center}
+#app#app .settings-sheet .position-grid button{width:10px!important;height:10px!important;min-width:0;min-height:0;padding:0!important;border:0!important;border-radius:3px!important;background:var(--line-2)!important;box-shadow:none!important}
+#app#app .settings-sheet .position-grid button:before,#app#app .settings-sheet .position-grid button:after{display:none!important}
+#app#app .settings-sheet .position-grid button:hover{background:var(--ink-3)!important}
+#app#app .settings-sheet .position-grid button.active{background:var(--accent)!important}
+#app#app .settings-sheet .watermark-presets{display:flex;gap:6px;flex-wrap:wrap}
+#app#app .settings-sheet .watermark-presets button{height:34px;padding:0 12px;border:0;border-radius:8px;background:color-mix(in srgb,var(--ink) 6%,transparent);color:var(--ink-2);font-size:13px;box-shadow:none}
+#app#app .settings-sheet .watermark-presets button:hover{color:var(--ink)}
+#app#app .settings-sheet .color-presets{display:flex;align-items:center;gap:8px;height:40px}
+#app#app .settings-sheet .color-presets button{flex:none;width:22px!important;height:22px!important;min-width:0;padding:0;border-radius:50%!important;border:1px solid color-mix(in srgb,var(--ink) 18%,transparent)!important;box-shadow:none}
+#app#app .settings-sheet .color-presets button.active{outline:2px solid var(--accent);outline-offset:2px}
+#app#app .settings-sheet .watermark-field{margin-bottom:16px}
+#app#app .settings-sheet .dimension-grid .setting-control>div{display:block;position:relative;width:fit-content}
+@media(max-width:760px){
+ #app#app .settings-sheet .download-actions{display:flex}
+ #app#app .settings-sheet .download-actions>button{flex:1 1 0;width:auto}
+ #app#app .settings-sheet .settings-more{width:auto!important;max-width:none!important;margin:0 -14px -14px!important;left:auto;right:auto;transform:none}
+ #app#app .settings-sheet .dimension-grid{width:100%}
+ #app#app .settings-sheet .dimension-grid .setting-control{flex:1 1 0}
+ #app#app .settings-sheet .dimension-grid .setting-control>div{width:100%}
+ #app#app .settings-sheet .dimension-grid input{width:100%}
+}
+
+/* crop: platform row, then preset chips in one row */
+#app#app .settings-sheet #cropSettings>.setting-control{flex:1 1 100%!important}
+#app#app .settings-sheet .crop-preset-grid{display:flex!important;flex-wrap:wrap;gap:6px;grid-template-columns:none!important;width:auto!important}
+#app#app .settings-sheet .crop-preset-grid button:not([hidden]){display:inline-flex!important;flex-direction:row;align-items:baseline;gap:8px;height:40px;width:auto!important;min-width:0;padding:0 14px;border:0!important;border-radius:9px;background:color-mix(in srgb,var(--ink) 6%,transparent)!important;color:var(--ink-2)!important;box-shadow:none!important}
+#app#app .settings-sheet .crop-preset-grid button strong{font-size:13px;font-weight:500;color:inherit}
+#app#app .settings-sheet .crop-preset-grid button span{font-size:12px;color:var(--ink-3)!important;font-variant-numeric:tabular-nums}
+#app#app .settings-sheet .crop-preset-grid button small{display:none}
+#app#app .settings-sheet .crop-preset-grid button.active{background:var(--sheet)!important;color:var(--ink)!important;box-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 .5px color-mix(in srgb,var(--ink) 14%,transparent)!important}
+#app#app .settings-sheet .crop-manual-note{display:flex;align-items:center;gap:12px;height:40px;font-size:12px;color:var(--ink-3)}
+#app#app .settings-sheet .crop-manual-note b{font-weight:400}
+/* redact: quiet text actions */
+#app#app .settings-sheet .redact-actions{display:flex;align-items:center;gap:4px;height:40px}
+#app#app .settings-sheet .redact-actions .region-count{margin-right:10px;font-size:13px;color:var(--ink-2)}
+#app#app .settings-sheet .redact-actions .region-count b{font-weight:600;color:var(--ink)}
+#app#app .settings-sheet .redact-actions button,#app#app .settings-sheet #cropReset{height:34px;padding:0 10px;border:0!important;border-radius:8px;background:transparent!important;color:var(--ink-2);font-size:13px;box-shadow:none}
+#app#app .settings-sheet .redact-actions button:hover:not(:disabled),#app#app .settings-sheet #cropReset:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)!important;color:var(--ink)}
+#app#app .settings-sheet .redact-actions button:disabled{color:var(--ink-3);opacity:.55}
+@media(max-width:760px){#app#app .settings-sheet .crop-preset-grid,#app#app .settings-sheet #cropPlatformButtons{flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:none}}
+
+/* refine 3: crop chips centered, SVG + AI cards flattened */
+#app#app .settings-sheet .crop-preset-grid button:not([hidden]){align-items:center}
+#app#app .settings-sheet #cropSettings{row-gap:16px}
+#app#app .settings-sheet .vector-pro-card,#app#app .settings-sheet .background-engine-card{display:flex;align-items:flex-end;gap:20px;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
+#app#app .settings-sheet .vector-pro-head strong{display:none}
+#app#app .settings-sheet .vector-pro-head .control-label{margin-bottom:6px}
+#app#app .settings-sheet .vector-auto-summary{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:0!important;border-radius:9px;background:color-mix(in srgb,var(--ink) 6%,transparent);font-size:13px;color:var(--ink-2)}
+#app#app .settings-sheet .vector-auto-summary b{font-weight:500;color:var(--ink)}
+#app#app .settings-sheet .vector-auto-summary span{color:var(--ink-3)}
+#app#app .settings-sheet .vector-stats{display:flex;gap:28px;border:0!important;background:transparent!important;padding:0!important}
+#app#app .settings-sheet .vector-stats>div{display:flex;flex-direction:column;justify-content:flex-end;padding:0!important;border:0!important;background:transparent!important}
+#app#app .settings-sheet .vector-stats span{font-size:12px;letter-spacing:0;text-transform:none;color:var(--ink-3);line-height:16px;margin-bottom:6px}
+#app#app .settings-sheet .vector-stats b{font-size:22px;font-weight:500;line-height:40px;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--ink)}
+#app#app .settings-sheet .vector-stats small{display:none}
+#app#app .settings-sheet .background-engine-head{display:flex;align-items:flex-end;gap:12px}
+#app#app .settings-sheet .background-engine-head>div{display:flex;flex-direction:column}
+#app#app .settings-sheet .background-engine-head strong{font-size:14px;font-weight:500;line-height:40px}
+#app#app .settings-sheet .engine-badge{display:inline-flex;align-items:center;height:26px;margin-bottom:6px;padding:0 10px;border:0!important;border-radius:999px;background:color-mix(in srgb,var(--ink) 6%,transparent);font-size:12px;color:var(--ink-2)}
+#app#app .settings-sheet .bg-ai-model-panel{display:flex;align-items:center;gap:14px;height:40px}
+#app#app .settings-sheet .bg-ai-model-panel .helper{max-width:300px;font-size:12px;line-height:1.45;color:var(--ink-3);margin:0}
+.toast,#toast{bottom:28px!important}
+
+#app#app .settings-sheet .more-settings-button{flex:none;width:auto;min-width:max-content;overflow:visible;white-space:nowrap}
+#app#app .settings-sheet .more-settings-button span[aria-hidden]{display:inline-flex;align-items:center;justify-content:center;width:12px;height:12px;line-height:1;transform:none}
+#app#app .settings-sheet .more-settings-button[aria-expanded=true] span[aria-hidden]{transform:rotate(180deg)}
+#app#app .settings-sheet .more-settings-button{padding:0 2px}
+#app#app .settings-sheet .more-settings-button{width:max-content!important;max-width:none!important;min-width:max-content!important;flex:none!important;overflow:visible!important}
+#app#app .settings-sheet .more-settings-button span[aria-hidden]{font-size:0;overflow:hidden}#app#app .settings-sheet .more-settings-button span[aria-hidden]:before{content:"";width:5px;height:5px;border-right:1.3px solid currentColor;border-bottom:1.3px solid currentColor;transform:translateY(-2px) rotate(45deg)}
