@@ -1,4 +1,5 @@
 :root{color-scheme:light}
+html{overflow-y:scroll;scrollbar-gutter:stable}
 :root{
   --bg:#ece8e1;--sheet:#f6f3ee;--line:#ddd7cd;--line-2:#c9c1b4;
   --ink:#2b2824;--ink-2:#5c5750;--ink-3:#8f887e;--accent:#2f6b66;--accent-ink:#f6f3ee;
