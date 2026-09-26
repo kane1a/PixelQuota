@@ -489,3 +489,8 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 #app#app .settings-sheet #cropPlatformButtons{position:relative}
 #app#app#app .settings-sheet #cropPlatformButtons{display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;grid-auto-flow:column}
 @media(max-width:760px){#app#app#app .settings-sheet #cropPlatformButtons{grid-template-columns:repeat(8,88px)!important}}
+
+/* tool controls always take the whole first row; downloads never share it, so track width can't depend on content */
+#app#app#app .settings-sheet .bar:has(#cropSettings:not([hidden])) .settings-tools{flex:1 1 100%!important;width:100%!important;min-width:0!important;max-width:100%!important}
+#app#app#app .settings-sheet #cropSettings>.setting-control{flex:1 1 100%!important;width:100%!important}
+#app#app#app .settings-sheet #cropPlatformButtons{min-width:0;contain:inline-size}
