@@ -244,6 +244,7 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 
 /* Reserve the minimum useful KB preset width so format stays on the desktop control row. */
 @media(min-width:761px){.settings-primary.bar .tool-settings>#compressTargetSettings{flex:1 1 326px;min-width:326px}}
+@media(min-width:761px){.settings-primary.bar #compressTargetSettings .preset-row button{font-size:12px;padding-left:2px;padding-right:2px}}
 
 /* Watermark drawer: matching field labels, slider values, and the same 3×3 position control. */
 #watermarkMoreSettings .watermark-more-grid .watermark-field>.control-label,
