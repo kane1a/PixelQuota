@@ -184,9 +184,10 @@ function resultIsCurrent(index=state.selectedIndex??0){
 }
 function syncDownloadAvailability(){
   const zip=$('downloadAllBtn'),current=$('downloadCurrentBtn');if(!zip||!current)return;
-  const hasFiles=state.files.length>0,hasBatch=state.files.length>1,index=state.selectedIndex??0;
-  zip.hidden=!hasBatch;zip.disabled=!hasBatch||state.busy||!state.results.some(Boolean);
-  current.hidden=!hasFiles;current.disabled=!hasFiles||state.busy||!resultIsCurrent(index);
+  const hasFiles=state.files.length>0,hasBatch=state.files.length>1;
+  const backgroundReady=state.toolMode!=='remove-bg'||getBackgroundAIState().ready;
+  zip.hidden=!hasBatch;zip.disabled=!hasBatch||state.busy||!backgroundReady;
+  current.hidden=!hasFiles;current.disabled=!hasFiles||state.busy||!backgroundReady;
   const add=$('addMoreBtn');if(add){add.hidden=!hasFiles||hasBatch;add.disabled=state.busy;}
   const summary=$('batchSummary');
   if(summary){
@@ -299,6 +300,7 @@ function syncBackgroundEngineUI(){
   if(model.status==='error'&&model.message){hint.hidden=false;hint.textContent=`${t('bgModelErrorDetail')} ${model.message}`;}
   else if(model.ready){hint.hidden=true;}
   else{hint.hidden=false;hint.textContent=t(model.cached?'bgModelCachedHint':'bgModelInitialHint');}
+  syncDownloadAvailability();
 }
 async function loadBackgroundModelUI({silent=false}={}){
   try{
