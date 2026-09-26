@@ -187,6 +187,20 @@ function syncDownloadAvailability(){
   const hasFiles=state.files.length>0,hasBatch=state.files.length>1,index=state.selectedIndex??0;
   zip.hidden=!hasBatch;zip.disabled=!hasBatch||state.busy||!state.results.some(Boolean);
   current.hidden=!hasFiles;current.disabled=!hasFiles||state.busy||!resultIsCurrent(index);
+  const add=$('addMoreBtn');if(add){add.hidden=!hasFiles||hasBatch;add.disabled=state.busy;}
+  const summary=$('batchSummary');
+  if(summary){
+    summary.hidden=!hasBatch;
+    const completed=state.results.filter(Boolean).length+state.errors.filter(Boolean).length;
+    const passed=state.results.filter(r=>r?.metTarget||r?.operation!=='compress').length;
+    const total=state.files.length;
+    $('batchSummaryTotal').textContent=hasBatch?`${completed}/${total}`:'';
+    $('resultsSummary').textContent=completed?`${completed}/${total} ${t('filesQueued')}`:t('queuedTitle');
+    const ok=$('batchMeter')?.querySelector('.batch-meter-ok'),over=$('batchMeter')?.querySelector('.batch-meter-over'),wait=$('batchMeter')?.querySelector('.batch-meter-wait');
+    if(ok)ok.style.width=`${total?Math.min(100,passed/total*100):0}%`;
+    if(over)over.style.width=`${total?Math.min(100,(completed-passed)/total*100):0}%`;
+    if(wait)wait.style.width=`${total?Math.min(100,(total-completed)/total*100):0}%`;
+  }
 }
 function scheduleAutoProcess(){
   if(!state.files.length||!['compress','vectorize'].includes(state.toolMode))return;
@@ -570,7 +584,9 @@ function setWatermarkPanel(panel){
     const active=button.dataset.watermarkPanel===panel;
     button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));
   });
-  document.querySelectorAll('[data-watermark-panel-content]').forEach(section=>section.hidden=section.dataset.watermarkPanelContent!==panel);
+  // Keep both watermark columns visible in the drawer. The tab buttons remain as a compact focus cue,
+  // but switching them must not hide the other configuration surface.
+  document.querySelectorAll('[data-watermark-panel-content]').forEach(section=>section.hidden=false);
   closeColorPicker();
 }
 function updateWatermarkStateIndicators(){
@@ -942,15 +958,16 @@ function fitPreviewSurface(width,height){
   const panel=$('comparisonPanel'),stage=$('comparisonStage'),surface=$('previewSurface');
   width=Number(width)||0;height=Number(height)||0;
   if(!panel||!stage||!surface||width<=0||height<=0)return;
-  const panelStyle=getComputedStyle(panel),stageStyle=getComputedStyle(stage);
-  const contentWidth=Math.max(180,panel.clientWidth-parseFloat(panelStyle.paddingLeft)-parseFloat(panelStyle.paddingRight));
+  // The stage is the canvas. Only the image surface scales inside it, so switching
+  // between portrait and landscape never shrinks or moves the comparison chrome.
+  const stageStyle=getComputedStyle(stage);
   const padX=parseFloat(stageStyle.paddingLeft)+parseFloat(stageStyle.paddingRight);
   const padY=parseFloat(stageStyle.paddingTop)+parseFloat(stageStyle.paddingBottom);
-  const maxSurfaceWidth=Math.max(150,contentWidth-padX),maxSurfaceHeight=innerWidth<=760?245:390;
+  const maxSurfaceWidth=Math.max(1,stage.clientWidth-padX),maxSurfaceHeight=Math.max(1,stage.clientHeight-padY);
   const scale=Math.min(maxSurfaceWidth/width,maxSurfaceHeight/height);
   const displayWidth=Math.max(1,Math.round(width*scale)),displayHeight=Math.max(1,Math.round(height*scale));
   surface.style.width=`${displayWidth}px`;surface.style.height=`${displayHeight}px`;
-  stage.style.width=`${Math.min(contentWidth,displayWidth+padX)}px`;stage.style.height=`${displayHeight+padY}px`;
+  stage.style.width='100%';stage.style.height='100%';
   stage.dataset.orientation=height>width?'portrait':width>height?'landscape':'square';
 }
 function fitCurrentPreviewSurface(){
@@ -1139,7 +1156,7 @@ function resultCardHtml(file,index,result) {
   const status=isVector?'SVG':limitMode?(result.metTarget?t('pass'):t('failed')):t('ready');
   const meter=limitMode?resultMeterHtml({percent:result.targetBytes?result.blob.size/result.targetBytes*100:100,over,limit:true}):resultMeterHtml();
   const label=`${file.name}, ${formatBytes(file.size)} to ${formatBytes(result.blob.size)}, ${detail}`;
-  return `<article class="result-card done${over?' over-limit':''}${selectedClass(index)}" data-result-index="${index}" data-select-result="${index}" tabindex="0" aria-label="${escapeHtml(label)}">${removeButtonHtml(index)}<div class="thumb"><img src="${result.previewUrl}" alt="" /></div>${meter}<div class="result-info"><strong title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</strong><span class="result-size" title="${formatBytes(file.size)} → ${formatBytes(result.blob.size)}">${formatBytes(file.size)} → ${formatBytes(result.blob.size)}</span></div><div class="result-card-foot"><span class="status ${over?'fail':'pass'}">${status}</span><div class="result-action"><button type="button" data-download-index="${index}" aria-label="${escapeHtml(t('download'))}">${t('download')}</button></div></div>${reason?`<div class="result-reason"><strong>!</strong><span>${escapeHtml(reason)}</span></div>`:''}</article>`;
+  return `<article class="result-card done${over?' over-limit':''}${selectedClass(index)}" data-result-index="${index}" data-select-result="${index}" tabindex="0" aria-label="${escapeHtml(label)}">${removeButtonHtml(index)}<div class="thumb"><img src="${result.previewUrl}" alt="" /></div>${meter}<div class="result-info"><strong title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</strong><span class="result-size" title="${formatBytes(file.size)} → ${formatBytes(result.blob.size)}">${formatBytes(file.size)} → ${formatBytes(result.blob.size)}</span></div><div class="result-card-foot"><span class="status ${over?'fail':'pass'}">${status}</span></div>${reason?`<div class="result-reason"><strong>!</strong><span>${escapeHtml(reason)}</span></div>`:''}</article>`;
 }
 function errorCardHtml(file,index,error) {
   const label=`${file.name}, ${t('failed')}`;
@@ -1158,6 +1175,7 @@ function renderCard(index) {
 function renderCards() {
   if(!state.files.length){$('resultsSection').hidden=true;$('emptyResults').hidden=false;$('dropZone').hidden=false;$('resultList').hidden=true;$('resultList').innerHTML='';syncDownloadAvailability();return;}
   $('emptyResults').hidden=true;$('resultsSection').hidden=false;$('dropZone').hidden=true;$('resultList').hidden=false;
+  $('resultList').classList.toggle('single',state.files.length===1);
   chooseDefaultResult(); $('resultList').innerHTML=state.files.map((file,i)=>state.results[i]?resultCardHtml(file,i,state.results[i]):state.errors[i]?errorCardHtml(file,i,state.errors[i]):queuedCardHtml(file,i)).join('')+'<button id="resultAddBtn" class="result-add" type="button" aria-label="'+escapeHtml(t('addImages'))+'"><span aria-hidden="true">＋</span></button>';
   syncDownloadAvailability(); updateResultsSummary(); renderComparison();
 }
@@ -1350,6 +1368,7 @@ function bind(){
   $('dropZone').onclick=e=>{if(!e.target.closest('button'))$('fileInput').click();};
   $('dropZone').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('fileInput').click();}};
   $('fileInput').onchange=e=>addFiles(e.target.files);
+  $('addMoreBtn').onclick=()=>{$('fileInput').click();};
   ['dragenter','dragover'].forEach(ev=>$('dropZone').addEventListener(ev,e=>{e.preventDefault();$('dropZone').classList.add('dragging')}));
   ['dragleave','drop'].forEach(ev=>$('dropZone').addEventListener(ev,e=>{e.preventDefault();$('dropZone').classList.remove('dragging')}));
   $('dropZone').addEventListener('drop',e=>addFiles(e.dataTransfer.files));
@@ -1362,6 +1381,7 @@ function bind(){
   $('resizeButtons').onclick=e=>{const b=e.target.closest('[data-resize]');if(b)setResize(b.dataset.resize);};
   $('processBtn').onclick=processAll;$('clearBtn').onclick=resetAll;$('downloadAllBtn').onclick=downloadAll;$('downloadCurrentBtn').onclick=downloadCurrent;
   $('compareRange').oninput=e=>updateComparisonPosition(e.target.value);
+  document.querySelector('.comparison-stage').onclick=e=>{const button=e.target.closest('[data-canvas-step]');if(!button||state.files.length<2)return;const step=Number(button.dataset.canvasStep)||0;const next=(state.selectedIndex??0)+step;selectResult((next+state.files.length)%state.files.length);};
   $('resultList').onclick=e=>{if(e.target.closest('#resultAddBtn')){$('fileInput').click();return;}const remove=e.target.closest('[data-remove-index]');if(remove){e.stopPropagation();removeFile(Number(remove.dataset.removeIndex));return;}const b=e.target.closest('[data-download-index]');if(b){e.stopPropagation();const r=state.results[Number(b.dataset.downloadIndex)];if(r)downloadBlob(r.blob,r.outputName);return;}const card=e.target.closest('[data-select-result]');if(card)selectResult(Number(card.dataset.selectResult));};
   $('resultList').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('[data-select-result]')&&!e.target.closest('button')){e.preventDefault();selectResult(Number(e.target.closest('[data-select-result]').dataset.selectResult));}};
   $('languageToggle').onclick=()=>toggleLanguageMenu();

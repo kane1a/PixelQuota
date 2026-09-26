@@ -11,3 +11,8 @@ tests/fixture.jpg
 *.log
 .vscode/
 .idea/
+tests/fixture-2.jpg
+tests/portrait-fixture.jpg
+tests/bg-fixture.png
+tests/vector-fixture.png
+*.local.mjs
