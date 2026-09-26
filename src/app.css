@@ -241,3 +241,6 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 /* Keep controls and actions on the same baseline; mobile gets a full-width action row. */
 .settings-primary.bar{align-items:flex-end}
 @media(max-width:760px){.settings-primary.bar{align-items:stretch}}
+
+/* Reserve the minimum useful KB preset width so format stays on the desktop control row. */
+@media(min-width:761px){.settings-primary.bar .tool-settings>#compressTargetSettings{flex:1 1 326px;min-width:326px}}
