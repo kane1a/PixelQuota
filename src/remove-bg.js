@@ -314,7 +314,8 @@ async function renderAI(file,opts={},maxDimension=0,onProgress=()=>{}){
 }
 
 export async function renderBackgroundRemovalPreview(file,opts={}){
-  return opts.engine==='ai'?renderAI(file,opts,760):render(file,opts,760);
+  const side=Math.max(760,Math.min(2048,Math.round(opts.previewSide||760)));
+  return opts.engine==='ai'?renderAI(file,opts,side):render(file,opts,side);
 }
 
 export async function renderBackgroundRemovalInspection(file,opts={}){

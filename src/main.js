@@ -204,9 +204,10 @@ function syncDownloadAvailability(){
   }
 }
 function scheduleAutoProcess(){
-  if(!state.files.length||!['compress','vectorize'].includes(state.toolMode))return;
+  if(!state.files.length||!['compress','vectorize','redact'].includes(state.toolMode))return;
+  if(state.toolMode==='redact'&&!state.files.some((_,i)=>redactRegionsFor(i).length))return;
   clearTimeout(autoProcessTimer);
-  autoProcessTimer=setTimeout(()=>{autoProcessTimer=0;if(!state.busy&&state.files.length)processAll();},300);
+  autoProcessTimer=setTimeout(()=>{autoProcessTimer=0;if(!state.busy&&state.files.length){state.autoRun=true;processAll();}},state.toolMode==='redact'?700:300);
 }
 // Any in-flight processAll() run started before a bump must not commit its results.
 function bumpOutputGeneration(){state.outputGeneration=(state.outputGeneration||0)+1;}
@@ -394,7 +395,8 @@ async function updateBackgroundPreview(token=state.bgPreviewToken){
   const index=Number.isInteger(state.selectedIndex)?state.selectedIndex:0,file=state.files[index];if(!file)return;
   if(state.bgEngine==='ai')setBackgroundBusy(true,t(hasBackgroundAIMatte(file)?'bgBusyRefine':'bgBusyAnalyze'));
   try{
-    const preview=await renderBackgroundRemovalPreview(file,backgroundOptions());
+    const stageBox=$('comparisonStage')?.getBoundingClientRect();const previewSide=Math.max(stageBox?.width||0,stageBox?.height||0)*(window.devicePixelRatio||1);
+    const preview=await renderBackgroundRemovalPreview(file,{...backgroundOptions(),previewSide});
     if(token!==state.bgPreviewToken||state.toolMode!=='remove-bg'||index!==state.selectedIndex)return;
     const canvas=$('backgroundPreviewCanvas'),ctx=canvas.getContext('2d',{alpha:true});
     canvas.width=preview.width;canvas.height=preview.height;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(preview.canvas,0,0);
@@ -656,7 +658,7 @@ function redactSettingsKey(index){return JSON.stringify({mode:'redact',regions:r
 function invalidateRedactResult(index){
   bumpOutputGeneration();
   const result=state.results[index];if(result?.previewUrl)URL.revokeObjectURL(result.previewUrl);
-  state.results[index]=null;state.errors[index]=null;state.processKeys[index]=null;state.resultOptions[index]=null;state.redactView='edit';syncDownloadAvailability();
+  state.results[index]=null;state.errors[index]=null;state.processKeys[index]=null;state.resultOptions[index]=null;state.redactView=state.redactView==='compare'?'edit':state.redactView;syncDownloadAvailability();scheduleAutoProcess();
 }
 function syncRedactViewSwitch(resultCurrent=false){
   const root=$('redactViewSwitch');if(!root)return;
@@ -1016,7 +1018,7 @@ function renderComparison() {
   const original=$('compareOriginal'),liveCanvas=$('watermarkLiveCanvas'),redactCanvas=$('redactCanvas'),redactOverlay=$('redactOverlayCanvas'),cropOverlay=$('cropOverlayCanvas'),backgroundCanvas=$('backgroundPreviewCanvas'),previewSurface=$('previewSurface'),redactLayersDock=$('redactLayersDock'),originalBadge=$('compareOriginalBadge'),output=$('compareOutput'),mask=$('compareOutputMask'),badge=$('compareOutputBadge'),divider=$('compareDivider'),range=$('compareRange'),failure=$('compareFailure'),unavailable=$('compareUnavailable');
   const comparisonHint=document.querySelector('.comparison-copy-actions>span'),redactViewSwitch=$('redactViewSwitch'),backgroundInspectBtn=$('backgroundInspectBtn');
   failure.hidden=true;$('compareFailureText').textContent='';unavailable.hidden=true;
-  mask.hidden=true;badge.hidden=true;divider.hidden=true;range.hidden=true;originalBadge.hidden=false;liveCanvas.hidden=true;redactCanvas.hidden=true;redactOverlay.hidden=true;cropOverlay.hidden=true;backgroundCanvas.hidden=true;redactLayersDock.hidden=true;redactViewSwitch.hidden=true;backgroundInspectBtn.hidden=true;original.hidden=false;previewSurface.classList.toggle('checkerboard',state.toolMode==='remove-bg');
+  mask.hidden=true;badge.hidden=true;divider.hidden=true;range.hidden=true;originalBadge.hidden=false;liveCanvas.hidden=true;redactCanvas.hidden=true;redactOverlay.hidden=true;cropOverlay.hidden=true;backgroundCanvas.hidden=true;redactLayersDock.hidden=true;redactViewSwitch.hidden=true;backgroundInspectBtn.hidden=true;original.hidden=false;previewSurface.classList.toggle('checkerboard',state.toolMode==='remove-bg');previewSurface.classList.remove('bg-compare');
   $('compareFilename').textContent=file.name;$('compareOriginalSize').textContent=formatBytes(file.size);
 
   if(state.toolMode==='watermark'){
@@ -1071,8 +1073,8 @@ function renderComparison() {
     document.querySelector('.comparison-copy p').textContent=t('bgPreviewLabel');$('comparisonTitle').textContent=t('bgPreviewTitle');comparisonHint.textContent=state.bgEngine==='ai'&&!aiModel.ready?(aiModel.cached?t('bgPreviewCachedLoading'):t('bgPreviewNeedsModel')):t('bgPreviewHint');originalBadge.hidden=true;
     const liveReady=state.bgPreviewIndex===index&&state.bgPreviewMeta;
     backgroundInspectBtn.hidden=!liveReady;
-    backgroundCanvas.hidden=!liveReady;original.hidden=!!liveReady;
-    if(liveReady){fitPreviewSurface(state.bgPreviewMeta.width,state.bgPreviewMeta.height);$('compareDimensions').textContent=sourceDimensionsText(state.bgPreviewMeta.sourceWidth,state.bgPreviewMeta.sourceHeight);}
+    backgroundCanvas.hidden=!liveReady;original.hidden=false;previewSurface.classList.toggle('bg-compare',!!liveReady);divider.hidden=!liveReady;range.hidden=!liveReady;
+    if(liveReady){if(!original.src||original.dataset.src!==state.previews[index]){setImageSource(original,state.previews[index]||'',`${file.name} ${t('original')}`);original.dataset.src=state.previews[index]||'';}fitPreviewSurface(state.bgPreviewMeta.width,state.bgPreviewMeta.height);updateComparisonPosition();$('compareDimensions').textContent=sourceDimensionsText(state.bgPreviewMeta.sourceWidth,state.bgPreviewMeta.sourceHeight);}
     else{original.onload=()=>{unavailable.hidden=true;fitPreviewSurface(original.naturalWidth,original.naturalHeight);$('compareDimensions').textContent=sourceDimensionsText(original.naturalWidth,original.naturalHeight);};original.onerror=()=>{unavailable.hidden=false;};setImageSource(original,state.previews[index]||'',`${file.name} ${t('bgPreviewTitle')}`);}
     $('compareSaving').textContent='BiRefNet Lite';$('compareStatus').className=`status ${state.bgEngine==='ai'&&aiModel.ready?'pass':'pending'}`;$('compareStatus').textContent=state.bgEngine==='ai'?(aiModel.ready?t('bgStatusReady'):aiModel.cached?t('bgStatusCacheLoading'):t('bgStatusNeedsModel')):t('bgPrototypeStatus');
     document.querySelectorAll('.result-card').forEach(card=>card.classList.toggle('selected',Number(card.dataset.resultIndex)===index));return;
@@ -1279,7 +1281,7 @@ async function processAll() {
     state.activeRun=null;state.busy=false;$('processBtn').classList.remove('busy');
   }
   if(!state.files.length){syncDownloadAvailability();updateQueue();return;}
-  state.busy=false;if(isRedact&&!staleRun){state.redactView='compare';renderComparison();}$('processBtn').classList.remove('busy');syncDownloadAvailability();updateQueue();updateResultsSummary();if(staleRun)return toast(t('settingsChangedRerun'));toast(isVector?t('vectorDone'):t(isWatermark?'watermarkDone':isRedact?'redactDone':isCrop?'cropDone':isBackground?'bgDone':state.compressionMode==='convert'?'convertDone':'done'));
+  state.busy=false;const auto=state.autoRun;state.autoRun=false;if(isRedact&&!staleRun){if(!auto)state.redactView='compare';renderComparison();}$('processBtn').classList.remove('busy');syncDownloadAvailability();updateQueue();updateResultsSummary();if(staleRun)return toast(t('settingsChangedRerun'));if(auto&&isRedact)return;toast(isVector?t('vectorDone'):t(isWatermark?'watermarkDone':isRedact?'redactDone':isCrop?'cropDone':isBackground?'bgDone':state.compressionMode==='convert'?'convertDone':'done'));
 }
 
 function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1600);}
@@ -1428,7 +1430,7 @@ function installMotion(){
   });
   const stage=$('comparisonStage');
   if(stage){
-    const live=()=>{const r=$('compareRange');return r&&!r.hidden&&!$('compareOutputMask')?.hidden;};
+    const live=()=>{const r=$('compareRange');return r&&!r.hidden;};
     stage.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||!live())return;const s=$('previewSurface').getBoundingClientRect();if(!s.width||e.clientX<s.left||e.clientX>s.right||e.clientY<s.top||e.clientY>s.bottom)return;cancelAnimationFrame(back);stage.classList.add('is-scrubbing');updateComparisonPosition((e.clientX-s.left)/s.width*100);});
     let back=0;const glide=to=>{cancelAnimationFrame(back);const from=state.comparePosition,t0=performance.now(),d=reduce.matches?0:520;const step=now=>{const k=d?Math.min(1,(now-t0)/d):1,e=1-Math.pow(1-k,3);updateComparisonPosition(from+(to-from)*e);if(k<1)back=requestAnimationFrame(step);};back=requestAnimationFrame(step);};
     stage.addEventListener('pointerenter',()=>cancelAnimationFrame(back));

@@ -471,7 +471,6 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 @media(prefers-reduced-motion:no-preference){
  .settings-more:not([hidden]){animation:pq-drawer .34s cubic-bezier(.2,.8,.2,1)}
  .tool-settings:not([hidden]){animation:pq-fade .3s cubic-bezier(.2,.8,.2,1)}
- #cropPresetGrid button:not([hidden]){animation:pq-pop .34s cubic-bezier(.3,1.35,.5,1) both}
  .settings-sheet button,.app-header button,.result-add,.drop-zone .button{transition:transform .16s cubic-bezier(.3,1.4,.5,1),background-color .2s,color .2s,border-color .2s,opacity .2s}
  .settings-sheet button:active:not(:disabled),.drop-zone .button:active,.result-add:active{transform:scale(.96)}
  .batch-meter span,.mini-meter i{transition:width .6s cubic-bezier(.2,.8,.2,1)}
@@ -484,3 +483,8 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 @keyframes pq-pop{from{opacity:0;transform:scale(.92)}}
 #app#app .settings-sheet .crop-preset-grid button:not([hidden]){min-width:168px;justify-content:flex-start}
 #app#app .settings-sheet .crop-preset-grid{min-height:40px}
+
+/* bg removal: checker lives on the output canvas, output clipped for before/after */
+.background-preview-canvas{background-color:#fff;background-image:linear-gradient(45deg,#e4e0d8 25%,transparent 25%),linear-gradient(-45deg,#e4e0d8 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e4e0d8 75%),linear-gradient(-45deg,transparent 75%,#e4e0d8 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}
+.preview-surface.bg-compare .background-preview-canvas{clip-path:inset(0 calc(100% - var(--compare-position)) 0 0)}
+.preview-surface.checkerboard{background-color:transparent}
