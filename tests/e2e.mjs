@@ -232,14 +232,14 @@ await page.$eval('#colorHexInput',e=>{e.value='#7C3AED';e.dispatchEvent(new Even
 await page.$eval('#watermarkOpacity',e=>{e.value='42';e.dispatchEvent(new Event('input',{bubbles:true}))});
 await page.$eval('#watermarkSize',e=>{e.value='7';e.dispatchEvent(new Event('input',{bubbles:true}))});
 await page.click('#watermarkPositions [data-position="tr"]');
-await page.click('#watermarkSubtoolSwitch [data-watermark-panel="image"]');
+await page.evaluate(()=>document.querySelector('#watermarkSubtoolSwitch [data-watermark-panel="image"]').click());
 const imagePanelOpen=await page.evaluate(()=>({panel:window.PixelQuotaTest.state.watermarkPanel,textHidden:document.querySelector('#textWatermarkPanel').hidden,imageHidden:document.querySelector('#imageWatermarkPanel').hidden,text:document.querySelector('#watermarkText').value,color:document.querySelector('#watermarkColor').value,textConfigured:document.querySelector('#textWatermarkState').classList.contains('configured')}));
 if(imagePanelOpen.panel!=='image'||imagePanelOpen.textHidden||imagePanelOpen.imageHidden||!imagePanelOpen.text.includes('XX 銀行開戶')||imagePanelOpen.color.toLowerCase()!=='#7c3aed'||!imagePanelOpen.textConfigured)throw new Error(`image watermark tab did not preserve text settings ${JSON.stringify(imagePanelOpen)}`);
 const logoChooserPromise=page.waitForFileChooser();await page.click('#watermarkImageBtn');const logoChooser=await logoChooserPromise;await logoChooser.accept([fixture]);
 await page.$eval('#watermarkImageOpacity',e=>{e.value='73';e.dispatchEvent(new Event('input',{bubbles:true}))});
 await page.$eval('#watermarkImageSize',e=>{e.value='50';e.dispatchEvent(new Event('input',{bubbles:true}))});
 await page.click('#watermarkImagePositions [data-position="bl"]');
-await page.click('#watermarkSubtoolSwitch [data-watermark-panel="text"]');
+await page.evaluate(()=>document.querySelector('#watermarkSubtoolSwitch [data-watermark-panel="text"]').click());
 const textPanelBack=await page.evaluate(()=>({panel:window.PixelQuotaTest.state.watermarkPanel,textHidden:document.querySelector('#textWatermarkPanel').hidden,imageHidden:document.querySelector('#imageWatermarkPanel').hidden,imageName:window.PixelQuotaTest.state.watermarkImageFile?.name||'',imageConfigured:document.querySelector('#imageWatermarkState').classList.contains('configured'),color:document.querySelector('#watermarkColor').value}));
 if(textPanelBack.panel!=='text'||textPanelBack.textHidden||textPanelBack.imageHidden||!textPanelBack.imageName||!textPanelBack.imageConfigured||textPanelBack.color.toLowerCase()!=='#7c3aed')throw new Error(`watermark tab switch cleared image settings ${JSON.stringify(textPanelBack)}`);
 await page.waitForFunction(()=>window.PixelQuotaTest.state.liveWatermarkPreviewMeta&&window.PixelQuotaTest.state.liveWatermarkPreviewIndex===0&&!document.querySelector('#watermarkLiveCanvas').hidden,{timeout:30000});

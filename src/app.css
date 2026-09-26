@@ -191,3 +191,36 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
   .settings-primary.bar .settings-actions .settings-underbar{flex:0 0 auto}
   .settings-primary.bar .settings-actions .download-actions{flex:0 0 auto}
 }
+/* v1.6 pass 3: watermark controls use labelled 40px fields in two columns. */
+.watermark-subtool-switch[hidden]{display:none!important}
+.watermark-more-grid{align-items:start}
+.watermark-more-grid .watermark-section{display:grid;grid-template-rows:auto auto auto auto;align-content:start;gap:10px}
+.watermark-more-grid .watermark-section>.more-section-heading{grid-row:1;height:18px;margin:0;line-height:18px}
+.watermark-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.watermark-field>.control-label,.watermark-position-wrap>.control-label,.watermark-color-field .color-preset-block>span{display:flex;align-items:center;justify-content:space-between;height:18px;margin:0;color:var(--ink-2);font-size:12px;font-weight:600;line-height:18px}
+.watermark-presets-field{grid-row:2}
+.watermark-presets-field>.control-label{display:flex}
+.watermark-presets{display:flex;align-items:stretch;gap:6px;height:40px;min-height:40px}
+.watermark-presets button{height:40px;min-width:0;white-space:nowrap}
+.watermark-controls-row{grid-row:3;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;min-width:0}
+.watermark-align-field .align-buttons{display:flex;align-items:stretch;gap:3px;height:40px;min-height:40px;min-width:0}
+.watermark-align-field .align-buttons button{height:40px;min-width:0;flex:1 1 0;white-space:nowrap}
+.watermark-color-field{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:18px 40px;gap:5px;min-width:0}
+.watermark-color-field>.color-preset-block{display:contents}
+.watermark-color-field .color-preset-block>span{grid-column:1/-1;grid-row:1}
+.watermark-color-field .color-presets{grid-column:1;grid-row:2;display:flex;align-items:stretch;gap:6px;height:40px;min-width:0}
+.watermark-color-field .color-presets button{width:34px;height:40px;min-width:0;flex:1 1 34px}
+.watermark-color-field>.custom-color-picker{grid-column:2;grid-row:2;display:flex;align-items:stretch;height:40px;min-width:112px}
+.watermark-color-field .custom-color-label{display:none}
+.watermark-color-field .color-picker-toggle{height:40px;min-width:112px;white-space:nowrap}
+.watermark-more-grid .watermark-section>.range-control{grid-row:4;display:flex;flex-direction:column;gap:5px;height:63px;min-width:0;margin:0}
+.watermark-more-grid .range-control>.control-label{display:flex;align-items:center;justify-content:space-between;height:18px;line-height:18px}
+.watermark-more-grid .range-control>input{height:40px;min-height:40px;width:100%;margin:0}
+.watermark-image-picker-field{grid-row:2}
+.watermark-image-picker-field .watermark-image-picker{display:flex;align-items:center;height:40px;min-height:40px;min-width:0}
+.watermark-image-picker-field .watermark-image-picker>.button{height:40px;white-space:nowrap}
+.image-watermark-section>.more-range-grid{grid-row:3;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;min-width:0}
+.image-watermark-section>.watermark-position-wrap{grid-row:4;display:flex;flex-direction:column;gap:5px;min-width:0}
+.watermark-position-wrap .position-grid{height:40px;min-height:40px;display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}
+.watermark-position-wrap .position-grid button{height:40px;min-width:0}
+@media(max-width:760px){.watermark-controls-row{grid-template-columns:minmax(0,1fr)}.watermark-color-field{grid-template-columns:minmax(0,1fr) auto}.watermark-more-grid .watermark-section{gap:10px}.image-watermark-section>.more-range-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
