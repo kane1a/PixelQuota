@@ -81,6 +81,7 @@ function drawBlur(ctx,canvas,rect,strength){
   ctx.filter='none';ctx.restore();
 }
 
+export function paintRedactRegion(ctx,canvas,region){return drawRegion(ctx,canvas,region);}
 function drawRegion(ctx,canvas,region){
   const rect=normalizedRect(region,canvas.width,canvas.height);
   if(region.mode==='block'){

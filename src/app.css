@@ -494,3 +494,89 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 #app#app#app .settings-sheet .bar:has(#cropSettings:not([hidden])) .settings-tools{flex:1 1 100%!important;width:100%!important;min-width:0!important;max-width:100%!important}
 #app#app#app .settings-sheet #cropSettings>.setting-control{flex:1 1 100%!important;width:100%!important}
 #app#app#app .settings-sheet #cropPlatformButtons{min-width:0;contain:inline-size}
+
+/* ==== v1.6 round 11: user 11-point list ==== */
+/* 9. thumbnail strip visible from the first image */
+#app#app .result-list.single{display:flex}
+#app#app .result-add{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--ink-2)}
+#app#app .result-add small{font-size:11px;color:var(--ink-3);white-space:nowrap}
+#app#app .result-add:hover,#app#app .result-add:hover small{color:var(--ink)}
+/* 10. clear-all lives at the end of the strip */
+#app#app .strip-clear{align-self:center;flex:none;height:32px;margin-left:4px;padding:0 10px;border:0;background:none;color:var(--ink-3);font-size:12px;white-space:nowrap;cursor:pointer;border-radius:6px;transition:color .15s,background .15s}
+#app#app .strip-clear:hover{color:var(--over);background:color-mix(in srgb,var(--over) 8%,transparent)}
+/* 1. no more-settings toggle; the extra row just appears once images exist */
+#app#app .settings-sheet .settings-underbar{display:none}
+/* 4 & 11. colour picker: real HSV field + hue rainbow */
+#app#app .color-field{--picker-hue:0;position:relative;height:138px;border-radius:8px;cursor:crosshair;outline:none;background:linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,hsl(var(--picker-hue) 100% 50%));box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+#app#app .color-field:before{content:none}
+#app#app .color-field span{position:absolute;width:14px;height:14px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 1px 5px rgba(0,0,0,.45);pointer-events:none}
+#app#app .hue-row{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;margin-top:10px;font-size:12px;color:var(--ink-2)}
+#app#app .hue-slider{width:100%;height:12px;margin:0;appearance:none;-webkit-appearance:none;border-radius:999px;background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);outline:none;cursor:ew-resize;accent-color:auto}
+#app#app .hue-slider::-webkit-slider-runnable-track{height:12px;border-radius:999px;background:transparent}
+#app#app .hue-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:17px;height:17px;margin-top:-2.5px;border-radius:50%;border:3px solid #fff;background:transparent;box-shadow:0 1px 6px rgba(0,0,0,.35);cursor:pointer}
+#app#app .hue-slider::-moz-range-thumb{width:13px;height:13px;border-radius:50%;border:3px solid #fff;background:transparent;box-shadow:0 1px 6px rgba(0,0,0,.35)}
+#app#app .hex-field{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;margin-top:10px;font-size:12px;color:var(--ink-2)}
+#app#app .hex-field input{height:34px;padding:0 10px;border:1px solid var(--line-2);border-radius:6px;background:var(--sheet);font-family:ui-monospace,Consolas,monospace;font-size:13px}
+/* colour rows: presets + custom picker with a real gap, both 40px, same baseline */
+#app#app .color-presets{display:flex;align-items:center;gap:8px}
+#app#app .watermark-color-field{column-gap:14px}
+#app#app .color-inline{display:flex;align-items:center;gap:14px;height:40px}
+#app#app .custom-color-picker{position:relative;display:flex;align-items:center;height:40px}
+#app#app .color-picker-toggle{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid var(--line-2);border-radius:8px;background:var(--sheet);font-size:12px;white-space:nowrap}
+#app#app .color-picker-preview{width:18px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);flex:none}
+#app#app #redactColorWrap .color-presets button{width:28px;height:28px}
+/* 3. watermark text input spans to the card's right edge (next to the actions) */
+#app#app .settings-sheet #watermarkSettings{flex:1 1 auto;min-width:0}
+#app#app .settings-sheet #watermarkSettings .text-control{flex:1 1 auto;width:100%;max-width:none}
+#app#app .settings-sheet #watermarkSettings .text-control .field{width:100%}
+#app#app .settings-sheet .bar:has(#watermarkSettings:not([hidden])) .settings-tools{flex:1 1 auto;min-width:0}
+#app#app .settings-sheet .bar:has(#watermarkSettings:not([hidden])) .settings-actions{margin-left:24px}
+/* position + opacity now inside the text-watermark block */
+#app#app .watermark-more-grid .text-place-row{grid-row:4;grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:end;gap:24px;margin:0}
+#app#app .text-place-row .range-control{display:flex;flex-direction:column;gap:5px;min-width:0;margin:0}
+#app#app .text-place-row .watermark-position-wrap{display:flex;flex-direction:column;gap:5px;align-items:flex-start;margin:0}
+/* 6. reset crop frame: a visible chip on the canvas */
+#app#app .stage-action-button{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:0;border-radius:999px;background:rgba(32,30,27,.72);color:#fff;font-size:12px;cursor:pointer;backdrop-filter:blur(6px);transition:background .15s,transform .15s}
+#app#app .stage-action-button:hover{background:rgba(32,30,27,.9)}
+#app#app .stage-action-button:active{transform:scale(.96)}
+#app#app .stage-action-button[hidden]{display:none}
+#app#app .settings-sheet .bar-rule:has(+ #moreSettings[hidden]){display:none}
+#app#app .hue-row{display:flex!important;align-items:center;gap:10px}
+#app#app .hue-row .hue-slider{flex:1 1 auto;width:auto;min-width:0;height:12px}
+#app#app .watermark-color-field>.custom-color-picker{margin-left:10px}
+#app#app #redactColorWrap .custom-color-picker{margin-left:6px}
+#app#app #watermarkMoreSettings .color-picker-popover{top:auto;bottom:calc(100% + 8px);left:auto;right:0}
+#app#app .color-picker-popover:not([hidden]){animation:pq-pick .18s cubic-bezier(.2,.8,.2,1)}
+@keyframes pq-pick{from{opacity:0;transform:translateY(4px) scale(.98)}}
+@media(prefers-reduced-motion:reduce){#app#app .color-picker-popover:not([hidden]){animation:none}}
+#app#app .watermark-color-field{display:grid!important;grid-template-columns:auto auto!important;justify-content:start;column-gap:16px!important}
+#app#app .watermark-color-field .color-presets{gap:8px}
+#app#app .watermark-color-field .color-presets button{flex:none!important;width:26px!important;height:26px!important;border-radius:50%}
+#app#app .watermark-color-field>.custom-color-picker{margin-left:0!important}
+#app#app #redactColorWrap .color-inline{gap:16px}
+#app#app .watermark-more-grid .watermark-controls-row{display:flex!important;flex-wrap:wrap;align-items:flex-end;gap:14px 24px}
+#app#app .watermark-controls-row>.watermark-field{flex:none;min-width:0}
+#app#app .text-place-row .range-control input[type=range]{width:100%;min-width:0}
+@media(max-width:760px){#app#app .watermark-more-grid .text-place-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);row-gap:16px}#app#app .text-place-row .watermark-position-wrap{grid-column:1/-1}}
+@media(max-width:760px){
+#app#app .watermark-more-grid .text-place-row,#app#app .watermark-more-grid .watermark-controls-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;column-gap:20px!important;row-gap:16px}
+#app#app .text-place-row>*,#app#app .watermark-controls-row>*{min-width:0!important;width:auto!important;max-width:100%}
+#app#app .watermark-more-grid input[type=range]{width:100%!important;min-width:0!important;box-sizing:border-box}
+}
+@media(max-width:760px){#app#app .watermark-color-field{grid-template-columns:auto!important;row-gap:12px}#app#app .watermark-color-field>.custom-color-picker{justify-self:start}}
+/* watermark rows: sliders shrink with their column instead of forcing 160px */
+#app#app .settings-sheet .watermark-more-grid .range-control{width:100%;min-width:0;max-width:200px}
+#app#app .settings-sheet .watermark-more-grid .range-control input[type=range]{width:100%}
+#app#app .watermark-more-grid .text-place-row{grid-template-columns:repeat(2,minmax(0,200px)) auto}
+#app#app .watermark-more-grid .watermark-controls-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,200px))!important;column-gap:24px!important}
+#app#app .watermark-color-field{grid-column:1/-1;display:flex!important;flex-wrap:wrap;align-items:center;gap:12px 16px!important}
+@media(max-width:760px){#app#app .watermark-more-grid .text-place-row,#app#app .watermark-more-grid .watermark-controls-row{grid-template-columns:repeat(2,minmax(0,1fr))!important}#app#app .settings-sheet .watermark-more-grid .range-control{max-width:none}}
+#app#app .watermark-color-field{justify-content:flex-start!important;text-align:left!important}
+#app#app .watermark-color-field>.control-label,#app#app .watermark-color-field>span:first-child{flex:1 0 100%;text-align:left!important;justify-self:start}
+#app#app .watermark-color-field .color-presets{justify-content:flex-start!important;margin:0!important}
+#app#app .watermark-color-field{align-items:flex-end!important}
+#app#app .watermark-color-field .color-preset-block{display:flex;flex-direction:column;align-items:flex-start!important;text-align:left!important;gap:8px;min-width:0}
+@media(max-width:760px){#app#app .watermark-color-field{flex-direction:column;align-items:flex-start!important}}
+#app#app .watermark-more-grid .watermark-color-field{justify-self:stretch!important;align-self:start;width:100%!important;margin:0!important;flex-direction:row;flex-wrap:nowrap}
+@media(max-width:760px){#app#app .watermark-more-grid .watermark-color-field{flex-direction:column}}
+#app#app .watermark-more-grid .watermark-color-field{margin-bottom:22px!important}

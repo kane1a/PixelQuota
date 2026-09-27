@@ -33,9 +33,11 @@ export function createColorPicker({
 }){
   let hsv={h:0,s:0,v:1};
 
-  function sync(hex){
+  function sync(hex,keep=null){
     const normalized=normalizeHex(hex)||'#ffffff';
-    hsv=hexToHsv(normalized);
+    const next=hexToHsv(normalized);
+    // Greys/black/white have no hue: keep the hue (and s/v) the user is working with instead of snapping back to red.
+    hsv=keep?{...keep}:(next.s===0||next.v===0)?{...next,h:hsv.h}:next;
     input.value=normalized;
     preview.style.background=normalized;
     hexLabel.textContent=normalized.toUpperCase();
@@ -52,16 +54,16 @@ export function createColorPicker({
     return normalized;
   }
 
-  function setColor(value,emit=true){
+  function setColor(value,emit=true,keep=null){
     const normalized=normalizeHex(value);
     if(!normalized)return false;
-    sync(normalized);
+    sync(normalized,keep);
     if(emit)onChange(normalized);
     return true;
   }
 
   function applyHsv(){
-    setColor(hsvToHex(hsv.h,hsv.s,hsv.v),true);
+    setColor(hsvToHex(hsv.h,hsv.s,hsv.v),true,{...hsv});
   }
 
   function pointerToField(event){
@@ -76,7 +78,7 @@ export function createColorPicker({
   function toggleOpen(){if(popover.hidden)open();else close();}
 
   toggle.onclick=toggleOpen;
-  hue.oninput=e=>{hsv.h=Number(e.target.value)||0;applyHsv();};
+  hue.oninput=e=>{hsv.h=Number(e.target.value)||0;if(hsv.s<.15){hsv.s=1;}if(hsv.v<.35){hsv.v=.9;}applyHsv();};
   hexInput.oninput=e=>{const normalized=normalizeHex(e.target.value);if(normalized)setColor(normalized,true);};
   hexInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();if(setColor(e.target.value,true))close();}};
   field.onpointerdown=e=>{field.setPointerCapture?.(e.pointerId);pointerToField(e);};
