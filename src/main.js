@@ -207,7 +207,7 @@ function scheduleAutoProcess(){
   if(!state.files.length||!['compress','vectorize','redact'].includes(state.toolMode))return;
   if(state.toolMode==='redact'&&!state.files.some((_,i)=>redactRegionsFor(i).length))return;
   clearTimeout(autoProcessTimer);
-  autoProcessTimer=setTimeout(()=>{autoProcessTimer=0;if(!state.busy&&state.files.length){state.autoRun=true;processAll();}},state.toolMode==='redact'?700:300);
+  autoProcessTimer=setTimeout(()=>{autoProcessTimer=0;if(!state.busy&&state.files.length){state.autoRun=true;processAll.fromAuto=true;const run=processAll();processAll.fromAuto=false;return run;}},state.toolMode==='redact'?700:300);
 }
 // Any in-flight processAll() run started before a bump must not commit its results.
 function bumpOutputGeneration(){state.outputGeneration=(state.outputGeneration||0)+1;}
@@ -1263,7 +1263,9 @@ function updateCardProgress(index,pct) {
 }
 
 async function processAll() {
-  if(state.busy)return;
+  // A manual run requested while an auto-preview run is in flight is queued, never dropped.
+  if(state.busy){if(state.autoRun&&!processAll.fromAuto)state.pendingManualRun=true;return;}
+  if(!processAll.fromAuto){clearTimeout(autoProcessTimer);autoProcessTimer=0;state.autoRun=false;}
   if(!state.files.length)return toast(t('addFirst'));
   const isWatermark=state.toolMode==='watermark',isRedact=state.toolMode==='redact',isCrop=state.toolMode==='crop',isBackground=state.toolMode==='remove-bg',isVector=state.toolMode==='vectorize';
   const opts=isWatermark?watermarkOptions():isBackground?backgroundOptions():isVector?vectorOptions():isCrop?null:isRedact?null:inputOptions();
@@ -1316,7 +1318,7 @@ async function processAll() {
     state.activeRun=null;state.busy=false;$('processBtn').classList.remove('busy');
   }
   if(!state.files.length){syncDownloadAvailability();updateQueue();return;}
-  state.busy=false;const auto=state.autoRun;state.autoRun=false;if(isRedact&&!staleRun){if(!auto)state.redactView='compare';renderComparison();}$('processBtn').classList.remove('busy');syncDownloadAvailability();updateQueue();updateResultsSummary();if(staleRun){if(auto){scheduleAutoProcess();return;}state.staleRetries=(state.staleRetries||0)+1;if(state.staleRetries<=2){setTimeout(processAll,60);return;}state.staleRetries=0;return toast(t('settingsChangedRerun'));}state.staleRetries=0;if(auto&&isRedact)return;toast(isVector?t('vectorDone'):t(isWatermark?'watermarkDone':isRedact?'redactDone':isCrop?'cropDone':isBackground?'bgDone':state.compressionMode==='convert'?'convertDone':'done'));
+  state.busy=false;const auto=state.autoRun;state.autoRun=false;if(state.pendingManualRun){state.pendingManualRun=false;$('processBtn').classList.remove('busy');setTimeout(processAll,0);return;}if(isRedact&&!staleRun){if(!auto)state.redactView='compare';renderComparison();}$('processBtn').classList.remove('busy');syncDownloadAvailability();updateQueue();updateResultsSummary();if(staleRun){if(auto){scheduleAutoProcess();return;}state.staleRetries=(state.staleRetries||0)+1;if(state.staleRetries<=2){setTimeout(processAll,60);return;}state.staleRetries=0;return toast(t('settingsChangedRerun'));}state.staleRetries=0;if(auto&&isRedact)return;toast(isVector?t('vectorDone'):t(isWatermark?'watermarkDone':isRedact?'redactDone':isCrop?'cropDone':isBackground?'bgDone':state.compressionMode==='convert'?'convertDone':'done'));
 }
 
 function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1600);}

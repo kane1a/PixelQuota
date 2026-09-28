@@ -580,3 +580,4 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 #app#app .watermark-more-grid .watermark-color-field{justify-self:stretch!important;align-self:start;width:100%!important;margin:0!important;flex-direction:row;flex-wrap:nowrap}
 @media(max-width:760px){#app#app .watermark-more-grid .watermark-color-field{flex-direction:column}}
 #app#app .watermark-more-grid .watermark-color-field{margin-bottom:22px!important}
+#app#app#app #cropPresetGrid>button{width:224px!important;min-width:224px!important;max-width:224px!important}
