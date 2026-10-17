@@ -1,0 +1,16 @@
+PixelQuota 第三方元件與授權
+
+PixelQuota 原始碼採 MIT 授權，全文見 PixelQuota-MIT.txt。第三方元件不因整合而改變其原始授權。
+
+- heic-to 1.6.6：LGPL-3.0，見 heic-to-LGPL-3.0.txt、GPL-3.0.txt 與 HEIF-NOTICE.txt，包含上游來源與重建方式
+- utif2 4.1.0：MIT，見 utif2-MIT.txt 與 TIFF-NOTICE.txt
+- pako：MIT，見 pako-MIT.txt
+- @jsquash/avif 2.1.1：Apache-2.0，見 jsquash-avif-Apache-2.0.txt
+- wasm-feature-detect 1.9.0：Apache-2.0，見 wasm-feature-detect-Apache-2.0.txt
+- fflate 0.8.3：MIT，見 fflate-MIT.txt
+- fit-curve 0.2.0：MIT，見 fit-curve-MIT.txt
+- imagetracerjs 1.2.6：Unlicense，見 imagetracerjs-Unlicense.txt
+
+下載包與網站均保留本目錄，不刪除程式碼內原有的第三方授權註記。版本依此版 package-lock.json 固定。測試素材、模型權重及外部 AI 執行階段不包含在離線 HTML 下載包內。
+
+AI 去背首次使用需另外取得執行階段及 BiRefNet Lite 模型資源，圖片資料仍在裝置內處理。外部資源的來源與授權請以各上游專案為準，本文件不是對所有上游專利或法律條件的專業審查。

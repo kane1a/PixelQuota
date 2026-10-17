@@ -1,6 +1,8 @@
 import { encodeAvif, detectAvifEncoderSupport } from './avif.js';
+import { browserImageSource, decodeFile, assertCanvasSize } from './image-reader.js';
+export { decodeFile, assertCanvasSize, MAX_CANVAS_SIDE, MAX_CANVAS_PIXELS } from './image-reader.js';
 
-const HEIC_RE = /\.(heic|heif)$/i;
+const HEIC_RE = /\.(heic|heif|hif)$/i;
 
 function toBlob(canvas, type, quality) {
   return new Promise((resolve, reject) => {
@@ -36,54 +38,6 @@ export async function detectEncoderSupport(type){
   if(!['image/jpeg','image/png','image/webp'].includes(type))return false;
   const canvas=document.createElement('canvas');canvas.width=2;canvas.height=2;
   try{const blob=await toBlob(canvas,type,.9);return blob.type===type;}catch{return false;}
-}
-
-async function decodeWithImage(blob) {
-  const url = URL.createObjectURL(blob);
-  try {
-    const img = new Image();
-    img.decoding = 'async';
-    img.src = url;
-    await img.decode();
-    return img;
-  } finally {
-    // Kept alive until img.decode resolves. Drawing happens immediately after decode.
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-}
-
-// Largest canvas mainstream desktop browsers can allocate (Chrome/Firefox: 32767 px per side, ~268 MP).
-export const MAX_CANVAS_SIDE = 32767;
-export const MAX_CANVAS_PIXELS = 268435456;
-export function assertCanvasSize(width, height) {
-  if (!(width > 0 && height > 0) || width > MAX_CANVAS_SIDE || height > MAX_CANVAS_SIDE || width * height > MAX_CANVAS_PIXELS) {
-    throw new Error(`too_large:${Math.round(width)}x${Math.round(height)}`);
-  }
-}
-
-export async function decodeFile(file) {
-  let source = file;
-  const looksHeic = HEIC_RE.test(file.name) || /heic|heif/i.test(file.type);
-  if (looksHeic) {
-    const { default: heic2any } = await import('heic2any');
-    const converted = await heic2any({ blob:file, toType:'image/jpeg', quality:0.98, multiple:false });
-    source = Array.isArray(converted) ? converted[0] : converted;
-  }
-  try {
-    let image;
-    if ('createImageBitmap' in window) {
-      try { image = await createImageBitmap(source, { imageOrientation:'from-image' }); }
-      catch { image = await createImageBitmap(source); }
-    } else {
-      image = await decodeWithImage(source);
-    }
-    try { assertCanvasSize(image.width || image.naturalWidth, image.height || image.naturalHeight); }
-    catch (error) { image?.close?.(); throw error; }
-    return image;
-  } catch (error) {
-    if (/^too_large:/.test(error?.message)) throw error;
-    throw new Error(`decode_failed:${error?.message || 'unknown'}`);
-  }
 }
 
 function hasTransparency(image) {
@@ -221,12 +175,13 @@ async function encodeAtQuality(canvas,type,quality=.98){
 }
 
 export async function compressImage(file, opts, onProgress=()=>{}) {
+  const source=await browserImageSource(file);
   const image = await decodeFile(file);
-  try { return await compressDecoded(image, file, opts, onProgress); }
+  try { return await compressDecoded(image, file, opts, onProgress, source!==file, source.type); }
   finally { image?.close?.(); }
 }
 
-async function compressDecoded(image, file, opts, onProgress) {
+async function compressDecoded(image, file, opts, onProgress, wasNormalized, normalizedType) {
   const src = sourceDimensions(image);
   const transparency = hasTransparency(image);
   const compressionMode=opts.compressionMode==='convert'?'convert':'limit';
@@ -234,7 +189,7 @@ async function compressDecoded(image, file, opts, onProgress) {
   const planned = plannedDimensions(image, opts);
   const sourceExt = (file.name.match(/\.([^.]+)$/)?.[1] || 'jpg').toLowerCase();
   const isHeic = HEIC_RE.test(file.name) || /heic|heif/i.test(file.type);
-  if (compressionMode==='limit'&&opts.outputFormat === 'auto' && opts.stripMetadata === false && !isHeic && !planned.exact && planned.width === src.width && planned.height === src.height && file.size <= targetBytes) {
+  if (compressionMode==='limit'&&opts.outputFormat === 'auto' && opts.stripMetadata === false && !isHeic && !wasNormalized && !planned.exact && planned.width === src.width && planned.height === src.height && file.size <= targetBytes) {
     onProgress(100);
     return {
       blob:file,
@@ -249,12 +204,13 @@ async function compressDecoded(image, file, opts, onProgress) {
       outputWidth:src.width,
       outputHeight:src.height,
       sourceName:file.name,
+      operation:'compress',
       unchanged:true
     };
   }
   let type = opts.outputFormat;
   if (type === 'auto'){
-    const originalType=sourceType(file,sourceExt);
+    const originalType=sourceType({type:normalizedType || file.type},sourceExt);
     type=compressionMode==='convert'&&originalType&&!isHeic?originalType:(transparency ? 'image/webp' : 'image/jpeg');
   }
   if(!['image/jpeg','image/png','image/webp','image/avif','image/bmp'].includes(type))throw new Error(`encode_unsupported:${type}`);
@@ -262,7 +218,7 @@ async function compressDecoded(image, file, opts, onProgress) {
   const extension = extensionForType(type);
   const background = type === 'image/jpeg' ? '#ffffff' : null;
   // "Remove EXIF" unchecked: carry the source EXIF over when both sides are JPEG.
-  let exif = opts.stripMetadata === false && type === 'image/jpeg' && !isHeic && sourceType(file,sourceExt) === 'image/jpeg' ? await extractJpegExif(file) : null;
+  let exif = opts.stripMetadata === false && type === 'image/jpeg' && !isHeic && sourceType({type:normalizedType || file.type},sourceExt) === 'image/jpeg' ? await extractJpegExif(file) : null;
   // The KB limit wins: if keeping EXIF would eat more than half the budget, drop it rather than starve the pixels.
   if (exif && compressionMode === 'limit' && exif.length * 2 > targetBytes) exif = null;
   const withExif = blob => exif ? insertJpegSegment(blob, exif) : blob;
@@ -324,6 +280,7 @@ async function compressDecoded(image, file, opts, onProgress) {
     originalHeight:src.height,
     outputWidth:dims.width,
     outputHeight:dims.height,
-    sourceName:file.name
+    sourceName:file.name,
+    operation:'compress'
   };
 }

@@ -9,7 +9,26 @@ const {version}=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'
 fs.rmSync(dist,{recursive:true,force:true});
 fs.mkdirSync(assets,{recursive:true});
 
+const inlineWorkerPlugin={
+  name:'inline-workers',
+  setup(api){
+    api.onResolve({filter:/\?worker&inline$/},args=>({
+      path:path.resolve(args.resolveDir,args.path.replace(/\?worker&inline$/,'')), namespace:'inline-worker'
+    }));
+    api.onLoad({filter:/.*/,namespace:'inline-worker'},async({path:workerPath})=>{
+      const {outputFiles}=await build({entryPoints:[workerPath],bundle:true,minify:true,write:false,
+        format:'iife',platform:'browser',target:['es2020'],logLevel:'silent'});
+      return{loader:'js',contents:`const source=${JSON.stringify(outputFiles[0].text)};
+        export default function InlineWorker(){
+          const url=URL.createObjectURL(new Blob([source],{type:'text/javascript'}));
+          try{return new Worker(url);}finally{URL.revokeObjectURL(url);}
+        }`};
+    });
+  }
+};
+
 await build({
+  plugins:[inlineWorkerPlugin],
   entryPoints:[path.join(root,'src','main.js')],
   bundle:true,
   minify:true,
@@ -28,6 +47,7 @@ for(const name of fs.readdirSync(path.join(root,'public'))){
 }
 
 let html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+html=html.replace('</head>',()=>`<meta name="application-version" content="${version}">\n</head>`);
 const js=fs.readFileSync(path.join(assets,'app.js'),'utf8').replace(/<\/script/gi,'<\\/script');
 const cssPath=path.join(assets,'app.css');
 const css=fs.existsSync(cssPath)?fs.readFileSync(cssPath,'utf8'):'';

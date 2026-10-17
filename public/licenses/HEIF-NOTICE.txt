@@ -1,0 +1,18 @@
+HEIF 解碼第三方元件
+
+PixelQuota 的 HEIC／HEIF 讀取使用 heic-to 1.6.6。
+
+- 元件：https://github.com/hoppergee/heic-to
+- 固定發佈版本：https://www.npmjs.com/package/heic-to/v/1.6.6
+- 授權：GNU Lesser General Public License v3.0
+- 授權全文：heic-to-LGPL-3.0.txt 與 GPL-3.0.txt
+- 上游建置來源與說明：https://github.com/hoppergee/heic-to/blob/main/esbuild.mjs
+- 底層函式庫：https://github.com/strukturag/libheif
+
+本次沒有修改 heic-to 函式庫。PixelQuota 原始碼與 package-lock.json 保留套件版本，使用 npm ci 與 npm run build 可重新產生合併版本；使用者可以替換相容版本後重新建置。PixelQuota 自身的 MIT 授權不取代該元件及其底層依賴的授權。
+
+字卡原型的 engine/image-reader.js 為同一份 src/image-reader.js 的產物，不是另一套解碼實作。可在安裝該套件的 PixelQuota 原始碼目錄執行：
+
+node --input-type=module -e "import {build} from 'esbuild';await build({entryPoints:['src/image-reader.js'],bundle:true,minify:true,format:'esm',platform:'browser',target:['es2020'],outfile:process.argv[1]});" "輸出位置/image-reader.js"
+
+本文件記錄元件來源、授權與重建方式，不是對所有底層依賴或編解碼器專利完成法律審查的聲明。

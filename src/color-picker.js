@@ -29,13 +29,17 @@ function hsvToHex(h,s,v){
 }
 
 export function createColorPicker({
-  input,toggle,preview,hexLabel,popover,field,cursor,hue,hexInput,presetRoot,presetAttribute='color',onChange=()=>{}
+  input,toggle,preview,hexLabel,popover,field,cursor,hue,hexInput,presetRoot,presetAttribute='color',onChange=()=>{},overlayManager=null,overlayId='color-picker'
 }){
+  const popupHost=popover.closest('.settings-sheet')||document.querySelector('#app')||document.body;
+  if(popover.parentElement!==popupHost)popupHost.append(popover);
   let hsv={h:0,s:0,v:1};
 
-  function sync(hex){
+  function sync(hex,keep=null){
     const normalized=normalizeHex(hex)||'#ffffff';
-    hsv=hexToHsv(normalized);
+    const next=hexToHsv(normalized);
+    // Greys/black/white have no hue: keep the hue (and s/v) the user is working with instead of snapping back to red.
+    hsv=keep?{...keep}:(next.s===0||next.v===0)?{...next,h:hsv.h}:next;
     input.value=normalized;
     preview.style.background=normalized;
     hexLabel.textContent=normalized.toUpperCase();
@@ -52,16 +56,16 @@ export function createColorPicker({
     return normalized;
   }
 
-  function setColor(value,emit=true){
+  function setColor(value,emit=true,keep=null){
     const normalized=normalizeHex(value);
     if(!normalized)return false;
-    sync(normalized);
+    sync(normalized,keep);
     if(emit)onChange(normalized);
     return true;
   }
 
   function applyHsv(){
-    setColor(hsvToHex(hsv.h,hsv.s,hsv.v),true);
+    setColor(hsvToHex(hsv.h,hsv.s,hsv.v),true,{...hsv});
   }
 
   function pointerToField(event){
@@ -71,14 +75,28 @@ export function createColorPicker({
     applyHsv();
   }
 
-  function open(){popover.hidden=false;toggle.setAttribute('aria-expanded','true');sync(input.value);}
-  function close(){popover.hidden=true;toggle.setAttribute('aria-expanded','false');}
+  function placePopover(){
+    if(popover.hidden)return;
+    const anchor=toggle.getBoundingClientRect(),bounds=popover.getBoundingClientRect(),margin=8;
+    const left=Math.round(Math.max(margin,Math.min(innerWidth-bounds.width-margin,anchor.right-bounds.width)));
+    let top=anchor.bottom+8;
+    if(top+bounds.height>innerHeight-margin)top=anchor.top-bounds.height-8;
+    top=Math.round(Math.max(margin,Math.min(innerHeight-bounds.height-margin,top)));
+    popover.style.left=`${left}px`;popover.style.top=`${top}px`;
+  }
+  function show(){popover.hidden=false;toggle.setAttribute('aria-expanded','true');sync(input.value);placePopover();}
+  function hide(){popover.hidden=true;toggle.setAttribute('aria-expanded','false');}
+  window.addEventListener('resize',placePopover);
+  document.addEventListener('scroll',placePopover,true);
+  if(overlayManager)overlayManager.register(overlayId,{trigger:toggle,popover,open:show,close:hide});
+  function open(){if(overlayManager)overlayManager.open(overlayId);else show();}
+  function close(options){if(overlayManager)overlayManager.close(overlayId,options);else hide();}
   function toggleOpen(){if(popover.hidden)open();else close();}
 
   toggle.onclick=toggleOpen;
-  hue.oninput=e=>{hsv.h=Number(e.target.value)||0;applyHsv();};
+  hue.oninput=e=>{hsv.h=Number(e.target.value)||0;if(hsv.s<.15){hsv.s=1;}if(hsv.v<.35){hsv.v=.9;}applyHsv();};
   hexInput.oninput=e=>{const normalized=normalizeHex(e.target.value);if(normalized)setColor(normalized,true);};
-  hexInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();if(setColor(e.target.value,true))close();}};
+  hexInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();if(setColor(e.target.value,true))close({restoreFocus:true});}};
   field.onpointerdown=e=>{field.setPointerCapture?.(e.pointerId);pointerToField(e);};
   field.onpointermove=e=>{if(field.hasPointerCapture?.(e.pointerId))pointerToField(e);};
   field.onpointerup=e=>field.releasePointerCapture?.(e.pointerId);
@@ -107,5 +125,5 @@ export function createColorPicker({
   }
   sync(input.value);
 
-  return{setColor,open,close,getColor:()=>input.value};
+  return{setColor,open,close,getColor:()=>input.value,isOpen:()=>!popover.hidden};
 }
