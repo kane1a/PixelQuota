@@ -34,6 +34,7 @@ export function createColorPicker({
   const popupHost=popover.closest('.settings-sheet')||document.querySelector('#app')||document.body;
   if(popover.parentElement!==popupHost)popupHost.append(popover);
   let hsv={h:0,s:0,v:1};
+  let editingHex=false;
 
   function sync(hex,keep=null){
     const normalized=normalizeHex(hex)||'#ffffff';
@@ -43,7 +44,7 @@ export function createColorPicker({
     input.value=normalized;
     preview.style.background=normalized;
     hexLabel.textContent=normalized.toUpperCase();
-    hexInput.value=normalized.toUpperCase();
+    if(!editingHex)hexInput.value=normalized.toUpperCase();
     hue.value=String(Math.round(hsv.h));
     field.style.setProperty('--picker-hue',String(Math.round(hsv.h)));
     cursor.style.left=`${hsv.s*100}%`;
@@ -95,7 +96,17 @@ export function createColorPicker({
 
   toggle.onclick=toggleOpen;
   hue.oninput=e=>{hsv.h=Number(e.target.value)||0;if(hsv.s<.15){hsv.s=1;}if(hsv.v<.35){hsv.v=.9;}applyHsv();};
-  hexInput.oninput=e=>{const normalized=normalizeHex(e.target.value);if(normalized)setColor(normalized,true);};
+  hexInput.oninput=e=>{
+    // Keep partial text and the caret intact; shorthand is expanded only on commit.
+    if(!/^#?[0-9a-f]{6}$/i.test(e.target.value.trim()))return;
+    editingHex=true;
+    try{setColor(e.target.value,true);}finally{editingHex=false;}
+  };
+  hexInput.onblur=()=>{
+    const normalized=normalizeHex(hexInput.value);
+    if(normalized&&normalized!==input.value)setColor(normalized,true);
+    else sync(input.value);
+  };
   hexInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();if(setColor(e.target.value,true))close({restoreFocus:true});}};
   field.onpointerdown=e=>{field.setPointerCapture?.(e.pointerId);pointerToField(e);};
   field.onpointermove=e=>{if(field.hasPointerCapture?.(e.pointerId))pointerToField(e);};

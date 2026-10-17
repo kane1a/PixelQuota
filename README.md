@@ -6,7 +6,7 @@
 
 Compress, convert, watermark, redact, crop for social platforms, remove backgrounds, and vectorize images without uploading selected image files to PixelQuota.
 
-[**Live Demo**](https://kane1a.github.io/PixelQuota/) · [繁體中文](README.zh-TW.md) · [Changelog](CHANGELOG.md) · [Privacy](#privacy) · [Contributing](CONTRIBUTING.md)
+[**Live Demo**](https://kane1a.github.io/PixelQuota/) · [Traditional Chinese](README.zh-TW.md) · [Changelog](CHANGELOG.md) · [Privacy](#privacy) · [Contributing](CONTRIBUTING.md)
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-111827.svg)
 ![Privacy: image files stay local](https://img.shields.io/badge/images-stay%20local-168a57.svg)
@@ -79,10 +79,13 @@ npm run build
 
 The build creates:
 
-- `dist/index.html` — static-host / GitHub Pages entry.
-- `dist/PixelQuota.html` — self-contained standalone build that can be opened directly.
+- `dist/index.html`: lightweight static-host / GitHub Pages entry.
+- `dist/assets/`: same-origin hashed JavaScript and CSS, including image codecs loaded only when needed. Keep this directory beside the hosted entry.
+- `dist/PixelQuota.html`: self-contained standalone build for direct `file://` use; non-AI image processing does not require a local server or separate code files.
 
 ### Browser validation
+
+Online codecs need a connection when first used. A failed AVIF WASM download can be retried in the same page; if the browser retains a failed JavaScript codec-module load, restore the connection and reload the page. The standalone build embeds these non-AI codecs.
 
 ```bash
 npm run test:e2e

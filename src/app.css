@@ -307,7 +307,7 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 #app#app .settings-sheet .more-settings-button:hover,#app#app .settings-sheet .clear-button:hover{color:var(--ink)}
 /* more settings: flat, same card */
 #app#app .settings-sheet .settings-more{flex:1 1 100%;order:3;margin:2px -20px -16px;padding:16px 20px 18px;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none}
-#app#app .settings-sheet .settings-more *{box-shadow:none}
+#app#app .settings-sheet .settings-more *:not(.seg-ind){box-shadow:none}
 #app#app .settings-sheet .advanced-settings,#app#app .settings-sheet .more-tool-section,#app#app .settings-sheet .watermark-section,#app#app .settings-sheet .advanced-inner,#app#app .settings-sheet .redact-layers{background:transparent!important;border:0!important;padding:0;margin:0;border-radius:0}
 #app#app .settings-sheet .advanced-inner{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 28px}
 #app#app .settings-sheet .dimension-grid{display:flex;gap:12px}
@@ -451,7 +451,7 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 /* ==== motion ==== */
 .has-ind{position:relative;isolation:isolate}
 .has-ind>button{position:relative;z-index:1}
-.seg-ind{position:absolute;z-index:0;pointer-events:none;border-radius:7px;background:var(--sheet);box-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 .5px color-mix(in srgb,var(--ink) 12%,transparent);transition:opacity .2s}
+.seg-ind{position:absolute;z-index:0;pointer-events:none;border-radius:7px;background:color-mix(in srgb,var(--accent) 12%,var(--sheet));box-shadow:inset 0 0 0 2px var(--accent);transition:opacity .2s}
 #app#app .settings-sheet .has-ind>button.active,.has-ind>button.active{background:transparent!important;box-shadow:none!important;border-color:transparent!important}
 #toolModeSwitch .seg-ind{border-radius:999px;background:var(--ink);box-shadow:none}
 @media(max-width:760px){#toolModeSwitch .seg-ind{border-radius:6px}}
@@ -483,7 +483,7 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 #app#app .settings-sheet #cropPlatformButtons{display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr));width:100%!important}
 #app#app .settings-sheet #cropPlatformButtons>button{width:100%;padding:0 6px}
 #app#app .settings-sheet .has-ind>button:focus{outline:none}
-#app#app .settings-sheet .has-ind>button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:7px}
+#app#app .settings-sheet .has-ind>button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:8px}
 @media(max-width:760px){#app#app .settings-sheet #cropPlatformButtons{grid-template-columns:repeat(8,max-content);grid-auto-columns:max-content}#app#app .settings-sheet #cropPlatformButtons>button{min-width:88px}}
 #app#app .settings-sheet #cropPlatformButtons>.seg-ind{position:absolute;grid-area:auto;width:auto}
 #app#app .settings-sheet #cropPlatformButtons{position:relative}
@@ -544,7 +544,7 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 #app#app .hue-row{display:flex!important;align-items:center;gap:10px}
 #app#app .hue-row .hue-slider{flex:1 1 auto;width:auto;min-width:0;height:12px}
 #app#app .watermark-color-field>.custom-color-picker{margin-left:10px}
-#app#app #redactColorWrap .custom-color-picker{margin-left:6px}
+#app#app #redactColorWrap .custom-color-picker{margin-left:0}
 #app#app #watermarkMoreSettings .color-picker-popover{top:auto;bottom:calc(100% + 8px);left:auto;right:0}
 #app#app .color-picker-popover:not([hidden]){animation:pq-pick .18s cubic-bezier(.2,.8,.2,1)}
 @keyframes pq-pick{from{opacity:0;transform:translateY(4px) scale(.98)}}
@@ -608,7 +608,7 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 #backgroundInspectModal .edge-inspect-foot{font-size:12px!important}
 small{font-size:12px!important}
 #app#app .result-info>span,#app#app .result-info strong,#app#app .comparison-copy p,#app#app .comparison-copy-actions>span{font-size:12px!important}
-#app#app .color-picker-toggle #colorPickerHex,#app#app .color-picker-toggle #redactColorPickerHex{display:none!important}
+#app#app .color-picker-toggle #colorPickerHex,#app#app .color-picker-toggle #redactColorPickerHex{display:inline!important;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;font-weight:500;white-space:nowrap;color:var(--ink)}
 
 #app#app .settings-sheet .compress-mode-switch,#app#app .settings-sheet .segment-grid,#app#app .settings-sheet .preset-row,
 #app#app .settings-sheet .align-buttons,#app#app .settings-sheet .redact-view-switch{height:40px;padding:0;align-items:stretch}
@@ -691,4 +691,18 @@ small{font-size:12px!important}
 }
 @media(max-width:760px){
  #app#app .watermark-more-grid .text-place-row{column-gap:12px!important}
+}
+
+/* v1.6.1: explicit selection boundaries, visible colour values and stage controls. */
+#app#app .settings-sheet .has-ind>button{min-width:40px!important;border-radius:8px}
+#app#app .settings-sheet .has-ind>.seg-ind,#app#app .comparison-stage-actions .redact-view-switch>.seg-ind{border-radius:8px}
+#app#app .settings-sheet .crop-preset-grid button.active{border-color:var(--accent)!important;background:color-mix(in srgb,var(--accent) 12%,var(--sheet))!important;box-shadow:inset 0 0 0 2px var(--accent)!important}
+#app#app .settings-sheet .color-control{height:auto}
+#app#app .settings-sheet .color-inline{flex-wrap:wrap;gap:16px;height:auto;min-height:40px}
+#app#app .settings-sheet .color-picker-toggle{min-width:132px!important;flex-shrink:0;gap:8px;padding:0 12px;justify-content:space-between}
+#app#app .comparison-stage-actions .redact-view-switch{display:flex;align-items:stretch;gap:2px;height:40px;padding:0;border:0;border-radius:8px;background:var(--sheet)}
+#app#app .comparison-stage-actions .redact-view-switch>button{height:40px;min-height:40px;min-width:40px;padding:0 12px;border:0;border-radius:8px;color:var(--ink-2);font-size:13px;white-space:nowrap}
+#app#app .comparison-stage-actions .redact-view-switch>button.active{color:var(--ink)}
+@media(max-width:980px){
+ #app#app .comparison-stage-actions:has(.redact-view-switch:not([hidden])){top:52px}
 }
