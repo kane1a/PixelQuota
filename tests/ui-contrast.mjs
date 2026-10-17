@@ -1,4 +1,4 @@
-// Real-browser regression for v1.6.1 control contrast: selected segmented controls, visible #HEX on both
+// Real-browser regression for v1.6.1/v1.6.2 control contrast: selected segmented controls, visible #HEX on both
 // custom-colour buttons, and the redaction Continue editing / Compare result switch (both states).
 // Usage: node tests/ui-contrast.mjs [outDir|report.json]
 //   PIXELQUOTA_UI_TEST_HTML      built single-file product (default: <repo>/dist/PixelQuota.html)
@@ -95,7 +95,7 @@ async function analyze({ b64, cells, trackKey }) {
         return { frac: tot ? pass / tot : 0, mean: tot ? sum / tot : 0 };
       };
       for (const s of ['top', 'right', 'bottom', 'left']) sides[s] = sample(s);
-      o.ring = sides; o.track = track;
+      o.ring = sides; o.track = track; o.lighterThanTrack = lum(bg) > lum(track) && ratio(bg, track) >= 1.03;
     }
   }
   return out;
@@ -118,7 +118,10 @@ const pageHelpers = {
       const r = b.getBoundingClientRect(), te = textEl(b), tcs = getComputedStyle(te);
       const vis = r.left >= gr.left - 1 && r.right <= gr.right + 1 && r.top >= gr.top - 1 && r.bottom <= gr.bottom + 1;
       const pts = [[.5, .5], [.12, .2], [.88, .2], [.12, .8], [.88, .8]].map(([fx, fy]) => { const x = r.left + r.width * fx, y = r.top + r.height * fy; const el = document.elementFromPoint(x, y); return !!el && (el === b || b.contains(el)); });
-      return { index: [...g.children].indexOf(b), text: b.textContent.trim(), active: b.classList.contains('active'), disabled: b.disabled, rect: { x: r.x, y: r.y, w: r.width, h: r.height }, fully: vis, hits: pts, fg: parse(tcs.webkitTextFillColor && tcs.webkitTextFillColor !== 'rgba(0, 0, 0, 0)' ? tcs.webkitTextFillColor : tcs.color), op: opacity(te), fontSize: parseFloat(tcs.fontSize), fontWeight: tcs.fontWeight, radius: parseFloat(getComputedStyle(b).borderRadius) };
+      const ind = g.querySelector(':scope > .seg-ind'), surf = b.classList.contains('active') ? (ind && parseFloat(getComputedStyle(ind).opacity) > 0 ? ind : b) : null;
+      const shadow = surf ? getComputedStyle(surf).boxShadow : 'none';
+      const dropShadow = shadow !== 'none' && shadow.split(/,(?![^(]*\))/).some(l => !/inset/.test(l) && (l.match(/-?[\d.]+px/g) || []).slice(1, 3).some(v => parseFloat(v) > 0));
+      return { shadow, dropShadow, index: [...g.children].indexOf(b), text: b.textContent.trim(), active: b.classList.contains('active'), disabled: b.disabled, rect: { x: r.x, y: r.y, w: r.width, h: r.height }, fully: vis, hits: pts, fg: parse(tcs.webkitTextFillColor && tcs.webkitTextFillColor !== 'rgba(0, 0, 0, 0)' ? tcs.webkitTextFillColor : tcs.color), op: opacity(te), fontSize: parseFloat(tcs.fontSize), fontWeight: tcs.fontWeight, radius: parseFloat(getComputedStyle(b).borderRadius) };
     });
     const vw = document.documentElement.clientWidth, vh = innerHeight;
     return { radius:parseFloat(cs.borderRadius), indicatorRadius:g.querySelector(':scope > .seg-ind')?parseFloat(getComputedStyle(g.querySelector(':scope > .seg-ind')).borderRadius):null, gr: { x: gr.x, y: gr.y, w: gr.width, h: gr.height }, display: cs.display, visible: gr.width > 0 && gr.height > 0 && cs.visibility !== 'hidden', inViewportX: gr.left >= -1 && gr.right <= vw + 1, buttons, scrollX: scrollX, scrollY: scrollY, vw, vh, docOverflow: document.documentElement.scrollWidth - vw };
@@ -165,8 +168,8 @@ async function measureGroup(page, id, label, tag, opts = {}) {
     check(`${prefix}: ${kind} rendered text ink contrast >= 3.5:1`, r.inkRatio >= 3.5, { text: b.text, ratio: +r.inkRatio.toFixed(2), bg: r.bg });
     check(`${prefix}: ${kind} font size >= ${fontFloor}px`, b.fontSize >= fontFloor, { text: b.text, fontSize: b.fontSize });
     if (sel && trackBtn) {
-      const sides = r.ring, worst = Math.min(...Object.values(sides).map(s => s.frac));
-      check(`${prefix}: selected boundary is a >=3:1 luminance border on all 4 sides (non-colour cue)`, worst === 1, { text: b.text, sides, track: r.track });
+      check(`${prefix}: selected option is a raised pill with an outer drop shadow (not removed by overrides)`, b.dropShadow, { text: b.text, shadow: b.shadow });
+      check(`${prefix}: selected pill renders lighter than the unselected track`, r.lighterThanTrack, { text: b.text, bg: r.bg, track: r.track });
     }
     if (opts.heights !== false) {
       check(`${prefix}: ${kind} control corner is 8px`, b.radius===8, {text:b.text,radius:b.radius});

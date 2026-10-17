@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.2 - 2026-10-18
+
+### Interface fixes
+
+- Restored the original raised, light selection style with a soft drop shadow instead of the accent border introduced in 1.6.1
+- Kept the drop shadow on options inside expanded settings, which previously removed it and let the selection blend into the track
+- Applied the same raised style to crop presets and the redaction edit/compare switch, now on a light track for readable labels
+
 ## 1.6.1 - 2026-10-17
 
 ### Interface fixes
