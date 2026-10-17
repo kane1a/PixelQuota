@@ -1,27 +1,45 @@
 # Changelog
 
+## 1.6.1 - 2026-10-17
+
+### Interface fixes
+
+- Added an accent-tinted selection indicator with a clear border, including options inside expanded settings
+- Displayed synchronized #HEX values on both watermark and redaction custom-color buttons
+- Fixed premature three-digit HEX expansion while typing a six-digit value, preserving in-field editing and shorthand commit
+- Fixed unreadable redaction edit/compare controls and kept both states at 40px
+- Let color rows grow when wrapping on narrow screens so their buttons no longer overlap redaction actions
+
+### Loading and documentation
+
+- Split the hosted application into a lightweight shell and same-origin, on-demand AVIF, HEIF, and TIFF resources
+- Kept the downloadable PixelQuota.html self-contained for non-AI local-file processing
+- Deferred AVIF encoder initialization until AVIF output is requested; reused the loaded encoder in memory without adding persistent application caches
+- Redirected the hosted standalone filename to the online entry while preserving direct file:// use
+- Changed public changelog, release, and pull-request descriptions to English while retaining explicitly named translations and the five-language interface
+
 ## 1.6.0 - 2026-10-17
 
-### 介面改版
+### Interface
 
-- 六工具統一為亞麻日間介面，整合畫布、縮圖列、常用設定與可展開設定
-- 保留單張下載與批次 ZIP，調整浮水印、遮蔽、裁切與去背預覽的操作排列
-- 擴充社群裁切的選項，維持既有 EXIF、尺寸、轉檔與圖片浮水印功能
+- Unified all six tools in a linen light interface with an integrated canvas, thumbnail strip, common controls, and expandable settings
+- Preserved individual downloads and batch ZIP exports while reorganizing watermark, redaction, crop, and background-removal previews
+- Expanded social-crop presets without removing EXIF handling, resizing, conversion, or image watermarks
 
-### 圖片相容性
+### Image compatibility
 
-- 更新 HEIC／HEIF 解碼與共用圖片來源，修正部分新式 iPhone 照片無法預覽或處理的問題
-- 新增 TIFF／TIF 讀取，涵蓋已驗證的壓縮、透明度、16-bit、方向與多頁第一頁
-- 依檔案內容正規化 MIME，補上 JPE／JFIF、SVG 尺寸及空白 MIME 等入口
-- 浮水印、遮蔽與裁切保留透明來源，修正 HDR AVIF 與瀏覽器直接顯示原圖的偏色差異
-- 動態來源編輯後輸出靜態圖片；多頁 TIFF 僅處理第一頁，高位元輸入正規化為 8-bit RGBA
+- Updated HEIC/HEIF decoding and the shared image reader to handle supported modern iPhone photos
+- Added TIFF/TIF reading with tested compression, transparency, 16-bit input, orientation, and first-page support
+- Normalized MIME types from file contents and covered JPE/JFIF extensions, SVG dimensions, and empty MIME inputs
+- Preserved transparent sources in watermark, redaction, and crop tools; corrected HDR AVIF preview color differences
+- Edited animated inputs produce static images; only the first TIFF page is read, and high-bit-depth input is normalized to 8-bit RGBA
 
-### 可靠性與安全
+### Reliability and security
 
-- TIFF 區段數量、長度、整數與原始資料範圍檢查不再漏掉損壞檔案，並保留錯誤後恢復能力
-- 批次進度不再將尚未產生結果的項目顯示為成功
-- 將建置依賴 source-map-js 更新為 1.2.2，修補已確認的高風險來源映射阻斷服務漏洞
-- 正式建置加入單一來源的版本標記，供部署後核對
+- Added TIFF segment-count, length, integer, and source-range validation, with recovery after invalid files
+- Batch progress no longer marks items as successful before an output exists
+- Updated the locked source-map-js build dependency to 1.2.2 to address the identified high-severity source-map denial-of-service vulnerability
+- Added a single-source application version marker for post-deployment verification
 
 ## 1.5.0 - 2026-09-26
 

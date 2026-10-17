@@ -27,41 +27,26 @@ const inlineWorkerPlugin={
   }
 };
 
-await build({
-  plugins:[inlineWorkerPlugin],
-  entryPoints:[path.join(root,'src','main.js')],
-  bundle:true,
-  minify:true,
-  format:'esm',
-  platform:'browser',
-  target:['es2020'],
-  loader:{'.wasm':'binary'},
-  outfile:path.join(assets,'app.js'),
-  logLevel:'info'
-});
+const common={plugins:[inlineWorkerPlugin],bundle:true,minify:true,format:'esm',platform:'browser',target:['es2020'],logLevel:'info'};
+const online=await build({...common,entryPoints:[path.join(root,'src','main.js')],outdir:assets,
+  splitting:true,entryNames:'app-[hash]',chunkNames:'chunks/[name]-[hash]',assetNames:'chunks/[name]-[hash]',
+  loader:{'.wasm':'file'},metafile:true});
+const entryOutput=Object.entries(online.metafile.outputs).find(([,meta])=>meta.entryPoint?.endsWith('src/main.js'))?.[0];
+if(!entryOutput)throw new Error('Unable to locate online main entry output');
+const jsUrl=`./assets/${path.relative(assets,path.resolve(entryOutput)).replaceAll(path.sep,'/')}`;
+const cssOutput=online.metafile.outputs[entryOutput].cssBundle;
+if(!cssOutput)throw new Error('Online build did not emit CSS');
+const cssUrl=`./assets/${path.relative(assets,path.resolve(cssOutput)).replaceAll(path.sep,'/')}`;
 
-for(const name of fs.readdirSync(path.join(root,'public'))){
-  const src=path.join(root,'public',name);
-  const dst=path.join(dist,name);
-  fs.cpSync(src,dst,{recursive:true});
-}
-
-let html=fs.readFileSync(path.join(root,'index.html'),'utf8');
-html=html.replace('</head>',()=>`<meta name="application-version" content="${version}">\n</head>`);
-const js=fs.readFileSync(path.join(assets,'app.js'),'utf8').replace(/<\/script/gi,'<\\/script');
-const cssPath=path.join(assets,'app.css');
-const css=fs.existsSync(cssPath)?fs.readFileSync(cssPath,'utf8'):'';
-const configPath=path.join(dist,'config.js');
+const standalone=await build({...common,entryPoints:[path.join(root,'src','main.js')],outfile:path.join(assets,'standalone.js'),
+  splitting:false,loader:{'.wasm':'binary'},metafile:true});
+const standaloneCss=standalone.metafile.outputs[path.relative(root,path.join(assets,'standalone.js')).replaceAll(path.sep,'/')]?.cssBundle;
+const standaloneCssPath=standaloneCss?path.resolve(root,standaloneCss):path.join(assets,'standalone.css');
+const sourceHtml=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const configPath=path.join(root,'public','config.js');
 const config=fs.existsSync(configPath)?fs.readFileSync(configPath,'utf8').replace(/<\/script/gi,'<\\/script'):'';
-
-if(css) html=html.replace('</head>',()=>`<style>${css}</style>\n</head>`);
-html=html.replace(/<script src="\.\/config\.js"><\/script>/,()=>config?`<script>${config}</script>`:'');
-html=html.replace(/<script type="module" src="\/src\/main\.js"><\/script>/,()=>`<script type="module">${js}</script>`);
-
-fs.writeFileSync(path.join(dist,'index.html'),html);
-fs.writeFileSync(path.join(dist,'PixelQuota.html'),html);
-fs.writeFileSync(path.join(dist,'START-HERE.txt'),`PixelQuota ${version}\r\n\r\n直接雙擊 PixelQuota.html 即可使用，不需要安裝、不需要終端機。\r\nDouble-click PixelQuota.html to use the app. No install or local server required.\r\n`);
-
+const addMeta=html=>html.replace('</head>',()=>`<meta name="application-version" content="${version}">\n</head>`);
+const nestedLinks=source=>source.replaceAll('href="./index.html"','href="../index.html"').replaceAll('href="./privacy.html"','href="../privacy.html"').replaceAll('src="./assets/','src="../assets/').replaceAll('href="./assets/','href="../assets/');
 const pages=[
   ['compress-image-to-20kb','Compress Image to 20KB - PixelQuota','Compress JPG, PNG, WebP, AVIF, or HEIC under 20KB in your browser. No upload, no account, no watermark.'],
   ['compress-image-to-50kb','Compress Image to 50KB - PixelQuota','Compress any image under 50KB with the highest quality that fits. Private browser processing.'],
@@ -71,14 +56,33 @@ const pages=[
   ['compress-image-to-1mb','Compress Image to 1MB - PixelQuota','Compress images under 1MB, resize, convert formats, and download privately in your browser.'],
   ['heic-to-jpg','HEIC to JPG Converter - PixelQuota','Convert iPhone HEIC and HEIF photos to JPG locally, with an optional KB limit and resize in the same pass.']
 ];
-function nestedLinks(source){return source.replaceAll('href="./index.html"','href="../index.html"').replaceAll('href="./privacy.html"','href="../privacy.html"');}
+
+for(const name of fs.readdirSync(path.join(root,'public'))){
+  fs.cpSync(path.join(root,'public',name),path.join(dist,name),{recursive:true});
+}
+let shell=addMeta(sourceHtml);
+shell=shell.replace(/<script src="\.\/config\.js"><\/script>/,()=>config?`<script>${config}</script>`:'');
+shell=shell.replace(/<script type="module" src="\/src\/main\.js"><\/script>/,()=>`<script type="module" src="${jsUrl}"></script>`);
+shell=shell.replace('</head>',()=>`<link rel="stylesheet" href="${cssUrl}">\n</head>`);
+fs.writeFileSync(path.join(dist,'index.html'),shell);
 for(const [slug,title,description] of pages){
-  let page=nestedLinks(html).replace(/<title>.*?<\/title>/,`<title>${title}</title>`).replace(/<meta name="description" content="[^"]*"\s*\/>/,`<meta name="description" content="${description}" />`);
+  const page=nestedLinks(shell).replace(/<title>.*?<\/title>/,`<title>${title}</title>`).replace(/<meta name="description" content="[^"]*"\s*\/>/,`<meta name="description" content="${description}" />`);
   const dir=path.join(dist,slug);fs.mkdirSync(dir,{recursive:true});fs.writeFileSync(path.join(dir,'index.html'),page);
 }
 fs.mkdirSync(path.join(dist,'tools'),{recursive:true});
-fs.writeFileSync(path.join(dist,'tools','index.html'),nestedLinks(html).replace(/<title>.*?<\/title>/,'<title>Free Image Tools - PixelQuota</title>'));
+fs.writeFileSync(path.join(dist,'tools','index.html'),nestedLinks(shell).replace(/<title>.*?<\/title>/,'<title>Free Image Tools - PixelQuota</title>'));
+
+let offline=addMeta(sourceHtml);
+const standaloneJs=fs.readFileSync(path.join(assets,'standalone.js'),'utf8').replace(/<\/script/gi,'<\\/script');
+const standaloneCssText=fs.existsSync(standaloneCssPath)?fs.readFileSync(standaloneCssPath,'utf8'):'';
+offline=offline.replace('</head>',()=>`${standaloneCssText?`<style>${standaloneCssText}</style>\n`:''}</head>`);
+offline=offline.replace(/<head>/i,()=>`<head><script>if(location.protocol==='http:'||location.protocol==='https:')location.replace('./index.html'+location.search+location.hash);</script>`);
+offline=offline.replace(/<script src="\.\/config\.js"><\/script>/,()=>config?`<script>${config}</script>`:'');
+offline=offline.replace(/<script type="module" src="\/src\/main\.js"><\/script>/,()=>`<script type="module">${standaloneJs}</script>`);
+fs.writeFileSync(path.join(dist,'PixelQuota.html'),offline);
+fs.writeFileSync(path.join(dist,'START-HERE.txt'),`PixelQuota ${version}\r\n\r\nDouble-click PixelQuota.html to use the standalone app. No install or local server required.\r\nFor web hosting, deploy index.html and assets/ together. AI first use requires internet access.\r\n`);
 fs.writeFileSync(path.join(dist,'robots.txt'),'User-agent: *\nAllow: /\n');
-fs.rmSync(assets,{recursive:true,force:true});
-if(fs.existsSync(configPath)) fs.rmSync(configPath,{force:true});
-console.log('PixelQuota production build ready:',path.join(dist,'PixelQuota.html'));
+// These temporary outputs were already embedded in the standalone HTML.
+for(const name of ['standalone.js','standalone.css'])fs.rmSync(path.join(assets,name),{force:true});
+fs.rmSync(path.join(dist,'config.js'),{force:true});
+console.log('PixelQuota dual production build ready:',path.join(dist,'index.html'),path.join(dist,'PixelQuota.html'));

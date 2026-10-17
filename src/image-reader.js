@@ -1,6 +1,3 @@
-import { heicTo } from 'heic-to/csp';
-import { decodeTiffSource } from './tiff.js';
-
 const HEIF_EXTENSION = /\.(heic|heif|hif)$/i;
 const IMAGE_EXTENSION = /\.(jpe?g|jpe|jfif|png|apng|webp|avif|heic|heif|hif|bmp|gif|svg|ico|tiff?)$/i;
 const HEIF_BRANDS = new Set(['heic','heix','hevc','hevx','heim','heis','hevm','hevs','mif1','msf1']);
@@ -82,7 +79,7 @@ async function prepareSource(file) {
   const header = new Uint8Array(await file.slice(0, 256).arrayBuffer());
   const tiff = header.length >= 4 && ((header[0] === 73 && header[1] === 73 && header[2] === 42 && header[3] === 0) ||
     (header[0] === 77 && header[1] === 77 && header[2] === 0 && header[3] === 42));
-  if (tiff) return decodeTiffSource(file);
+  if (tiff) return (await import('./tiff.js')).decodeTiffSource(file);
   const ascii = (start, end) => String.fromCharCode(...header.subarray(start, end));
   const nativeType = header[0] === 255 && header[1] === 216 && header[2] === 255 ? 'image/jpeg'
     : ascii(0,8) === '\x89PNG\r\n\x1a\n' ? 'image/png'
@@ -99,7 +96,7 @@ async function prepareSource(file) {
   try {
     // Native decoding is preferable where available; the fallback runs in a Web Worker.
     try { image = await nativeDecode(file); }
-    catch { image = await heicTo({ blob: file, type: 'bitmap' }); }
+    catch { image = await (await import('heic-to/csp')).heicTo({ blob: file, type: 'bitmap' }); }
     const width = image.width || image.naturalWidth;
     const height = image.height || image.naturalHeight;
     assertCanvasSize(width, height);

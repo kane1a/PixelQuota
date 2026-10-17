@@ -603,9 +603,11 @@ function setCompressionMode(mode){
   if(!['limit','convert'].includes(mode)||state.compressionMode===mode)return;
   state.compressionMode=mode;invalidateAllOutputs();syncCompressionModeUI();updateQueue();renderComparison();
 }
-async function initFormatCapabilities(){
+function initFormatCapabilities(){
   const avif=$('formatButtons')?.querySelector('[data-format-capability="avif"]');if(!avif)return;
-  const supported=await detectEncoderSupport('image/avif');
+  // Do not initialize the AVIF WASM encoder during default startup. The real
+  // encoder is loaded and validated only when AVIF output is requested.
+  const supported=typeof WebAssembly==='object';
   avif.disabled=!supported;avif.classList.toggle('unsupported',!supported);avif.title=supported?'':t('formatUnavailable');
 }
 function setToolMode(mode){
@@ -1318,19 +1320,19 @@ async function processAll() {
   if(isWatermark&&!opts.text&&!opts.imageFile)return toast(t('watermarkContentRequired'));
   if(isBackground&&opts.engine==='ai'&&!getBackgroundAIState().ready)return toast(t('bgModelRequiredToast'));
   if(!isWatermark&&!isRedact&&!isCrop&&!isBackground&&!isVector&&opts.resizeMode==='exact'&&(!opts.maxWidth||!opts.maxHeight))return toast(t('invalidExact'));
-  const todo=[];let skipped=0;
+  const todo=[];let skipped=0;const shouldSkip=(index,key)=>state.processKeys[index]===key&&(!state.errors[index]||processAll.fromAuto);
   if(isRedact){
     let anyRegion=false;
     for(let i=0;i<state.files.length;i++){
       const regions=redactRegionsFor(i);if(!regions.length)continue;anyRegion=true;
-      const key=redactSettingsKey(i);if(state.processKeys[i]===key)skipped++;else todo.push(i);
+      const key=redactSettingsKey(i);if(shouldSkip(i,key))skipped++;else todo.push(i);
     }
     if(!anyRegion)return toast(t('redactNeedRegion'));
   }else if(isCrop){
-    for(let i=0;i<state.files.length;i++){const key=cropSettingsKey(i);if(state.processKeys[i]===key)skipped++;else todo.push(i);}
+    for(let i=0;i<state.files.length;i++){const key=cropSettingsKey(i);if(shouldSkip(i,key))skipped++;else todo.push(i);}
   }else{
     const key=isWatermark?watermarkSettingsKey(opts):isBackground?backgroundSettingsKey(opts):isVector?vectorSettingsKey(opts):settingsKey(opts);
-    for(let i=0;i<state.files.length;i++){if(state.processKeys[i]===key)skipped++;else todo.push(i);}
+    for(let i=0;i<state.files.length;i++){if(shouldSkip(i,key))skipped++;else todo.push(i);}
   }
   state.lastSkipped=skipped;
   if(!todo.length){updateResultsSummary();toast(t('alreadyProcessed'));return;}

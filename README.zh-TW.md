@@ -79,10 +79,13 @@ npm run build
 
 Build 會產生：
 
-- `dist/index.html`：給 GitHub Pages／靜態網站使用
-- `dist/PixelQuota.html`：可直接開啟的完整單檔版本
+- `dist/index.html`：GitHub Pages／靜態網站的輕量入口
+- `dist/assets/`：同來源的程式、樣式與按需載入圖片編解碼元件，部署網站時需一併保留
+- `dist/PixelQuota.html`：可直接雙擊的完整單檔版本，非 AI 圖片處理不需要本機伺服器或其他程式檔
 
 ### 瀏覽器驗證
+
+線上版首次使用大型編解碼元件時需要網路。AVIF 的 WASM 下載暫時失敗可在同頁重試；若 JavaScript 模組載入失敗被瀏覽器保留，恢復連線後需重新整理。單檔版已內嵌這些非 AI 編解碼元件。
 
 ```bash
 npm run test:e2e

@@ -1,6 +1,6 @@
 {
   "name": "pixelquota",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Privacy-first browser image toolkit for compression, conversion, watermarking, redaction, social cropping, and background removal.",
   "license": "MIT",
   "private": true,
@@ -13,7 +13,9 @@
     "test:privacy": "node tests/privacy.mjs",
     "test:tiff": "node tests/tiff-regressions.mjs",
     "test:ui-controls": "node tests/ui-controls.mjs",
-    "test:e2e": "npm run test:model-cache && npm run test:privacy && npm run test:ui-controls && npm run test:tiff && node tests/e2e.mjs"
+    "test:ui-contrast": "node tests/ui-contrast.mjs",
+    "test:loading": "node tests/loading.mjs",
+    "test:e2e": "npm run test:model-cache && npm run test:privacy && npm run test:ui-controls && npm run test:ui-contrast && npm run test:loading && npm run test:tiff && node tests/e2e.mjs"
   },
   "dependencies": {
     "@jsquash/avif": "^2.1.1",
