@@ -1,4 +1,5 @@
 import { decodeFile } from './compress.js';
+import { preferredOutputType } from './image-reader.js';
 
 const decodeCache=new Map();
 
@@ -30,11 +31,6 @@ function canvasBlob(canvas,type,quality){
   return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('redact_encode_failed')),type,quality));
 }
 
-function outputTypeFor(file){
-  if(file.type==='image/png')return'image/png';
-  if(file.type==='image/webp')return'image/webp';
-  return'image/jpeg';
-}
 
 function extensionFor(type){
   return type==='image/png'?'png':type==='image/webp'?'webp':'jpg';
@@ -120,7 +116,7 @@ export async function renderRedactPreview(file,regions=[],maxDimension=1200){
 export async function applyRedactions(file,regions=[],onProgress=()=>{}){
   if(!regions.length)throw new Error('redact_regions_required');
   const rendered=await renderCanvas(file,regions,0,p=>onProgress(Math.round(p*.88)));
-  const outputType=outputTypeFor(file);
+  const outputType=await preferredOutputType(file);
   const blob=await canvasBlob(rendered.canvas,outputType,outputType==='image/png'?undefined:.94);
   onProgress(100);
   const base=file.name.replace(/\.[^.]+$/,'');

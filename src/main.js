@@ -1,15 +1,22 @@
 import './app.css';
 import { zipSync } from 'fflate';
 import { compressImage, detectEncoderSupport } from './compress.js';
+import { browserImageSource, isImageFile, requiresImagePreparation } from './image-reader.js';
 import { applyWatermarks, renderWatermarkPreview, clearWatermarkCache } from './watermark.js';
 import { applyRedactions, renderRedactPreview,paintRedactRegion, clearRedactCache } from './redact.js';
 import { CROP_PRESETS, applyCrop, renderCropPreview, clearCropCache, defaultCropRect } from './crop.js';
 import { BACKGROUND_REMOVAL_ENGINE, removeBackgroundDemo, renderBackgroundRemovalPreview, renderBackgroundRemovalInspection, clearBackgroundRemovalCache, loadBackgroundAIModel, getBackgroundAIState, probeBackgroundAICache, hasBackgroundAIMatte } from './remove-bg.js';
 import { vectorizeImage, vectorOptionsKey } from './vectorize.js';
 import { createColorPicker } from './color-picker.js';
+import { createOverlayManager } from './overlay-manager.js';
+import { setupPositionPicker } from './position-picker.js';
+import { createNumericControls } from './numeric-controls.js';
 import { strings, detectLocale } from './i18n.js';
 
 const $ = id => document.getElementById(id);
+const overlayManager = createOverlayManager(document);
+let numericControls = null;
+const positionPickers = [];
 const state = {
   files:[], results:[], errors:[], previews:[], processKeys:[], resultOptions:[],
   locale:detectLocale(), busy:false, outputFormat:'auto', resizeMode:'limit', compressionMode:'limit',
@@ -88,25 +95,35 @@ function syncLanguageMenu(){
     button.setAttribute('aria-selected',String(active));
   });
 }
-function closeLanguageMenu(){
+function hideLanguageMenu(){
   const options=$('languageOptions'),toggle=$('languageToggle');if(!options||!toggle)return;
   options.hidden=true;toggle.setAttribute('aria-expanded','false');
 }
-function toggleLanguageMenu(force){
+function showLanguageMenu(){
   const options=$('languageOptions'),toggle=$('languageToggle');if(!options||!toggle)return;
+  options.hidden=false;toggle.setAttribute('aria-expanded','true');
+}
+function closeLanguageMenu(options={}){
+  if(overlayManager.isOpen('language'))overlayManager.close('language',options);else hideLanguageMenu();
+}
+function toggleLanguageMenu(force){
+  const options=$('languageOptions');if(!options)return;
   const open=typeof force==='boolean'?force:options.hidden;
-  options.hidden=!open;toggle.setAttribute('aria-expanded',String(open));
+  if(open)overlayManager.open('language');else overlayManager.close('language');
   if(open)document.querySelector('#languageOptions [aria-selected="true"]')?.focus();
+}
+function initLanguageOverlay(){
+  overlayManager.register('language',{trigger:$('languageToggle'),popover:$('languageOptions'),open:showLanguageMenu,close:hideLanguageMenu});
 }
 
 function applyLocale(locale) {
   state.locale = strings[locale] ? locale : 'en';
-  try { localStorage.setItem('pixelquota_lang',state.locale); } catch {}
   document.documentElement.lang=state.locale;
   document.querySelectorAll('[data-i18n]').forEach(el=>{const value=t(el.dataset.i18n);if(value)el.textContent=value;});
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{el.placeholder=t(el.dataset.i18nPlaceholder);});
   document.querySelectorAll('[data-i18n-aria-label]').forEach(el=>{el.setAttribute('aria-label',t(el.dataset.i18nAriaLabel));});
   syncLanguageMenu();
+  numericControls?.refreshLabels();
   updateToolModeUI(); applyPageCopy(); updateGate(); updateQueue();
   if (state.files.length) renderCards();
 }
@@ -193,7 +210,7 @@ function syncDownloadAvailability(){
   if(summary){
     summary.hidden=!hasBatch;
     const completed=state.results.filter(Boolean).length+state.errors.filter(Boolean).length;
-    const passed=state.results.filter(r=>r?.metTarget||r?.operation!=='compress').length;
+    const passed=state.results.filter(r=>r&&(r.metTarget||r.operation!=='compress')).length;
     const total=state.files.length;
     $('batchSummaryTotal').textContent=hasBatch?`${completed}/${total}`:'';
     $('resultsSummary').textContent=completed?`${completed}/${total} ${t('filesQueued')}`:t('queuedTitle');
@@ -625,12 +642,14 @@ function setWatermarkPosition(position){
   if(state.watermarkPosition===position)return;
   state.watermarkPosition=position;
   document.querySelectorAll('#watermarkPositions [data-position]').forEach(b=>b.classList.toggle('active',b.dataset.position===position));
+  positionPickers.find(p=>p.popover.id==='watermarkPositions')?.syncSelected();
   watermarkSettingsChanged();
 }
 function setWatermarkImagePosition(position){
   if(state.watermarkImagePosition===position)return;
   state.watermarkImagePosition=position;
   document.querySelectorAll('#watermarkImagePositions [data-position]').forEach(b=>b.classList.toggle('active',b.dataset.position===position));
+  positionPickers.find(p=>p.popover.id==='watermarkImagePositions')?.syncSelected();
   watermarkSettingsChanged();
 }
 function currentDateStamp(){
@@ -640,7 +659,9 @@ function applyWatermarkPreset(name){
   const key={bank:'watermarkPresetBankText',job:'watermarkPresetJobText',rent:'watermarkPresetRentText',card:'watermarkPresetCardText'}[name];if(!key)return;
   $('watermarkText').value=template(key,{date:currentDateStamp()});updateWatermarkStateIndicators();watermarkSettingsChanged();
 }
+let watermarkImageVersion=0;
 function clearWatermarkImage(){
+  watermarkImageVersion++;
   if(state.watermarkImageFile)clearWatermarkCache(state.watermarkImageFile);
   if(state.watermarkImagePreviewUrl)URL.revokeObjectURL(state.watermarkImagePreviewUrl);
   state.watermarkImageFile=null;state.watermarkImagePreviewUrl=null;
@@ -650,13 +671,18 @@ function clearWatermarkImage(){
   if($('watermarkImageName'))$('watermarkImageName').textContent='';
   updateWatermarkStateIndicators();watermarkSettingsChanged();
 }
-function setWatermarkImage(file){
-  if(!file||!file.type.startsWith('image/'))return;
-  if(state.watermarkImageFile)clearWatermarkCache(state.watermarkImageFile);
-  if(state.watermarkImagePreviewUrl)URL.revokeObjectURL(state.watermarkImagePreviewUrl);
-  state.watermarkImageFile=file;state.watermarkImagePreviewUrl=URL.createObjectURL(file);
-  $('watermarkImageThumb').src=state.watermarkImagePreviewUrl;$('watermarkImageName').textContent=file.name;$('watermarkImageInfo').hidden=false;
-  updateWatermarkStateIndicators();watermarkSettingsChanged();
+async function setWatermarkImage(file){
+  if(!isImageFile(file))return;
+  const version=++watermarkImageVersion;
+  try{
+    const source=await browserImageSource(file);
+    if(version!==watermarkImageVersion)return;
+    if(state.watermarkImageFile)clearWatermarkCache(state.watermarkImageFile);
+    if(state.watermarkImagePreviewUrl)URL.revokeObjectURL(state.watermarkImagePreviewUrl);
+    state.watermarkImageFile=file;state.watermarkImagePreviewUrl=URL.createObjectURL(source);
+    $('watermarkImageThumb').src=state.watermarkImagePreviewUrl;$('watermarkImageName').textContent=file.name;$('watermarkImageInfo').hidden=false;
+    updateWatermarkStateIndicators();watermarkSettingsChanged();
+  }catch(error){if(version===watermarkImageVersion)toast(errorReason(error));}
 }
 
 function redactRegionsFor(index){
@@ -971,7 +997,7 @@ function onRedactPointerUp(event){
 }
 
 function queueThumb(file,index) {
-  if (/\.(heic|heif)$/i.test(file.name)||/heic|heif/i.test(file.type)) return '<div class="thumb placeholder"><span>HEIC</span></div>';
+  if (requiresImagePreparation(file)&&!state.previews[index]) return '<div class="thumb placeholder"><span>…</span></div>';
   return `<div class="thumb"><img src="${state.previews[index]}" alt="" /></div>`;
 }
 function failureReason(result,opts) {
@@ -1214,6 +1240,7 @@ function renderCard(index) {
   existing.outerHTML=html; renderComparison();
 }
 function renderCards() {
+  if($('inputFormatNote'))$('inputFormatNote').hidden=!state.files.some(file=>/\.(gif|apng|webp|tiff?)$/i.test(file.name||'')||/^image\/(gif|webp|tiff?)$/i.test(file.type||''));
   if(!state.files.length){$('resultsSection').hidden=true;$('emptyResults').hidden=false;$('dropZone').hidden=false;$('resultList').hidden=true;$('resultList').innerHTML='';syncMoreSettings();syncDownloadAvailability();return;}
   $('emptyResults').hidden=true;$('resultsSection').hidden=false;$('dropZone').hidden=true;$('resultList').hidden=false;
   $('resultList').classList.toggle('single',state.files.length===1);
@@ -1230,14 +1257,33 @@ function updateResultsSummary() {
   $('resultsSummary').textContent=text;
 }
 
+async function prepareFilePreview(file){
+  try{
+    const source=await browserImageSource(file);
+    const indexes=[];
+    for(let index=0;index<state.files.length;index++)if(state.files[index]===file)indexes.push(index);
+    for(const index of indexes){
+      if(source===file&&state.previews[index])continue;
+      const previous=state.previews[index];
+      state.previews[index]=URL.createObjectURL(source);
+      if(previous)URL.revokeObjectURL(previous);
+      renderCard(index);
+    }
+  }catch(error){
+    for(let index=0;index<state.files.length;index++)if(state.files[index]===file){
+      state.errors[index]={message:error.message||String(error)};renderCard(index);
+    }
+  }
+}
 function addFiles(files) {
-  const incoming=[...files].filter(f=>f.type.startsWith('image/')||/\.(jpe?g|png|webp|avif|heic|heif|bmp)$/i.test(f.name));
+  const incoming=[...files].filter(isImageFile);
   if(!incoming.length)return;
   const room=30-state.files.length; if(room<=0)return toast(t('tooMany')); if(incoming.length>room)toast(t('tooMany'));
-  incoming.slice(0,room).forEach(file=>{state.files.push(file);state.previews.push(URL.createObjectURL(file));state.results.push(null);state.errors.push(null);state.processKeys.push(null);state.resultOptions.push(null);state.redactRegions.push([]);state.redactHistory.push({undo:[],redo:[]});state.cropRects.push(null);state.cropSourceMeta.push(null);});
+  incoming.slice(0,room).forEach(file=>{state.files.push(file);state.previews.push(requiresImagePreparation(file)?'':URL.createObjectURL(file));prepareFilePreview(file);state.results.push(null);state.errors.push(null);state.processKeys.push(null);state.resultOptions.push(null);state.redactRegions.push([]);state.redactHistory.push({undo:[],redo:[]});state.cropRects.push(null);state.cropSourceMeta.push(null);});
   if(state.selectedIndex===null)state.selectedIndex=0; state.lastSkipped=0;$('fileInput').value='';renderCards();updateQueue();scheduleAutoProcess();if(state.toolMode==='watermark')scheduleWatermarkPreview();if(state.toolMode==='redact'){updateRedactActions();scheduleRedactPreview();}if(state.toolMode==='crop')requestCropOverlayRender();if(state.toolMode==='remove-bg')scheduleBackgroundPreview();
 }
 function resetAll() {
+  if($('inputFormatNote'))$('inputFormatNote').hidden=true;
   bumpOutputGeneration();
   clearLiveWatermarkPreview();clearRedactPreview();clearCropEditor();clearBackgroundPreview();clearWatermarkCache();clearRedactCache();clearCropCache();state.files.forEach(file=>clearBackgroundRemovalCache(file));state.results.forEach(r=>r?.previewUrl&&URL.revokeObjectURL(r.previewUrl));state.previews.forEach(url=>URL.revokeObjectURL(url));
   state.files=[];state.results=[];state.errors=[];state.previews=[];state.processKeys=[];state.resultOptions=[];state.redactRegions=[];state.redactHistory=[];state.cropRects=[];state.cropSourceMeta=[];state.busy=false;state.lastSkipped=0;state.selectedIndex=null;state.selectionManual=false;state.comparePosition=50;state.redactSelected=null;state.redactView='edit';
@@ -1354,16 +1400,27 @@ function bindPercentRange(inputId,outputId){
   input.oninput=refresh;input.onchange=()=>{output.textContent=`${input.value}%`;syncRangeVisual(input);};syncRangeVisual(input);
 }
 
+function initPositionPickers(){
+  for(const [id,popover] of [['watermark-position',$('watermarkPositions')],['watermark-image-position',$('watermarkImagePositions')]]){
+    if(popover)positionPickers.push(setupPositionPicker({id,popover,overlayManager}));
+  }
+}
+function initNumericSettings(){
+  numericControls=createNumericControls({
+    onDragStart:input=>{if(input.id==='redactStrength'){setRedactView('edit');beginRedactStrengthEdit();}},
+    onDragEnd:input=>{if(input.id==='redactStrength')finishRedactStrengthEdit();}
+  });
+}
 function initColorPickers(){
   watermarkColorPicker=createColorPicker({
     input:$('watermarkColor'),toggle:$('colorPickerToggle'),preview:$('colorPickerPreview'),hexLabel:$('colorPickerHex'),
     popover:$('colorPickerPopover'),field:$('colorField'),cursor:$('colorFieldCursor'),hue:$('colorHue'),hexInput:$('colorHexInput'),
-    presetRoot:$('watermarkColorPresets'),presetAttribute:'data-color',onChange:()=>watermarkSettingsChanged()
+    presetRoot:$('watermarkColorPresets'),presetAttribute:'data-color',onChange:()=>watermarkSettingsChanged(),overlayManager,overlayId:'watermark-color'
   });
   redactColorPicker=createColorPicker({
     input:$('redactColor'),toggle:$('redactColorPickerToggle'),preview:$('redactColorPickerPreview'),hexLabel:$('redactColorPickerHex'),
     popover:$('redactColorPickerPopover'),field:$('redactColorField'),cursor:$('redactColorFieldCursor'),hue:$('redactColorHue'),hexInput:$('redactColorHexInput'),
-    presetRoot:$('redactColorPresets'),presetAttribute:'data-redact-color',onChange:color=>{state.redactColor=color;}
+    presetRoot:$('redactColorPresets'),presetAttribute:'data-redact-color',onChange:color=>{state.redactColor=color;},overlayManager,overlayId:'redact-color'
   });
 }
 
@@ -1375,7 +1432,6 @@ function bind(){
   $('watermarkAlignButtons').onclick=e=>{const b=e.target.closest('[data-align]');if(b)setWatermarkTextAlign(b.dataset.align);};
   $('watermarkPositions').onclick=e=>{const b=e.target.closest('[data-position]');if(b)setWatermarkPosition(b.dataset.position);};
   $('watermarkImagePositions').onclick=e=>{const b=e.target.closest('[data-position]');if(b)setWatermarkImagePosition(b.dataset.position);};
-  document.addEventListener('pointerdown',e=>{if(!e.target.closest('.custom-color-picker'))closeColorPicker();if(!e.target.closest('#languageMenu'))closeLanguageMenu();});
   $('redactModeButtons').onclick=e=>{const b=e.target.closest('[data-redact-mode]');if(b){setRedactView('edit');setRedactMode(b.dataset.redactMode);}};
   $('redactViewSwitch').onclick=e=>{const b=e.target.closest('[data-redact-view]');if(b)setRedactView(b.dataset.redactView);};
   $('redactStrength').onpointerdown=()=>{setRedactView('edit');beginRedactStrengthEdit();};
@@ -1391,7 +1447,7 @@ function bind(){
   bindPercentRange('watermarkImageOpacity','watermarkImageOpacityValue');
   bindPercentRange('watermarkImageSize','watermarkImageSizeValue');
   $('watermarkImageBtn').onclick=()=>$('watermarkImageInput').click();
-  $('watermarkImageInput').onchange=e=>setWatermarkImage(e.target.files?.[0]);
+  $('watermarkImageInput').onchange=e=>{const input=e.currentTarget,file=input.files?.[0];input.value='';if(file)setWatermarkImage(file);};
   $('watermarkImageClear').onclick=clearWatermarkImage;
   $('bgLoadModel').onclick=loadBackgroundModelUI;
   $('backgroundInspectBtn').onclick=openBackgroundInspector;
@@ -1428,7 +1484,7 @@ function bind(){
   $('resultList').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('[data-select-result]')&&!e.target.closest('button')){e.preventDefault();selectResult(Number(e.target.closest('[data-select-result]').dataset.selectResult));}};
   $('languageToggle').onclick=()=>toggleLanguageMenu();
   $('languageOptions').onclick=e=>{const option=e.target.closest('[data-locale]');if(!option)return;applyLocale(option.dataset.locale);updateRedactActions();closeLanguageMenu();$('languageToggle').focus();};
-  $('languageMenu').onkeydown=e=>{const options=[...document.querySelectorAll('#languageOptions [data-locale]')];if(e.key==='Escape'){e.preventDefault();closeLanguageMenu();$('languageToggle').focus();return;}if((e.key==='ArrowDown'||e.key==='ArrowUp')&&!$('languageOptions').hidden){e.preventDefault();const current=Math.max(0,options.indexOf(document.activeElement)),next=(current+(e.key==='ArrowDown'?1:-1)+options.length)%options.length;options[next]?.focus();}};
+  $('languageMenu').onkeydown=e=>{const options=[...document.querySelectorAll('#languageOptions [data-locale]')];if(e.key==='Escape'){e.preventDefault();closeLanguageMenu({restoreFocus:true});return;}if((e.key==='ArrowDown'||e.key==='ArrowUp')&&!$('languageOptions').hidden){e.preventDefault();const current=Math.max(0,options.indexOf(document.activeElement)),next=(current+(e.key==='ArrowDown'?1:-1)+options.length)%options.length;options[next]?.focus();}};
   let resizeFrame=0;window.addEventListener('resize',()=>{if(resizeFrame)return;resizeFrame=requestAnimationFrame(()=>{resizeFrame=0;fitCurrentPreviewSurface();requestCropOverlayRender();if(!$('backgroundInspectModal').hidden){const canvas=$('backgroundInspectCanvas');backgroundInspector.baseWidth=canvas.getBoundingClientRect().width/backgroundInspector.zoom;backgroundInspector.baseHeight=canvas.getBoundingClientRect().height/backgroundInspector.zoom;applyBackgroundInspectorTransform();}});});
 }
 // Selection is shown with an .active class; mirror it to aria-pressed so assistive tech can read it.
@@ -1440,7 +1496,7 @@ function initPressedStateSync(){
     new MutationObserver(records=>{for(const r of records)if(r.target.tagName==='BUTTON')sync(r.target);}).observe(group,{subtree:true,attributes:true,attributeFilter:['class']});
   }
 }
-function init(){initPressedStateSync();initPageMode();initColorPickers();bind();applyLocale(state.locale);setFormat(state.outputFormat);setResize(state.resizeMode);syncCompressionModeUI();initFormatCapabilities();setWatermarkPanel(state.watermarkPanel);setWatermarkColor('#ffffff');setRedactMode(state.redactMode);setRedactStrength(state.redactStrength,false);redactColorPicker.setColor(state.redactColor,false);setCropPlatform(state.cropPlatform);setCropPreset(state.cropPreset);updateWatermarkStateIndicators();updateRedactActions();syncBackgroundEngineUI();initBackgroundAICacheState();syncDownloadAvailability();initMonetization();window.PixelQuotaTest={addFiles,removeFile,processAll,state,compressImage,detectEncoderSupport,applyWatermarks,renderWatermarkPreview,applyRedactions,renderRedactPreview,applyCrop,renderCropPreview,removeBackgroundDemo,renderBackgroundRemovalPreview,renderBackgroundRemovalInspection,BACKGROUND_REMOVAL_ENGINE,loadBackgroundAIModel,getBackgroundAIState,probeBackgroundAICache,vectorizeImage,vectorOptions,vectorSettingsKey,updateVectorStats,setPreset,setCustom,setFormat,setResize,setCompressionMode,setToolMode,setWatermarkPanel,setWatermarkPosition,setWatermarkImagePosition,setWatermarkTextAlign,setWatermarkColor,setRedactMode,setRedactStrength,setRedactView,loadBackgroundModelUI,syncBackgroundEngineUI,setCropPlatform,setCropPreset,resetCropFrame,applyWatermarkPreset,settingsKey,inputOptions,watermarkOptions,backgroundOptions,backgroundSettingsKey,cropOptions,cropSettingsKey,redactRegionsFor,redactSettingsKey,undoRedact,redoRedact,deleteRedactRegion,selectRedactLayer,deleteRedactLayer,renderRedactLayers,renderRedactOverlay,renderCropOverlay,redactHandle,updateRedactCursor,syncRangeVisual,selectResult,renderComparison,fitPreviewSurface,updateComparisonPosition,updateWatermarkLivePreview,updateRedactPreview,updateBackgroundPreview,openBackgroundInspector,closeBackgroundInspector,setBackgroundInspectorZoom,backgroundInspector};}
+function init(){initPressedStateSync();initPageMode();initLanguageOverlay();initPositionPickers();initNumericSettings();initColorPickers();bind();applyLocale(state.locale);setFormat(state.outputFormat);setResize(state.resizeMode);syncCompressionModeUI();initFormatCapabilities();setWatermarkPanel(state.watermarkPanel);setWatermarkColor('#ffffff');setRedactMode(state.redactMode);setRedactStrength(state.redactStrength,false);redactColorPicker.setColor(state.redactColor,false);setCropPlatform(state.cropPlatform);setCropPreset(state.cropPreset);updateWatermarkStateIndicators();updateRedactActions();syncBackgroundEngineUI();initBackgroundAICacheState();syncDownloadAvailability();initMonetization();window.PixelQuotaTest={addFiles,removeFile,processAll,state,compressImage,detectEncoderSupport,applyWatermarks,renderWatermarkPreview,applyRedactions,renderRedactPreview,applyCrop,renderCropPreview,removeBackgroundDemo,renderBackgroundRemovalPreview,renderBackgroundRemovalInspection,BACKGROUND_REMOVAL_ENGINE,loadBackgroundAIModel,getBackgroundAIState,probeBackgroundAICache,vectorizeImage,vectorOptions,vectorSettingsKey,updateVectorStats,setPreset,setCustom,setFormat,setResize,setCompressionMode,setToolMode,setWatermarkPanel,setWatermarkPosition,setWatermarkImagePosition,setWatermarkTextAlign,setWatermarkColor,setRedactMode,setRedactStrength,setRedactView,loadBackgroundModelUI,syncBackgroundEngineUI,setCropPlatform,setCropPreset,resetCropFrame,applyWatermarkPreset,settingsKey,inputOptions,watermarkOptions,backgroundOptions,backgroundSettingsKey,cropOptions,cropSettingsKey,redactRegionsFor,redactSettingsKey,undoRedact,redoRedact,deleteRedactRegion,selectRedactLayer,deleteRedactLayer,renderRedactLayers,renderRedactOverlay,renderCropOverlay,redactHandle,updateRedactCursor,syncRangeVisual,selectResult,renderComparison,fitPreviewSurface,updateComparisonPosition,updateWatermarkLivePreview,updateRedactPreview,updateBackgroundPreview,openBackgroundInspector,closeBackgroundInspector,setBackgroundInspectorZoom,backgroundInspector};}
 
 /* ---- motion: jelly indicators, hover compare, hero swap ---- */
 function installMotion(){

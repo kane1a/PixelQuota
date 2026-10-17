@@ -1,4 +1,5 @@
 import { decodeFile } from './compress.js';
+import { preferredOutputType } from './image-reader.js';
 
 const decodeCache=new Map();
 
@@ -31,11 +32,6 @@ export function clearWatermarkCache(blob=null) {
   for(const key of [...decodeCache.keys()])releaseDecoded(key);
 }
 
-function outputTypeFor(file) {
-  if (file.type==='image/png') return 'image/png';
-  if (file.type==='image/webp') return 'image/webp';
-  return 'image/jpeg';
-}
 
 function extensionFor(type) {
   return type==='image/png'?'png':type==='image/webp'?'webp':'jpg';
@@ -177,7 +173,7 @@ export async function applyWatermarks(file,opts={},onProgress=()=>{}) {
   const imageFile=opts.imageFile instanceof Blob?opts.imageFile:null;
   if(!text&&!imageFile) throw new Error('watermark_content_required');
   const rendered=await renderWatermarkCanvas(file,opts,{onProgress:p=>onProgress(Math.round(p*.88))});
-  const outputType=outputTypeFor(file);
+  const outputType=await preferredOutputType(file);
   const blob=await canvasBlob(rendered.canvas,outputType,outputType==='image/png'?undefined:.94);
   onProgress(100);
 

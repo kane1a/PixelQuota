@@ -2,8 +2,8 @@
 html{overflow-y:scroll;scrollbar-gutter:stable}
 :root{
   --bg:#ece8e1;--sheet:#f6f3ee;--line:#ddd7cd;--line-2:#c9c1b4;
-  --ink:#2b2824;--ink-2:#5c5750;--ink-3:#8f887e;--accent:#2f6b66;--accent-ink:#f6f3ee;
-  --ok:#4a7a4f;--over:#a9563b;--wait:#c9c1b4;--scrim:rgba(30,28,25,.62);
+  --ink:#2b2824;--ink-2:#5c5750;--ink-3:#636459;--accent:#2f6b66;--accent-ink:#f6f3ee;
+  --ok:#4a7a4f;--over:#a9563b;--wait:#c9c1b4;--scrim:rgba(30,28,25,.8);
   font-family:"Segoe UI Variable Text","Segoe UI","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
   color:var(--ink);background:var(--bg);font-synthesis:none
 }
@@ -581,3 +581,114 @@ html,body{overflow-x:clip}.settings-underbar{min-height:40px}.more-settings-butt
 @media(max-width:760px){#app#app .watermark-more-grid .watermark-color-field{flex-direction:column}}
 #app#app .watermark-more-grid .watermark-color-field{margin-bottom:22px!important}
 #app#app#app #cropPresetGrid>button{width:224px!important;min-width:224px!important;max-width:224px!important}
+
+/* Touch captions retain the minimum readable size. */
+@media(max-width:980px),(pointer:coarse){
+ #app#app .settings-sheet .control-label,#app#app .settings-sheet .setting-control>label,footer{font-size:13px}
+ #toolModeSwitch button{font-size:15px}
+}
+
+/* v1.6.0 UI repair: strict typography, shared numeric controls, and real popovers. */
+#app#app .comparison-copy-title p,#app#app .comparison-badge,#app#app .comparison-badge strong,#app#app .canvas-file-label,
+#app#app .result-card .thumb.placeholder,#app#app .result-info>span,#app#app .result-card .status,#app#app .size-flow,
+#app#app .result-card .result-reason,#app#app .result-action button,#app#app .settings-eyebrow,#app#app .gate-badge,
+#app#app .control-label,#app#app .target-control>label,#app#app .preset-row button,#app#app .dimension-grid em,
+#app#app .watermark-align-row>span,#app#app .color-preset-block>span,#app#app .custom-color-label,
+#app#app .watermark-position-wrap>.control-label,#app#app .more-range-row>span,#app#app .align-buttons button,
+#app#app .color-picker-toggle,#app#app .hue-row,#app#app .hex-field,#app#app .more-range-row output,
+#app#app .more-range-grid output,#app#app .more-range-grid label,#app#app .watermark-image-info,
+#app#app .redact-actions button,#app#app .region-count,#app#app .crop-preset-grid button,
+#app#app .crop-preset-grid span,#app#app .crop-preset-grid small,#app#app .crop-manual-note b,
+#app#app .crop-manual-note button,#app#app .bg-ai-model-panel .helper,#app#app .vector-auto-summary,
+#app#app .vector-stats span,#app#app .redact-layers-head small,#app#app .redact-summary small,
+#app#app .redact-layer-copy b,#app#app .redact-layer-copy small,#app#app .result-add small,
+#app#app .comparison-meta,#app#app .drop-zone small{font-size:12px!important}
+#backgroundInspectModal .edge-inspect-head span,#backgroundInspectModal .edge-inspect-zoom button,
+#backgroundInspectModal .edge-inspect-meta,#backgroundInspectModal .edge-inspect-busy small,
+#backgroundInspectModal .edge-inspect-foot{font-size:12px!important}
+small{font-size:12px!important}
+#app#app .result-info>span,#app#app .result-info strong,#app#app .comparison-copy p,#app#app .comparison-copy-actions>span{font-size:12px!important}
+#app#app .color-picker-toggle #colorPickerHex,#app#app .color-picker-toggle #redactColorPickerHex{display:none!important}
+
+#app#app .settings-sheet .compress-mode-switch,#app#app .settings-sheet .segment-grid,#app#app .settings-sheet .preset-row,
+#app#app .settings-sheet .align-buttons,#app#app .settings-sheet .redact-view-switch{height:40px;padding:0;align-items:stretch}
+#app#app .settings-sheet .compress-mode-switch button,#app#app .settings-sheet .segment-grid button,
+#app#app .settings-sheet .align-buttons button,#app#app .settings-sheet .redact-view-switch button,
+#app#app .settings-sheet .preset-row button,#app#app .settings-sheet .watermark-presets button,
+#app#app .settings-sheet .redact-actions button,#app#app .settings-sheet #cropReset{height:40px;min-height:40px}
+#app#app .settings-sheet .color-presets button{width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important}
+#app#app .settings-sheet .numeric-control{display:grid!important;grid-template-columns:40px minmax(0,1fr) 40px;align-items:stretch;gap:4px;width:160px;min-width:160px;height:40px}
+#app#app .settings-sheet .numeric-step-button{width:40px;height:40px;min-width:40px;padding:0;border:1px solid var(--line-2);border-radius:8px;background:var(--sheet);color:var(--ink-2);font-size:18px;font-variant-numeric:tabular-nums}
+#app#app .settings-sheet .numeric-step-button:hover{border-color:var(--accent);color:var(--accent)}
+#app#app .settings-sheet .numeric-input-shell{position:relative;min-width:0;height:40px;border:0;border-radius:8px;background:transparent}
+#app#app .settings-sheet .numeric-value{display:block;width:100%;height:40px;padding:0 30px 0 8px;border:1px solid var(--line-2)!important;border-radius:8px;background:var(--bg)!important;color:var(--ink);font-size:14px!important;font-variant-numeric:tabular-nums;text-align:center;appearance:textfield;-moz-appearance:textfield}
+#app#app .settings-sheet .numeric-value::-webkit-inner-spin-button,#app#app .settings-sheet .numeric-value::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#app#app .settings-sheet .numeric-unit{position:absolute;top:50%;right:8px;color:var(--ink-3);font-size:12px;line-height:1;transform:translateY(-50%);pointer-events:none}
+#app#app .settings-sheet .control-label{cursor:ew-resize;user-select:none;touch-action:pan-y}
+
+#app#app .settings-sheet .position-picker{position:relative;display:inline-flex;align-items:center;flex:none;height:40px}
+#app#app .settings-sheet .position-picker-trigger{display:grid;place-items:center;width:40px;height:40px;min-width:40px;padding:0;border:1px solid var(--line-2);border-radius:8px;background:var(--sheet);color:var(--ink-2)}
+#app#app .position-trigger-icon{display:grid;grid-template-columns:repeat(3,4px);grid-template-rows:repeat(3,4px);gap:4px;width:20px;height:20px;place-content:center}
+#app#app .position-trigger-icon i{width:4px;height:4px;border-radius:50%;background:var(--line-2)}
+#app#app .position-trigger-icon i.active{background:var(--accent)}
+#app#app .settings-sheet .position-popover{position:fixed!important;inset:auto;width:max-content!important;height:auto!important;min-width:0!important;display:grid!important;grid-template-columns:repeat(3,40px)!important;grid-template-rows:repeat(3,40px)!important;grid-auto-rows:40px;gap:4px!important;padding:8px!important;border:1px solid var(--line-2)!important;border-radius:12px!important;background:var(--sheet)!important;box-shadow:0 8px 24px rgba(37,41,35,.18)!important;z-index:160!important;align-content:start}
+#app#app .settings-sheet .position-popover[hidden]{display:none!important}
+#app#app .settings-sheet .position-popover button{display:grid!important;place-items:center;width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;padding:0!important;border:1px solid var(--line-2)!important;border-radius:8px!important;background:var(--bg)!important;color:var(--ink-2)!important;box-shadow:none!important}
+#app#app .settings-sheet .position-popover button.active{border-color:var(--accent)!important;background:color-mix(in srgb,var(--accent) 12%,var(--sheet))!important;box-shadow:inset 0 0 0 1px var(--accent)!important}
+#app#app .settings-sheet .position-popover button:hover{border-color:var(--accent)!important}
+#app#app .color-picker-popover{position:fixed!important;inset:auto;width:min(252px,calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;padding:12px;border:1px solid var(--line-2);border-radius:12px;background:var(--sheet);box-shadow:0 8px 24px rgba(37,41,35,.18);z-index:170!important}
+#app#app .color-picker-popover[hidden]{display:none!important}
+#app#app .color-picker-popover .hue-row,#app#app .color-picker-popover .hex-field{font-size:12px}
+#app#app .color-picker-popover .hex-field input{height:40px;border-radius:8px}
+#app#app .settings-sheet .bar .tool-settings,#app#app .settings-sheet .bar .settings-actions{align-items:flex-end}
+#app#app .stage-action-button{height:40px;min-height:40px;min-width:40px}
+#app#app .settings-sheet button{height:40px;min-height:40px}
+#app#app .settings-sheet .watermark-subtool-switch{height:40px;padding:0;align-items:stretch}
+#app#app .settings-sheet .watermark-subtool-switch button{height:40px;min-height:40px}
+#app#app .color-picker-popover .hue-slider{display:block;width:100%;height:40px;min-height:40px;margin:0;touch-action:pan-x}
+
+@media(max-width:980px),(pointer:coarse){
+ #app#app .comparison-copy-title p,#app#app .comparison-badge,#app#app .comparison-badge strong,#app#app .canvas-file-label,
+ #app#app .result-card .thumb.placeholder,#app#app .result-info>span,#app#app .result-card .status,#app#app .size-flow,
+ #app#app .result-card .result-reason,#app#app .result-action button,#app#app .result-info>span,#app#app .result-info strong,#app#app .comparison-copy p,#app#app .comparison-copy-actions>span,#app#app .settings-eyebrow,#app#app .gate-badge,
+ #app#app .control-label,#app#app .target-control>label,#app#app .preset-row button,#app#app .dimension-grid em,
+ #app#app .watermark-align-row>span,#app#app .color-preset-block>span,#app#app .custom-color-label,
+ #app#app .watermark-position-wrap>.control-label,#app#app .more-range-row>span,#app#app .align-buttons button,
+ #app#app .color-picker-toggle,#app#app .hue-row,#app#app .hex-field,#app#app .more-range-row output,
+ #app#app .more-range-grid output,#app#app .more-range-grid label,#app#app .watermark-image-info,
+ #app#app .redact-actions button,#app#app .region-count,#app#app .crop-preset-grid button,
+ #app#app .crop-preset-grid span,#app#app .crop-preset-grid small,#app#app .crop-manual-note b,
+ #app#app .crop-manual-note button,#app#app .bg-ai-model-panel .helper,#app#app .vector-auto-summary,
+ #app#app .vector-stats span,#app#app .redact-layers-head small,#app#app .redact-summary small,
+ #app#app .redact-layer-copy b,#app#app .redact-layer-copy small,#app#app .result-add small,
+ #app#app .comparison-meta,#app#app .drop-zone small,#backgroundInspectModal .edge-inspect-head span,
+ #backgroundInspectModal .edge-inspect-zoom button,#backgroundInspectModal .edge-inspect-meta,
+ #backgroundInspectModal .edge-inspect-busy small,#backgroundInspectModal .edge-inspect-foot,small{font-size:13px!important}
+ #toolModeSwitch button{height:40px;min-height:40px}
+ #languageToggle,#languageOptions button{min-width:40px;min-height:40px;height:40px}
+ #app#app .settings-sheet button{min-width:40px;min-height:40px}
+ #app#app .settings-sheet .numeric-value{font-size:15px!important}
+ #app#app .settings-sheet .numeric-unit{font-size:13px}
+ #app#app .settings-sheet .numeric-control{width:160px;min-width:160px}
+ #app#app .settings-sheet .position-picker-trigger{min-width:40px;min-height:40px}
+ #app#app .settings-sheet .position-popover button{min-width:40px!important;min-height:40px!important}
+ .canvas-nav{width:40px!important;height:40px!important;min-width:40px;min-height:40px}
+ .remove-result,.result-action button,.strip-clear,.stage-action-button{min-width:40px!important;min-height:40px!important}
+ #backgroundInspectModal button{min-width:40px;min-height:40px}
+ #backgroundInspectModal .edge-inspect-close{width:40px;height:40px}
+ #app#app .strip-clear,#app#app .batch-summary-line,#app#app .batch-summary-line span,#app#app .batch-summary-line b,
+ #app#app .region-count b,#app#app .region-count span,#app#app .redact-layer-empty,#app#app .crop-manual-note span,
+ #app#app .engine-badge,#app#app .toast,#app#app .redact-summary,#app#app .redact-summary b,#app#app .redact-summary span,
+ #app#app .vector-stats small{font-size:13px!important}
+ #app#app .settings-sheet .preset-row button{min-width:40px!important}
+ #app#app .settings-sheet input.field{min-height:40px!important}
+ .toast,.stage-action-button span{font-size:13px!important}
+}
+
+/* Keep fixed-width numeric controls inside their responsive grid cells. */
+@media(min-width:761px) and (max-width:980px){
+ #app#app .settings-sheet .watermark-more-grid{grid-template-columns:minmax(0,1fr);row-gap:20px}
+}
+@media(max-width:760px){
+ #app#app .watermark-more-grid .text-place-row{column-gap:12px!important}
+}

@@ -1,4 +1,11 @@
 import { decodeFile } from './compress.js';
+import {
+  getAllowedModelResourceUrl,
+  isCompleteSuccessfulResponse,
+  isModelWeightResourceUrl,
+  shouldRetainModelCacheRecord,
+  MODEL_WEIGHT_RESOURCE_URL,
+} from './model-cache-policy.js';
 
 const decodeCache=new WeakMap();
 const aiMatteCache=new WeakMap();
@@ -12,7 +19,6 @@ const AI_CACHE_DB='pixelquota-ai-cache-v1',AI_CACHE_STORE='responses';
 let transformersModule=null,aiModel=null,aiProcessor=null,aiPipelinePromise=null,cacheProbePromise=null;
 const aiState={status:'idle',progress:0,message:'',modelId:AI_MODEL_ID,dtype:'fp16',device:'',cached:false,persistent:false};
 
-function cacheKey(input){return typeof input==='string'?input:input?.url||String(input);}
 function openAICacheDb(){
   if(!globalThis.indexedDB)return Promise.reject(new Error('indexeddb_unavailable'));
   return new Promise((resolve,reject)=>{
@@ -37,24 +43,53 @@ async function idbPut(record){
     tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>{db.close();reject(tx.error);};
   });
 }
-async function idbKeys(){
-  const db=await openAICacheDb();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(AI_CACHE_STORE,'readonly'),request=tx.objectStore(AI_CACHE_STORE).getAllKeys();
-    request.onsuccess=()=>resolve(request.result||[]);request.onerror=()=>reject(request.error);
-    tx.oncomplete=()=>db.close();tx.onerror=()=>{db.close();reject(tx.error);};
-  });
-}
-const persistentAICache={
-  async match(input){
+
+let cacheCleanupPromise=null;
+async function cleanupPersistentAICache(){
+  if(cacheCleanupPromise)return cacheCleanupPromise;
+  cacheCleanupPromise=(async()=>{
+    let db;
     try{
-      const record=await idbGet(cacheKey(input));if(!record)return undefined;
-      return new Response(record.blob,{status:record.status||200,statusText:record.statusText||'OK',headers:record.headers||{}});
+      db=await openAICacheDb();
+      await new Promise((resolve,reject)=>{
+        const tx=db.transaction(AI_CACHE_STORE,'readwrite'),store=tx.objectStore(AI_CACHE_STORE);
+        const cursorRequest=store.openCursor();
+        cursorRequest.onsuccess=()=>{
+          const cursor=cursorRequest.result;
+          if(!cursor)return;
+          if(!shouldRetainModelCacheRecord(cursor.value))cursor.delete();
+          cursor.continue();
+        };
+        cursorRequest.onerror=()=>reject(cursorRequest.error||new Error('indexeddb_read_failed'));
+        tx.oncomplete=()=>{db.close();resolve();};
+        tx.onerror=()=>{db.close();reject(tx.error||new Error('indexeddb_cleanup_failed'));};
+        tx.onabort=()=>{db.close();reject(tx.error||new Error('indexeddb_cleanup_aborted'));};
+      });
+      return true;
+    }catch{
+      try{db?.close();}catch{}
+      cacheCleanupPromise=null;
+      return false;
+    }
+  })();
+  return cacheCleanupPromise;
+}
+export const persistentAICache={
+  async match(input){
+    const url=getAllowedModelResourceUrl(input);if(!url)return undefined;
+    try{
+      const record=await idbGet(url);
+      if(!record||record.url!==url||!shouldRetainModelCacheRecord(record))return undefined;
+      return new Response(record.blob,{status:record.status,statusText:record.statusText||'OK',headers:record.headers||{}});
     }catch{return undefined;}
   },
   async put(input,response){
-    const url=cacheKey(input),clone=response.clone(),headers={};clone.headers.forEach((value,key)=>{headers[key]=value;});
-    const blob=await clone.blob();
+    const url=getAllowedModelResourceUrl(input);
+    if(!url||!isCompleteSuccessfulResponse(response))return;
+    let clone,blob;
+    try{clone=response.clone();blob=await clone.blob();}catch{return;}
+    if(!isCompleteSuccessfulResponse(response,blob.size))return;
+    const headers={};clone.headers.forEach((value,key)=>{headers[key]=value;});
     await idbPut({url,blob,status:clone.status,statusText:clone.statusText,headers,storedAt:Date.now()});
   }
 };
@@ -167,8 +202,9 @@ export async function probeBackgroundAICache(){
   cacheProbePromise=(async()=>{
     let cached=false,persistent=false;
     try{
-      const keys=await idbKeys(),needle=AI_MODEL_ID.toLowerCase();
-      cached=keys.some(key=>String(key).toLowerCase().includes(needle)&&/model_fp16\.onnx|model\.onnx/.test(String(key)));
+      await cleanupPersistentAICache();
+      const weightUrl=isModelWeightResourceUrl(MODEL_WEIGHT_RESOURCE_URL)?MODEL_WEIGHT_RESOURCE_URL:null;
+      cached=!!(weightUrl&&await persistentAICache.match(weightUrl));
       if(navigator.storage?.persisted)persistent=await navigator.storage.persisted();
     }catch{}
     emitAIProgress(()=>{},{cached,persistent,status:cached?'cached':aiState.status});
@@ -177,13 +213,19 @@ export async function probeBackgroundAICache(){
   return cacheProbePromise;
 }
 
-async function configureTransformersCache(transformers){
+export async function configureTransformersCache(transformers){
   if(!transformers?.env)return;
-  transformers.env.allowLocalModels=false;
-  if('useBrowserCache' in transformers.env)transformers.env.useBrowserCache=false;
-  if('useCustomCache' in transformers.env)transformers.env.useCustomCache=true;
-  if('customCache' in transformers.env)transformers.env.customCache=persistentAICache;
-  if('useWasmCache' in transformers.env)transformers.env.useWasmCache=true;
+  const env=transformers.env;
+  await cleanupPersistentAICache();
+  env.allowLocalModels=false;
+  if('useBrowserCache' in env)env.useBrowserCache=false;
+  if('useCustomCache' in env)env.useCustomCache=true;
+  if('customCache' in env)env.customCache=persistentAICache;
+  if('useWasmCache' in env)env.useWasmCache=false;
+  if(typeof env.fetch==='function'){
+    const sdkFetch=env.fetch;
+    env.fetch=(input,init={})=>sdkFetch.call(env,input,{...(init||{}),cache:'no-store'});
+  }
   try{
     if(navigator.storage?.persist){
       const persistent=await navigator.storage.persist();

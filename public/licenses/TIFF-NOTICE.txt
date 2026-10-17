@@ -1,0 +1,18 @@
+PixelQuota TIFF 解碼元件
+
+UTIF2：4.1.0，MIT 授權
+來源：https://www.npmjs.com/package/utif2
+上游：https://github.com/photopea/UTIF.js
+授權全文：utif2-MIT.txt
+
+pako：由 package-lock.json 固定實際版本，MIT 授權
+來源：https://github.com/nodeca/pako
+授權全文：pako-MIT.txt
+
+TIFF 解碼在 Web Worker 執行，解碼元件隨網站建置，不從第三方 CDN 載入。
+解碼後的 PNG 只留在當前分頁記憶體，不使用網站持久儲存，不上傳圖片。
+多頁 TIFF 僅處理第一頁，高位元深度會轉成瀏覽器可編輯的 8-bit RGBA。
+本元件不是相機 RAW 顯影器，也不是保留圖層、HDR 或印刷色彩描述檔的專業影像編輯器。
+
+重建：npm ci，接著 npm run build。
+src/tiff-worker.js、src/tiff.js 與 scripts/build.mjs 共同產生內嵌 Worker，支援網站與直接開啟的單檔版本。

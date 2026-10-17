@@ -25,6 +25,7 @@ export const strings = {
     "clearAll": "Clear all",
     "dropFiles": "Drop images here",
     "dropHint": "Choose files, drag them here, or paste from the clipboard.",
+    "inputFormatNote": "Animated images export as a still image; multi-page TIFF uses the first page only.",
     "chooseButton": "Choose images",
     "privacyLine": "Images are processed in this browser. PixelQuota never receives the file.",
     "results": "RESULTS",
@@ -432,7 +433,7 @@ export const strings = {
     "cropChannelBanner": "Channel banner",
     "cropChannelBannerHint": "Safe area centered · 16:9",
     "cropProfileCover": "Profile cover",
-    "cropReelCoverHint": "Full screen · 9:16",
+    "cropReelCoverHint": "Recommended size · 420 × 654",
     "cropPost": "Post",
     "cropTikTokPhoto": "Photo / cover",
     "cropPin": "Pin"
@@ -463,6 +464,7 @@ export const strings = {
     "clearAll": "全部清除",
     "dropFiles": "把圖片拖到這裡",
     "dropHint": "可選擇檔案、拖曳到這裡，或從剪貼簿貼上。",
+    "inputFormatNote": "動態圖片編輯後輸出靜態圖片，多頁 TIFF 僅處理第一頁",
     "chooseButton": "選擇圖片",
     "privacyLine": "圖片只在這個瀏覽器裡處理，PixelQuota 不會收到檔案。",
     "results": "處理結果",
@@ -870,7 +872,7 @@ export const strings = {
     "cropChannelBanner": "頻道橫幅",
     "cropChannelBannerHint": "重點放中間 · 16:9",
     "cropProfileCover": "個人封面",
-    "cropReelCoverHint": "全螢幕 · 9:16",
+    "cropReelCoverHint": "建議尺寸 · 420 × 654",
     "cropPost": "貼文",
     "cropTikTokPhoto": "相片 / 封面",
     "cropPin": "Pin"
@@ -901,6 +903,7 @@ export const strings = {
     "clearAll": "全部清除",
     "dropFiles": "把图片拖到这里",
     "dropHint": "可选择文件、拖拽到这里，或从剪贴板粘贴。",
+    "inputFormatNote": "动态图片编辑后输出静态图片，多页 TIFF 仅处理第一页",
     "chooseButton": "选择图片",
     "privacyLine": "图片只在此浏览器中处理，PixelQuota 不会接收文件。",
     "results": "处理结果",
@@ -1308,7 +1311,7 @@ export const strings = {
     "cropChannelBanner": "频道横幅",
     "cropChannelBannerHint": "重点放中间 · 16:9",
     "cropProfileCover": "个人封面",
-    "cropReelCoverHint": "全屏 · 9:16",
+    "cropReelCoverHint": "建议尺寸 · 420 × 654",
     "cropPost": "帖子",
     "cropTikTokPhoto": "照片 / 封面",
     "cropPin": "Pin"
@@ -1339,6 +1342,7 @@ export const strings = {
     "clearAll": "すべて消去",
     "dropFiles": "ここに画像をドロップ",
     "dropHint": "ファイル選択、ドラッグ＆ドロップ、クリップボードからの貼り付けに対応しています。",
+    "inputFormatNote": "アニメーション画像の編集結果は静止画になります。複数ページのTIFFは最初のページのみ処理します。",
     "chooseButton": "画像を選択",
     "privacyLine": "画像はこのブラウザ内だけで処理され、PixelQuota に送信されません。",
     "results": "結果",
@@ -1746,7 +1750,7 @@ export const strings = {
     "cropChannelBanner": "チャンネルバナー",
     "cropChannelBannerHint": "中央に要素を · 16:9",
     "cropProfileCover": "プロフィールカバー",
-    "cropReelCoverHint": "全画面 · 9:16",
+    "cropReelCoverHint": "推奨サイズ · 420 × 654",
     "cropPost": "投稿",
     "cropTikTokPhoto": "写真 / カバー",
     "cropPin": "ピン"
@@ -1777,6 +1781,7 @@ export const strings = {
     "clearAll": "모두 지우기",
     "dropFiles": "여기에 이미지를 놓으세요",
     "dropHint": "파일 선택, 드래그 앤 드롭, 클립보드 붙여넣기를 사용할 수 있습니다.",
+    "inputFormatNote": "애니메이션 이미지는 편집 후 정지 이미지로 저장되며, 여러 페이지의 TIFF는 첫 페이지만 처리합니다.",
     "chooseButton": "이미지 선택",
     "privacyLine": "이미지는 이 브라우저에서만 처리되며 PixelQuota로 전송되지 않습니다.",
     "results": "결과",
@@ -2184,7 +2189,7 @@ export const strings = {
     "cropChannelBanner": "채널 배너",
     "cropChannelBannerHint": "중앙에 핵심 배치 · 16:9",
     "cropProfileCover": "프로필 커버",
-    "cropReelCoverHint": "전체 화면 · 9:16",
+    "cropReelCoverHint": "권장 크기 · 420 × 654",
     "cropPost": "게시물",
     "cropTikTokPhoto": "사진 / 커버",
     "cropPin": "핀"
@@ -2192,10 +2197,7 @@ export const strings = {
 };
 
 export function detectLocale() {
-  try {
-    const saved = localStorage.getItem('pixelquota_lang');
-    if (saved && strings[saved]) return saved;
-  } catch {}
+  try { localStorage.removeItem('pixelquota_lang'); } catch {}
   const locale=(navigator.language||'').toLowerCase();
   if(locale.startsWith('ja'))return 'ja';
   if(locale.startsWith('ko'))return 'ko';

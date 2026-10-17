@@ -4,67 +4,63 @@
 
 **私密圖片工具，直接在你的瀏覽器裡完成。**
 
-壓縮、轉檔、浮水印、敏感遮蔽、社群裁切與 AI 去背，都不需要把圖片檔案上傳到 PixelQuota。
+壓縮、轉檔、浮水印、敏感遮蔽、社群裁切、AI 去背與向量化，都不需要把你選取的圖片上傳到 PixelQuota。
 
 [**線上直接使用**](https://kane1a.github.io/PixelQuota/) · [English](README.md) · [更新日誌](CHANGELOG.md) · [隱私](#隱私) · [參與貢獻](CONTRIBUTING.md)
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-111827.svg)
-![Privacy: image bytes stay local](https://img.shields.io/badge/images-stay%20local-168a57.svg)
+![Privacy: image files stay local](https://img.shields.io/badge/images-stay%20local-168a57.svg)
 ![No account required](https://img.shields.io/badge/account-not%20required-2f6df6.svg)
 
 </div>
 
 ![PixelQuota 工作台](docs/images/workspace-zh.png)
 
-## 五個工具，一套本機工作流程
+## 六個工具，完成常見圖片工作
 
 | 工具 | 功能 |
 | --- | --- |
-| 壓縮 / 轉檔 | 壓到真正的 KB 上限、設定精確或最大像素尺寸，也可以只轉格式、不強迫壓縮。 |
-| 浮水印 | 文字與圖片浮水印可同時使用，支援即時預覽、位置、透明度、大小、對齊與原尺寸輸出。 |
-| 敏感遮蔽 | 畫出像素化、模糊或實色遮蔽區域，可移動、縮放、復原 / 重作，輸出後還能比較前後差異再繼續編輯。 |
-| 社群裁切 | 先選平台尺寸，再由使用者自己決定裁切框與構圖，不用接受預設焦點。 |
-| 去背 | 可用快速模式或 BiRefNet Lite AI，調整透明邊緣，並用放大預覽檢查髮絲與細小邊界。 |
+| 壓縮 / 轉檔 | 設定真正的 KB 上限、精確或最大像素尺寸，也可以只轉格式、不強迫縮小檔案。 |
+| 浮水印 | 加入文字與圖片浮水印，可即時預覽、調整位置、透明度、大小與對齊，並以原尺寸輸出。 |
+| 敏感遮蔽 | 標記像素化、模糊或實色遮蔽區，可移動、縮放、復原 / 重作，並比較輸出結果與原圖。 |
+| 社群裁切 | 選擇平台尺寸，直接在圖片上調整裁切位置。 |
+| 去背 | 在瀏覽器本機執行 BiRefNet Lite，輸出與原圖尺寸相同的透明 PNG。 |
+| SVG Pro | 將點陣圖描繪成可編輯 SVG，檢視路徑 / 節點統計並匯出 SVG。 |
 
-## 專門處理那些很煩的上傳限制
+## 專門處理上傳限制
 
-PixelQuota 仍保留最初最重要的能力：處理 **「100 KB 以下」**、**「600×600 px」**、**「只能 JPG」** 這類嚴格表單。它會檢查真正輸出的位元組大小，在限制內尋找盡可能好的結果；如果 KB、格式與尺寸真的無法同時滿足，也會直接說明原因。
+PixelQuota 可處理 **「100 KB 以下」、「600 × 600 px」、「只能 JPG」** 這類嚴格表單。它會檢查實際輸出的檔案大小，在上限內尋找最佳結果；若檔案大小、格式與尺寸無法同時符合，就會直接說明，不會偷偷更改需求。
 
-「只轉檔」與 KB 壓縮是兩個獨立模式，因此只是需要 JPG / PNG / WebP / AVIF / BMP 的使用者，不必為了改格式被迫降低檔案大小。
+「只轉檔」與 KB 壓縮分開，因此只需要 JPG / PNG / WebP / AVIF / BMP 時，不必為了改格式而降低檔案大小。
 
 ## 本機 AI 去背
 
-AI 精準模式使用 **BiRefNet Lite 512** 在瀏覽器內執行。第一次使用時，瀏覽器會下載模型檔並存入 IndexedDB 本機快取；之後重新整理頁面，可直接從快取重新載入，不需要再次下載整份模型權重。
+AI 精準模式使用 **BiRefNet Lite 512** 在瀏覽器內執行。第一次使用 AI 時，會從 jsDelivr 下載 Transformers.js 執行環境，並從 Hugging Face 下載約 100 MB 的 FP16 模型資料。模型回應可存入瀏覽器 IndexedDB 快取供之後重用。
 
-隱私界線很明確：**模型檔可以使用網路，使用者選擇的圖片 bytes 不會上傳。** PixelQuota 不會把圖片送到遠端推論 API。
+快取模型可避免再次下載模型權重，但**不代表第一次使用可以離線，也不保證之後都能離線使用**。PixelQuota 的持久快取只用於模型權重與必要模型定義，不保存執行環境、圖片或語言設定；執行環境可能需要重新取得。瀏覽器也可能另外管理網路資源的內部暫存。你選取的圖片檔案留在裝置本機，不會傳送到遠端推論 API。
 
-BiRefNet Lite 會產生固定尺寸的 alpha matte。PixelQuota 會重用同一張 matte 進行去背門檻與邊緣柔化調整，不會每拖一次滑桿就重新跑 AI；正式輸出時，再以原圖像素尺寸合成透明 PNG。放大預覽同樣沿用既有 matte，不會觸發第二次 AI 推論。
+模型會產生固定尺寸的 alpha matte。PixelQuota 重用同一張 matte 來產生預覽與原尺寸透明 PNG，不會為每個輸出步驟重新執行模型。
 
-<table>
-<tr>
-<td width="50%"><img src="docs/images/background-ai-zh.png" alt="PixelQuota AI 去背"></td>
-<td width="50%"><img src="docs/images/background-edge-inspector-zh.png" alt="PixelQuota 去背邊緣放大預覽"></td>
-</tr>
-</table>
+## 格式與限制
 
-## 格式支援
+**輸入：** JPG / JPEG / JPE / JFIF、PNG / APNG、WebP、AVIF、HEIC / HEIF / HIF、TIFF / TIF、GIF、SVG、BMP 與 ICO。瀏覽器原生格式的解碼能力可能不同；HEIC / HEIF 與 TIFF 使用內建的 `heic-to`、`utif2` 解碼器。
 
-**輸入：** 支援瀏覽器可解碼的常見圖片格式，並另外提供 HEIC / HEIF 轉換支援。目前主流瀏覽器通常可處理 JPG、PNG、WebP、AVIF、BMP；實際解碼能力仍可能依瀏覽器而不同。
+**壓縮／轉檔輸出：** JPG、PNG、WebP、BMP、AVIF，並可自動選擇格式。AVIF 使用內建的 `@jsquash/avif` WebAssembly 編碼器。**SVG Pro** 輸出 SVG；HEIC 轉檔頁輸出 JPG。ZIP 下載使用 `fflate`。
 
-**輸出：** JPG、PNG、WebP、BMP、AVIF。AVIF 改用內建的本機 WebAssembly 編碼器，不再依賴瀏覽器 Canvas 是否原生支援 AVIF；圖片 bytes 不會上傳，也不會在失敗時偷偷改成其他格式。另提供自動格式。
+動態圖片輸入會輸出為靜態圖片。多頁 TIFF 僅讀取第一頁。高位元深度輸入在圖片處理時會正規化為 8-bit。重新編碼可能移除 EXIF / GPS 中繼資料。
 
-HEIC / HEIF 解碼使用 `heic2any`，AVIF 編碼使用內建的 `@jsquash/avif` WebAssembly codec，ZIP 打包使用 `fflate`。
+社群預設提供固定的構圖比例與輸出尺寸，不是平台介面的模擬。發布前，請再到目標平台確認實際構圖。
+
+建議使用最新版 Chrome 或 Edge，一般圖片處理也已用 Firefox 補驗。真實 AI 驗收使用 WebGPU，其他 AI 執行後端及 Safari／iOS 實機尚未驗證。
 
 ## 隱私
 
-- 沒有圖片上傳 API。
-- 不需要帳號。
-- 壓縮、轉檔、浮水印、遮蔽、裁切、預覽、ZIP 與去背合成都在裝置本機完成。
-- AI 去背第一次可能需要下載模型檔，但圖片 bytes 仍留在本機。
-- 重新編碼的輸出可移除 EXIF / GPS 中繼資料。
-- 選用廣告或贊助設定與使用者選取的圖片檔案分離。
+- 沒有圖片上傳 API，也不需要帳號。
+- 壓縮、轉檔、浮水印、遮蔽、裁切、預覽、ZIP、向量化與最後的去背合成都在瀏覽器內完成。
+- AI 模型或執行環境不在本機時，需要網路下載；你選取的圖片檔案不會傳給這些服務。
+- 選用廣告或贊助設定與你選取的圖片檔案分開。
 
-使用者介面的完整說明可查看 [Privacy 頁面](https://kane1a.github.io/PixelQuota/privacy.html)。
+完整說明請看使用者介面的 [Privacy 頁面](https://kane1a.github.io/PixelQuota/privacy.html)。
 
 ## 快速開始
 
@@ -83,8 +79,8 @@ npm run build
 
 Build 會產生：
 
-- `dist/index.html` — 給 GitHub Pages / 靜態網站使用。
-- `dist/PixelQuota.html` — 可直接開啟的完整單檔版本。
+- `dist/index.html`：給 GitHub Pages／靜態網站使用
+- `dist/PixelQuota.html`：可直接開啟的完整單檔版本
 
 ### 瀏覽器驗證
 
@@ -92,9 +88,9 @@ Build 會產生：
 npm run test:e2e
 ```
 
-Chrome / Chromium 測試會驗證壓縮、純轉檔、格式能力檢查、浮水印、遮蔽編輯 / 比較、手動社群裁切、去背、AI matte 重用、模型狀態、放大預覽、下載、響應式版面與多語系。
+Chrome / Chromium 測試涵蓋壓縮、轉檔、格式能力檢查、浮水印、遮蔽編輯 / 比較、社群裁切、去背流程、AI matte 重用、模型狀態、邊緣放大檢查、下載、響應式版面與多語系。
 
-Chrome / Chromium 不在常見安裝位置時，可設定 `CHROME_PATH`。
+若 Chrome / Chromium 不在常見安裝位置，可設定 `CHROME_PATH`。
 
 ## GitHub Pages
 
@@ -109,7 +105,7 @@ src/                 App 與圖片處理引擎
 public/              靜態設定與隱私頁
 scripts/             Production / 單檔打包
 tests/               瀏覽器端到端驗證
-docs/images/         README 精簡截圖
+docs/images/         README 截圖
 .github/             CI、Pages、Issue 與 PR 模板
 ```
 
@@ -121,4 +117,4 @@ docs/images/         README 精簡截圖
 
 ## 授權
 
-PixelQuota 採用 [MIT License](LICENSE)。
+PixelQuota 原始碼採用 [MIT License](LICENSE)。第三方元件保留各自授權，包括 LGPL-3.0 的 `heic-to`、MIT 的 `utif2` 與 Apache-2.0 的 `@jsquash/avif`。重新散布單檔下載包時，請保留附帶的 [`licenses/` 授權與來源說明](public/licenses/THIRD-PARTY-NOTICE.txt)。
