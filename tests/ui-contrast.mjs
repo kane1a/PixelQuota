@@ -253,6 +253,31 @@ async function auditColor(page, kind, expectedHex0) {
   await page.click('#' + ids.toggle); await sleep(160);
   const opened = await page.evaluate(({ pop, hexInput }) => { const p = document.getElementById(pop), r = p.getBoundingClientRect(); return { open: !p.hidden, inside: r.left >= -1 && r.top >= -1 && r.right <= document.documentElement.clientWidth + 1 && r.bottom <= innerHeight + 1, hexInputVisible: document.getElementById(hexInput).getBoundingClientRect().width > 40, rect: { x: r.x, y: r.y, w: r.width, h: r.height } }; }, { pop: ids.pop, hexInput: ids.hexInput });
   check(`${label}: popover opens fully inside viewport with a visible HEX input`, opened.open && opened.inside && opened.hexInputVisible, opened);
+  const hexRow = await page.evaluate(({ pop, inputId }) => {
+    const popup = document.getElementById(pop), input = document.getElementById(inputId), row = input?.closest('.hex-field'), label = row?.querySelector(':scope > span');
+    if (!popup || !input || !row || !label || !popup.contains(row)) return { missing: true };
+    const style = el => getComputedStyle(el), rowStyle = style(row), inputStyle = style(input);
+    const rect = el => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height, right: r.right, bottom: r.bottom }; };
+    const noBorder = el => ['Top', 'Right', 'Bottom', 'Left'].every(side => (parseFloat(style(el)[`border${side}Width`]) || 0) === 0 || style(el)[`border${side}Style`] === 'none');
+    const transparent = el => { const bg = style(el).backgroundColor, match = /\(([^)]+)\)/.exec(bg); return bg === 'transparent' || !!match && (match[1].split(/[ ,/]+/).filter(Boolean).map(Number)[3] ?? 1) === 0; };
+    const gap = input.getBoundingClientRect().left - label.getBoundingClientRect().right;
+    const directInputs = [...row.children].filter(e => e.matches('input'));
+    const otherBorderedChildren = [...row.children].filter(e => e !== input && (!noBorder(e) || !transparent(e)));
+    return {
+      missing: false, labelText: label.textContent.trim(), labelRect: rect(label), inputRect: rect(input), rowRect: rect(row),
+      rowNoBorder: noBorder(row), rowTransparent: transparent(row), rowPadding: ['Top', 'Right', 'Bottom', 'Left'].map(side => parseFloat(rowStyle[`padding${side}`]) || 0),
+      labelNoBorder: noBorder(label), labelTransparent: transparent(label), otherBorderedChildren: otherBorderedChildren.length,
+      directInputCount: directInputs.length, gap, inputBorderStyle: inputStyle.borderStyle,
+      inputBorderWidths: ['Top', 'Right', 'Bottom', 'Left'].map(side => parseFloat(inputStyle[`border${side}Width`]) || 0),
+      inputRadius: inputStyle.borderRadius, inputHeight: input.getBoundingClientRect().height, inputVisible: input.getBoundingClientRect().width > 0 && input.getBoundingClientRect().height > 0,
+      rowBg: rowStyle.backgroundColor, rowBgImage: rowStyle.backgroundImage
+    };
+  }, { pop: ids.pop, inputId: ids.hexInput });
+  const hexRowPass = !hexRow.missing && hexRow.labelText === 'HEX' && hexRow.labelRect.right <= hexRow.inputRect.x && Math.abs(hexRow.gap - 8) <= .5 &&
+    hexRow.rowNoBorder && hexRow.rowTransparent && hexRow.rowBgImage === 'none' && hexRow.rowPadding.every(v => v === 0) &&
+    hexRow.labelNoBorder && hexRow.labelTransparent && hexRow.otherBorderedChildren === 0 && hexRow.directInputCount === 1 &&
+    hexRow.inputVisible && hexRow.inputBorderStyle === 'solid' && hexRow.inputBorderWidths.every(v => v === 1) && hexRow.inputRadius === '8px' && Math.abs(hexRow.inputHeight - 40) <= .5;
+  check(`${label}: HEX label sits outside the sole 40px 8px input border with no outer row border, padding or background`, hexRowPass, hexRow);
   await shotEl(page, '#' + ids.pop, `${kind}-color-popover`, 8).catch(() => {});
   await page.click('#' + ids.hexInput, { clickCount: 3 }); await page.keyboard.down('Control'); await page.keyboard.press('A'); await page.keyboard.up('Control');
   await page.keyboard.type(typed); await page.keyboard.press('Enter'); await sleep(160);
