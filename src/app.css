@@ -639,6 +639,7 @@ small{font-size:12px!important}
 #app#app .color-picker-popover{position:fixed!important;inset:auto;width:min(252px,calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;padding:12px;border:1px solid var(--line-2);border-radius:12px;background:var(--sheet);box-shadow:0 8px 24px rgba(37,41,35,.18);z-index:170!important}
 #app#app .color-picker-popover[hidden]{display:none!important}
 #app#app .color-picker-popover .hue-row,#app#app .color-picker-popover .hex-field{font-size:12px}
+#app#app .color-picker-popover .hex-field{gap:8px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
 #app#app .color-picker-popover .hex-field input{height:40px;border-radius:8px}
 #app#app .settings-sheet .bar .tool-settings,#app#app .settings-sheet .bar .settings-actions{align-items:flex-end}
 #app#app .stage-action-button{height:40px;min-height:40px;min-width:40px}

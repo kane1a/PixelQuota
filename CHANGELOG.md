@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.3 - 2026-10-18
+
+### Interface fixes
+
+- Removed the redundant outer frame around the HEX row in both color pickers, leaving the HEX label beside a single bordered input
+- Preserved color editing, the raised selection style, on-demand loading, and the standalone download
+
 ## 1.6.2 - 2026-10-18
 
 ### Interface fixes

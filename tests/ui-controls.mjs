@@ -187,6 +187,17 @@ try{
   return{controls,collisions,outOfCell,heightAligned,fourPixelGaps,targetsAtLeast40,roundedControls,touchTextReadable};
  },controlIds,touchRequired);
  let layoutPage;
+ const waitForNumericLayout=async()=>{
+  await layoutPage.waitForFunction(()=>{
+   const ancestors=new Set();
+   for(const control of document.querySelectorAll('.numeric-control')){
+    if(!control.offsetParent)continue;
+    for(let el=control;el;el=el.parentElement)ancestors.add(el);
+   }
+   return document.getAnimations().every(animation=>!ancestors.has(animation.effect?.target)||animation.effect.getComputedTiming().iterations===Infinity||['finished','idle'].includes(animation.playState));
+  },{timeout:5000});
+  await layoutPage.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ };
  const hitTest=async(id,step)=>{
   const selector=`.numeric-control[data-numeric-control="${id}"] button[data-numeric-step="${step}"]`;
   await layoutPage.$eval(selector,e=>e.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));
@@ -218,8 +229,17 @@ try{
     await layoutPage.click('#languageToggle');await layoutPage.click(`#languageOptions [data-locale="${locale}"]`);
     await layoutPage.waitForFunction(expected=>document.documentElement.lang===expected,{},locale);
    }
-   await layoutPage.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+   const animationProbe=width===768&&locale==='en';
+   if(animationProbe)await layoutPage.evaluate(()=>{
+    const control=document.querySelector('.numeric-control[data-numeric-control="watermarkSize"]');
+    window.__pqGeometryAnimation=control.parentElement.animate([{transform:'translateY(4px)'},{transform:'none'}],{duration:500,easing:'linear'});
+   });
+   await waitForNumericLayout();
    const geometry=await describeLayout(width<1000);
+   if(animationProbe){
+    const animationState=await layoutPage.evaluate(()=>({state:window.__pqGeometryAnimation.playState,currentTime:window.__pqGeometryAnimation.currentTime,duration:window.__pqGeometryAnimation.effect.getTiming().duration}));
+    checks.push({name:'numeric geometry waits for a finite ancestor animation to finish without disabling it or relaxing 40px targets',pass:animationState.state==='finished'&&animationState.currentTime>=animationState.duration&&geometry.targetsAtLeast40,animationState,targetsAtLeast40:geometry.targetsAtLeast40});
+   }
    const hitTests=[];
    for(const id of controlIds)for(const step of [-1,1])hitTests.push(await hitTest(id,step));
    const before=await layoutPage.$eval('#watermarkSize',e=>Number(e.value));
